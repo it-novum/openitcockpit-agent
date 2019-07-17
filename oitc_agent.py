@@ -92,6 +92,7 @@ cached_customchecks_check_data = {}
 configpath = ""
 customchecks_configpath = ""
 verbose = False
+stacktrace = False
 
 sample_config = """
 [default]
@@ -101,6 +102,7 @@ sample_config = """
   certfile = 
   keyfile = 
   verbose = false
+  stacktrace = false
   # auth = user:pass
 [oitc]
   url = 
@@ -195,8 +197,10 @@ class Collect:
                     else:
                         status = p.status
                 except:
-                    if verbose:
+                    if stacktrace:
                         traceback.print_exc()
+                    if verbose:
+                        print ("'%s' Process is not allowing us to get the status option!" % name if name != "" else str(pid))
                 
                 try:
                     if callable(p.username):
@@ -204,8 +208,10 @@ class Collect:
                     else:
                         username = p.username
                 except:
-                    if verbose:
+                    if stacktrace:
                         traceback.print_exc()
+                    if verbose:
+                        print ("'%s' Process is not allowing us to get the username option!" % name if name != "" else str(pid))
                     
                 try:
                     if callable(p.nice):
@@ -213,8 +219,10 @@ class Collect:
                     else:
                         nice = p.nice
                 except:
-                    if verbose:
+                    if stacktrace:
                         traceback.print_exc()
+                    if verbose:
+                        print ("'%s' Process is not allowing us to get the nice option!" % name if name != "" else str(pid))
                     
                 try:
                     if callable(p.name):
@@ -222,8 +230,10 @@ class Collect:
                     else:
                         name = p.name
                 except:
-                    if verbose:
+                    if stacktrace:
                         traceback.print_exc()
+                    if verbose:
+                        print ("'%s' Process is not allowing us to get the name option!" % name if name != "" else str(pid))
                     
                 try:
                     if callable(p.exe):
@@ -231,8 +241,10 @@ class Collect:
                     else:
                         exe = p.exe
                 except:
-                    if verbose:
+                    if stacktrace:
                         traceback.print_exc()
+                    if verbose:
+                        print ("'%s' Process is not allowing us to get the exec option!" % name if name != "" else str(pid))
                     
                 try:
                     if hasattr(p, "cpu_percent") and callable(p.cpu_percent):
@@ -240,8 +252,10 @@ class Collect:
                     else:
                         cpu_percent = p.get_cpu_percent()
                 except:
-                    if verbose:
+                    if stacktrace:
                         traceback.print_exc()
+                    if verbose:
+                        print ("'%s' Process is not allowing us to get the CPU usage!" % name if name != "" else str(pid))
                         
                 try:
                     if hasattr(p, "memory_info") and callable(p.memory_info):
@@ -249,8 +263,10 @@ class Collect:
                     else:
                         memory_info = p.get_memory_info()._asdict()
                 except:
-                    if verbose:
+                    if stacktrace:
                         traceback.print_exc()
+                    if verbose:
+                        print ("'%s' Process is not allowing us to get memory usage information!" % name if name != "" else str(pid))
                     
                 try:
                     if hasattr(p, "memory_percent") and callable(p.memory_percent):
@@ -258,8 +274,10 @@ class Collect:
                     else:
                         memory_percent = p.get_memory_percent()
                 except:
-                    if verbose:
+                    if stacktrace:
                         traceback.print_exc()
+                    if verbose:
+                        print ("'%s' Process is not allowing us to get the percent of memory usage!" % name if name != "" else str(pid))
                         
                 try:
                     if hasattr(p, "num_fds") and callable(p.num_fds):
@@ -267,8 +285,10 @@ class Collect:
                     elif hasattr(p, "get_num_fds") and callable(p.get_num_fds):
                         num_fds = p.get_num_fds()
                 except:
-                    if verbose:
+                    if stacktrace:
                         traceback.print_exc()
+                    if verbose:
+                        print ("'%s' Process is not allowing us to get the num_fds option!" % name if name != "" else str(pid))
                 
                 try:
                     if hasattr(p, "io_counters") and callable(p.io_counters):
@@ -276,8 +296,10 @@ class Collect:
                     elif hasattr(p, "get_io_counters") and callable(p.get_io_counters):
                         io_counters = p.get_io_counters().__dict__
                 except:
-                    if verbose:
+                    if stacktrace:
                         traceback.print_exc()
+                    if verbose:
+                        print ("'%s' Process is not allowing us to get the IO counters!" % name if name != "" else str(pid))
                 
                 try:
                     if hasattr(p, "open_files") and callable(p.open_files):
@@ -285,8 +307,10 @@ class Collect:
                     else:
                         open_files = p.get_open_files()
                 except psutil.AccessDenied:
+                    if stacktrace:
+                        traceback.print_exc()
                     if verbose:
-                        print ("'%s' Process is not allowing us to view the CPU Usage!" % name)
+                        print ("'%s' Process is not allowing us to get the open_files option!" % name if name != "" else str(pid))
                     
                 process = {
                     'name': name,
@@ -304,8 +328,10 @@ class Collect:
                 }
                 processes.append(process)
             except:
-                if verbose:
+                if stacktrace:
                     traceback.print_exc()
+                if verbose:
+                    print ("An error occured during process check! Enable --stacktrace to get more information.")
         
         if system is 'windows':
             for win_process in psutil.win_service_iter():
@@ -431,8 +457,10 @@ def run_customcheck_command(check):
             cached_customchecks_check_data[check['name']]['returncode'] = None
     
     except:
-        if verbose:
+        if stacktrace:
             traceback.print_exc()
+        if verbose:
+            print ('An error occured while running the custom check "' + check['name'] + '"! Enable --stacktrace to get more information.')
     
     cached_customchecks_check_data[check['name']]['last_updated_timestamp'] = round(time.time())
     cached_customchecks_check_data[check['name']]['last_updated'] = time.ctime()
@@ -448,9 +476,11 @@ def process_customcheck_results(future_checks):
                 del cached_customchecks_check_data[check['name']]['running']
             if verbose:
                 print('custom check "' + check['name'] + '" stopped')
-        except Exception as exc:
+        except:
+            if stacktrace:
+                traceback.print_exc()
             if verbose:
-                print('%r generated an exception: %s' % (check, exc))
+                print ('An error occured while checking custom check "' + check['name'] + '" alive! Enable --stacktrace to get more information.')
     
     if len(cached_customchecks_check_data) > 0:
         cached_check_data['customchecks'] = cached_customchecks_check_data;
@@ -532,8 +562,10 @@ def notify_oitc(oitc):
                         if verbose:
                             print(handler.read().decode('utf-8'))
                 except:
-                    if verbose:
+                    if stacktrace:
                         traceback.print_exc()
+                    if verbose:
+                        print ('An error occured while trying to notify your configured openITCOCKPIT instance! Enable --stacktrace to get more information.')
 
 def run(server_class=HTTPServer, handler_class=MyServer, config=config, ssl=False):
     server_address = ('', int(config['default']['port']))
@@ -565,6 +597,7 @@ def print_help():
     print('--customchecks <file path>   : custom check config file path')
     print('--auth <user>:<password>     : enable http basic auth')
     print('-v --verbose                 : enable verbose mode')
+    print('--stacktrace                 : print stackstrace for possible exceptions')
     print('-h --help                    : print this help message and exit')
     print('\nAdd there parameters to enable transfer of check results to a openITCOCKPIT server:')
     print('--oitc-url <url>             : openITCOCKPIT url (https://demo.openitcockpit.io)')
@@ -580,7 +613,7 @@ def print_help():
 
 if __name__ == '__main__':
     try:
-        opts, args = getopt.getopt(sys.argv[1:],"h:i:p:a:c:v",["interval=","port=","address=","config=","customchecks=","certfile=","keyfile=","auth=","oitc-url=","oitc-apikey=","oitc-interval=","verbose","help"])
+        opts, args = getopt.getopt(sys.argv[1:],"h:i:p:a:c:v",["interval=","port=","address=","config=","customchecks=","certfile=","keyfile=","auth=","oitc-url=","oitc-apikey=","oitc-interval=","verbose","stacktrace","help"])
     except getopt.GetoptError:
         print_help()
         sys.exit(2)
@@ -597,6 +630,8 @@ if __name__ == '__main__':
             configpath = str(arg)
         elif opt in ("-v", "--verbose"):
             verbose = True
+        elif opt == "--stacktrace":
+            stacktrace = True
     
     if configpath is not "":
         if file_readable(configpath):
@@ -629,6 +664,8 @@ if __name__ == '__main__':
             config['default']['auth'] = str(base64.b64encode(arg.encode())).encode("utf-8")
         elif opt in ("-v", "--verbose"):
             config['default']['verbose'] = "true"
+        elif opt == "--stacktrace":
+            config['default']['stacktrace'] = "true"
         elif opt == "--oitc-url":
             config['oitc']['url'] = str(arg)
             added_oitc_parameter += 1
@@ -643,6 +680,11 @@ if __name__ == '__main__':
         verbose = True
     else:
         verbose = False
+        
+    if config['default']['stacktrace'] in (1, "1", "true", "True", True):
+        stacktrace = True
+    else:
+        stacktrace = False
     
     if 'auth' in config['default'] and str(config['default']['auth']).strip():
         if not isBase64(config['default']['auth']):
