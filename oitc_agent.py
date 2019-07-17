@@ -56,7 +56,6 @@ if sys.platform == 'darwin' or (system == 'linux' and 'linux' not in sys.platfor
 if (sys.version_info > (3, 0)):
     isPython3 = True
     import concurrent.futures as futures
-    from concurrent.futures import ThreadPoolExecutor
     import urllib.request, urllib.parse
     from _thread import start_new_thread as permanent_check_thread
     from _thread import start_new_thread as oitc_notification_thread
@@ -412,33 +411,25 @@ def run_customcheck_command(check):
     cached_customchecks_check_data[check['name']]['command'] = check['command']
     
     try:
-        if 1 == 1:
-            p = subprocess.Popen(check['command'], shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
-            
-            try:
-                stdout, stderr = p.communicate(timeout=int(check['timeout']))
-                p.poll()
-                if stdout:
-                    stdout = stdout.decode()
-                if stderr:
-                    stderr = stderr.decode()
-                cached_customchecks_check_data[check['name']]['result'] = str(stdout)
-                cached_customchecks_check_data[check['name']]['error'] = None if str(stderr) == 'None' else str(stderr)
-                cached_customchecks_check_data[check['name']]['returncode'] = p.returncode
-            except subprocess.TimeoutExpired:
-                if verbose:
-                    print('custom check "' + check['name'] + '" timed out')
-                p.kill()    #not needed; just to be sure
-                cached_customchecks_check_data[check['name']]['result'] = None
-                cached_customchecks_check_data[check['name']]['error'] = 'TimeoutExpired'
-                cached_customchecks_check_data[check['name']]['returncode'] = None
-        else:
-            try:
-                stdout, stderr = subprocess32.check_output(check['command'], shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, timeout=int(check['timeout']))
-                print(stdout)
-            except:
-                if verbose:
-                    traceback.print_exc()
+        p = subprocess.Popen(check['command'], shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+        
+        try:
+            stdout, stderr = p.communicate(timeout=int(check['timeout']))
+            p.poll()
+            if stdout:
+                stdout = stdout.decode()
+            if stderr:
+                stderr = stderr.decode()
+            cached_customchecks_check_data[check['name']]['result'] = str(stdout)
+            cached_customchecks_check_data[check['name']]['error'] = None if str(stderr) == 'None' else str(stderr)
+            cached_customchecks_check_data[check['name']]['returncode'] = p.returncode
+        except subprocess.TimeoutExpired:
+            if verbose:
+                print('custom check "' + check['name'] + '" timed out')
+            p.kill()    #not needed; just to be sure
+            cached_customchecks_check_data[check['name']]['result'] = None
+            cached_customchecks_check_data[check['name']]['error'] = 'TimeoutExpired'
+            cached_customchecks_check_data[check['name']]['returncode'] = None
     
     except:
         if verbose:
@@ -453,11 +444,8 @@ def run_customcheck_command(check):
 def process_customcheck_results(future_checks):
     for future in futures.as_completed(future_checks):   #, timeout=10
         check = future_checks[future]
-        data = {}
         try:
-            res = future.result()
-            print(res)
-            if not res: #if run_customcheck_command do not return True (exception/error)
+            if not future.result(): #if run_customcheck_command do not return True (exception/error)
                 del cached_customchecks_check_data[check['name']]['running']
             if verbose:
                 print('custom check "' + check['name'] + '" stopped')
@@ -475,10 +463,8 @@ def collect_customchecks_data_for_cache(customchecks):
             max_workers = int(customchecks['DEFAULT']['max_worker_threads'])
     if verbose:
         print('Start thread pool with max. ' + str(max_workers) + ' workers')
-    if isPython3:
-        executor = ThreadPoolExecutor(max_workers=max_workers)
-    else:
-        executor = futures.ThreadPoolExecutor(max_workers=max_workers)
+    
+    executor = futures.ThreadPoolExecutor(max_workers=max_workers)
     
     while True:
         need_to_be_checked = []
