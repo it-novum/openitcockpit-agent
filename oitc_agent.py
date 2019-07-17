@@ -245,9 +245,9 @@ class Collect:
                         
                 try:
                     if hasattr(p, "memory_info") and callable(p.memory_info):
-                        memory_info = p.memory_info()
+                        memory_info = p.memory_info()._asdict()
                     else:
-                        memory_info = p.get_memory_info()
+                        memory_info = p.get_memory_info()._asdict()
                 except:
                     if verbose:
                         traceback.print_exc()
@@ -295,7 +295,7 @@ class Collect:
                     'status': status,
                     'username': username,
                     'cpu_percent': cpu_percent,
-                    'memory': memory_info._asdict(),
+                    'memory': memory_info,
                     'memory_percent': memory_percent,
                     'num_fds': num_fds,
                     'open_files': open_files,
@@ -330,7 +330,6 @@ class Collect:
         out = {
             'disks': disks,
             'disk_io': diskIO,
-            'disk_io_total': diskIOTotal,
             'disk_io_total': diskIOTotal._asdict(),
     
             'cpu_total_percentage': cpuTotalPercentage,
