@@ -22,7 +22,7 @@ Monitoring agent for openITCOCKPIT
 - Download & install latest python version (3.x) from https://www.python.org/downloads/windows/
 - Open cmd and install dependencies: ```python.exe -m pip install psutil configparser```
 
-### Darwin (MAC)
+### macOS (Darwin)
 - Open console and install latest python version (3.x): ```brew install python3```
 - Install dependencies: ```pip3 install psutil configparser```
 
@@ -45,6 +45,7 @@ Custom: ```python oitc_agent.py -v -i <check interval seconds> -p <port number> 
 
 Windows: ```python.exe oitc_agent.py```
 
+#### Pull mode (publish data as json threw a web server)
 Options (script start parameters overwrite options in config file):
 
 |option| value | description | 
@@ -58,14 +59,6 @@ Options (script start parameters overwrite options in config file):
 |-v --verbose       |       |enable verbose mode (information/errors without stackstrace)     | 
 |--stacktrace       |       |print stackstrace for possible exceptions     | 
 |-h --help       |       |print a help message and exit     | 
-
-Add there parameters to enable transfer of check results to a openITCOCKPIT server:
-
-|option| value | description | 
-| ------ | ------ | ----------- | 
-|--oitc-url       |url       |openITCOCKPIT url (https://demo.openitcockpit.io)     | 
-|--oitc-apikey       |api key       |openITCOCKPIT api key     | 
-|--oitc-interval       |seconds       |transfer interval in seconds     | 
 
 Add there parameters to enable ssl encrypted http(s) server:
 
@@ -83,6 +76,21 @@ You can create a self signed certificate and key file with this command
 
 ```
 openssl req -nodes -new -x509 -keyout server.key -out server.cert
+```
+
+#### Push mode (send data as post request to a url endpoint)
+
+Add there parameters to enable transfer of check results to a openITCOCKPIT server:
+
+|option| value | description | 
+| ------ | ------ | ----------- | 
+|--oitc-url       |url       |openITCOCKPIT url (https://demo.openitcockpit.io)     | 
+|--oitc-apikey       |api key       |openITCOCKPIT api key     | 
+|--oitc-interval       |seconds       |transfer interval in seconds     | 
+
+Post data:
+```
+<?php echo $_POST['checkdata'];
 ```
 
 ---
