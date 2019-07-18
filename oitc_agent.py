@@ -42,8 +42,6 @@ import configparser
 import traceback
 import base64
 from time import sleep
-from subprocess import Popen, PIPE
-import subprocess
 
 isPython3 = False
 system = 'linux'
@@ -61,6 +59,8 @@ if (sys.version_info > (3, 0)):
     from _thread import start_new_thread as oitc_notification_thread
     from _thread import start_new_thread as permanent_customchecks_check_thread
     from http.server import BaseHTTPRequestHandler, HTTPServer
+    import subprocess
+    from subprocess import Popen, PIPE
 else:
     from concurrent import futures
     import urllib
@@ -69,7 +69,6 @@ else:
     from thread import start_new_thread as oitc_notification_thread
     from thread import start_new_thread as permanent_customchecks_check_thread
     from BaseHTTPServer import BaseHTTPRequestHandler, HTTPServer
-    #import subprocess32
     import subprocess32 as subprocess
 try:
     import psutil
@@ -453,8 +452,8 @@ def run_customcheck_command(check):
                 print('custom check "' + check['name'] + '" timed out')
             p.kill()    #not needed; just to be sure
             cached_customchecks_check_data[check['name']]['result'] = None
-            cached_customchecks_check_data[check['name']]['error'] = 'TimeoutExpired'
-            cached_customchecks_check_data[check['name']]['returncode'] = None
+            cached_customchecks_check_data[check['name']]['error'] = 'Command timeout after ' + str(check['timeout']) + ' seconds'
+            cached_customchecks_check_data[check['name']]['returncode'] = 124
     
     except:
         if stacktrace:
