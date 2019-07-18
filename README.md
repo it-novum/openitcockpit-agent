@@ -1,5 +1,5 @@
 # openitcockpit-agent
-Monitoring Agent for openITCOCKPIT
+Monitoring agent for openITCOCKPIT
 
 1. [Installation](#Installation)
 2. [Usage](#Usage)
@@ -22,7 +22,7 @@ Monitoring Agent for openITCOCKPIT
 - Download & install latest python version (3.x) from https://www.python.org/downloads/windows/
 - Open cmd and install dependencies: ```python.exe -m pip install psutil configparser```
 
-### Darwin (MAC)
+### macOS (Darwin)
 - Open console and install latest python version (3.x): ```brew install python3```
 - Install dependencies: ```pip3 install psutil configparser```
 
@@ -35,14 +35,17 @@ Monitoring Agent for openITCOCKPIT
 #### python2
 - Install python version (2.x) and psutil: ```apt-get install python python-psutil```
 - Uninstall psutil pip package to use the newer apt package version: ```pip uninstall psutil```
-- Install dependency: ```pip install configparser futures subprocess32```
+- Install dependencies: ```pip install configparser futures subprocess32```
 
 ## Usage
 
-Default: ```./oitc_agent.py```
+Default: ```python oitc_agent.py```
 
-Custom: ```./oitc_agent.py -v -i <check interval seconds> -p <port number> -a <ip address> -c <config path> --certfile <certfile path> --keyfile <keyfile path> --auth <user>:<password> --oitc-url <url> --oitc-apikey <api key> --oitc-interval <seconds>```
+Custom: ```python oitc_agent.py -v -i <check interval seconds> -p <port number> -a <ip address> -c <config path> --certfile <certfile path> --keyfile <keyfile path> --auth <user>:<password> --oitc-url <url> --oitc-apikey <api key> --oitc-interval <seconds>```
 
+Windows: ```python.exe oitc_agent.py```
+
+#### Pull mode (publish data as json threw a web server)
 Options (script start parameters overwrite options in config file):
 
 |option| value | description | 
@@ -57,6 +60,26 @@ Options (script start parameters overwrite options in config file):
 |--stacktrace       |       |print stackstrace for possible exceptions     | 
 |-h --help       |       |print a help message and exit     | 
 
+Add there parameters to enable ssl encrypted http(s) server:
+
+|option| value | description | 
+| ------ | ------ | ----------- | 
+|--certfile       |certfile path       |/path/to/cert.pem (absolute path recommended)    | 
+|--keyfile       |keyfile path       |/path/to/key.pem (absolute path recommended)    | 
+
+URL change from http://address:port to https://address:port
+
+
+Example:
+
+You can create a self signed certificate and key file with this command
+
+```
+openssl req -nodes -new -x509 -keyout server.key -out server.cert
+```
+
+#### Push mode (send data as post request to a url endpoint)
+
 Add there parameters to enable transfer of check results to a openITCOCKPIT server:
 
 |option| value | description | 
@@ -65,14 +88,48 @@ Add there parameters to enable transfer of check results to a openITCOCKPIT serv
 |--oitc-apikey       |api key       |openITCOCKPIT api key     | 
 |--oitc-interval       |seconds       |transfer interval in seconds     | 
 
-Add there parameters to enable ssl encrypted http(s) server:
+Post data:
+```
+<?php echo $_POST['checkdata'];
+```
 
-|option| value | description | 
-| ------ | ------ | ----------- | 
-|--certfile       |certfile path       |/path/to/cert.pem     | 
-|--keyfile       |keyfile path       |/path/to/key.pem     | 
+#### Update mode
 
-URL change from http://address:port to https://address:port
+You can update the agent config and customconfig on the fly by sending a post request with json formatted data
+
+Example:
+```
+{
+    "config": {
+        "interval": 15,
+        "port": 3334,
+        "address": "127.0.0.1",
+        "certfile": "/path",
+        "keyfile": "/path",
+        "verbose": "1",
+        "stacktrace": "1",
+        "auth": "user:pass",
+        "customchecks": "/path"
+    }
+    "customchecks": {
+        "default": {
+            "max_worker_threads": 8
+        },
+        "username": {
+            "command": "whoami",
+            "interval": 30,
+            "timeout": 5,
+            "enabled": "1"
+        }
+        "uname": {
+            "command": "uname -a",
+            "interval": 15,
+            "timeout": 5,
+            "enabled": "0"
+        }
+    }
+}
+```
 
 ---
 
@@ -102,7 +159,7 @@ Sample config file for custom check commands:
 [default]
   # max_worker_threads should be increased with increasing number of custom checks
   # but consider: each thread needs (a bit) memory
-  max_worker_threads = 4
+  max_worker_threads = 8
 [username]
   command = whoami
   interval = 30
