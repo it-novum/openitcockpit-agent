@@ -28,6 +28,9 @@
 #
 
 
+# next step: finish _process_post_data
+
+
 import sys
 import os
 import io
@@ -56,6 +59,7 @@ if (sys.version_info > (3, 0)):
     import concurrent.futures as futures
     import urllib.request, urllib.parse
     from _thread import start_new_thread as permanent_check_thread
+    from _thread import start_new_thread as permanent_webserver_thread
     from _thread import start_new_thread as oitc_notification_thread
     from _thread import start_new_thread as permanent_customchecks_check_thread
     from http.server import BaseHTTPRequestHandler, HTTPServer
@@ -66,6 +70,7 @@ else:
     import urllib
     import urllib2
     from thread import start_new_thread as permanent_check_thread
+    from thread import start_new_thread as permanent_webserver_thread
     from thread import start_new_thread as oitc_notification_thread
     from thread import start_new_thread as permanent_customchecks_check_thread
     from BaseHTTPServer import BaseHTTPRequestHandler, HTTPServer
@@ -91,6 +96,15 @@ cached_customchecks_check_data = {}
 configpath = ""
 verbose = False
 stacktrace = False
+added_oitc_parameter = 0
+initialized = False
+
+thread_stop_requested = False
+
+permanent_check_thread_running = False
+permanent_webserver_thread_running = False
+oitc_notification_thread_running = False
+permanent_customchecks_check_thread_running = False
 
 sample_config = """
 [default]
@@ -129,6 +143,23 @@ sample_customcheck_config = """
 
 config = configparser.ConfigParser(allow_no_value=True)
 customchecks = configparser.ConfigParser(allow_no_value=True)
+
+def reset_global_options():
+    globals()['enableSSL'] = False
+    globals()['cached_check_data'] = {}
+    globals()['cached_customchecks_check_data'] = {}
+    globals()['configpath'] = ""
+    globals()['verbose'] = False
+    globals()['stacktrace'] = False
+    globals()['added_oitc_parameter'] = 0
+    globals()['initialized'] = False
+    globals()['thread_stop_requested'] = False
+    globals()['permanent_check_thread_running'] = False
+    globals()['permanent_webserver_thread_running'] = False
+    globals()['oitc_notification_thread_running'] = False
+    globals()['permanent_customchecks_check_thread_running'] = False
+    globals()['config'] = configparser.ConfigParser(allow_no_value=True)
+    globals()['customchecks'] = configparser.ConfigParser(allow_no_value=True)
 
 class Collect:
     def getData(self):
@@ -183,6 +214,7 @@ class Collect:
                 nice = None
                 name = ""
                 exe = ""
+                cmdline = ""
                 cpu_percent = None
                 memory_info = {}
                 memory_percent = None
@@ -244,6 +276,17 @@ class Collect:
                         traceback.print_exc()
                     if verbose:
                         print ("'%s' Process is not allowing us to get the exec option!" % name if name != "" else str(pid))
+                        
+                try:
+                    if callable(p.cmdline):
+                        cmdline = p.cmdline()
+                    else:
+                        cmdline = p.cmdline
+                except:
+                    if stacktrace:
+                        traceback.print_exc()
+                    if verbose:
+                        print ("'%s' Process is not allowing us to get the cmdline option!" % name if name != "" else str(pid))
                     
                 try:
                     if hasattr(p, "cpu_percent") and callable(p.cpu_percent):
@@ -314,6 +357,7 @@ class Collect:
                 process = {
                     'name': name,
                     'exec': exe,
+                    'cmdline': cmdline,
                     'pid': pid,
                     'status': status,
                     'username': username,
@@ -399,34 +443,76 @@ class MyServer(BaseHTTPRequestHandler):
         self.end_headers()
     
     def do_GET(self):
-        if 'auth' in config['default']:
-            if str(config['default']['auth']).strip() and self.headers.get('Authorization') == None:
-                self.do_AUTHHEAD()
-                self.wfile.write('no auth header received'.encode())
-            elif self.headers.get('Authorization') == 'Basic ' + config['default']['auth'] or config['default']['auth'] == "":
+        try:
+            if 'auth' in config['default']:
+                if str(config['default']['auth']).strip() and self.headers.get('Authorization') == None:
+                    self.do_AUTHHEAD()
+                    self.wfile.write('no auth header received'.encode())
+                elif self.headers.get('Authorization') == 'Basic ' + config['default']['auth'] or config['default']['auth'] == "":
+                    self._set_headers()
+                    self.wfile.write(json.dumps(cached_check_data).encode())
+                elif str(config['default']['auth']).strip():
+                    self.do_AUTHHEAD()
+                    self.wfile.write(self.headers.get('Authorization').encode())
+                    self.wfile.write('not authenticated'.encode())
+            else:
                 self._set_headers()
                 self.wfile.write(json.dumps(cached_check_data).encode())
-            elif str(config['default']['auth']).strip():
-                self.do_AUTHHEAD()
-                self.wfile.write(self.headers.get('Authorization').encode())
-                self.wfile.write('not authenticated'.encode())
-        else:
-            self._set_headers()
-            self.wfile.write(json.dumps(cached_check_data).encode())
+        except:
+            if stacktrace:
+                traceback.print_exc
+                
+    def _process_post_data(self, data):
+        data = json.loads(str(data.decode('utf-8')))
+        print(data['config'])
+                
+    def do_POST(self):
+        try:
+            if 'auth' in config['default']:
+                if str(config['default']['auth']).strip() and self.headers.get('Authorization') == None:
+                    self.do_AUTHHEAD()
+                    self.wfile.write('no auth header received'.encode())
+                elif self.headers.get('Authorization') == 'Basic ' + config['default']['auth'] or config['default']['auth'] == "":
+                    self._process_post_data(data=self.rfile.read(int(self.headers['Content-Length'])))
+                    self.wfile.write(json.dumps({'success': True}).encode())
+                elif str(config['default']['auth']).strip():
+                    self.do_AUTHHEAD()
+                    self.wfile.write(self.headers.get('Authorization').encode())
+                    self.wfile.write('not authenticated'.encode())
+            else:
+                self._process_post_data(data=self.rfile.read(int(self.headers['Content-Length'])))
+                self.wfile.write(json.dumps({'success': True}).encode())
+        except:
+            traceback.print_exc
+            print('caught something in do_POST')
 
     def log_message(self, format, *args):
         if verbose:
             print("%s - - [%s] %s" % (self.address_string(),self.log_date_time_string(),format%args))
         return
+    
+    
 
 def collect_data_for_cache(check_interval):
+    global permanent_check_thread_running
     global cached_check_data
+
+    permanent_check_thread_running = True
+    
     time.sleep(1)
     if check_interval <= 0:
         check_interval = 5
-    while True:
-        cached_check_data = Collect().getData()
-        time.sleep(check_interval)
+    i = check_interval
+    while not thread_stop_requested:
+        if i >= check_interval:
+            cached_check_data = Collect().getData()
+            i = 0
+        time.sleep(1)
+        i += 1
+    
+    permanent_check_thread_running = False
+    if verbose:
+        print('stopped permanent_check_thread')
 
 def run_customcheck_command(check):
     if verbose:
@@ -485,6 +571,8 @@ def process_customcheck_results(future_checks):
         cached_check_data['customchecks'] = cached_customchecks_check_data;
 
 def collect_customchecks_data_for_cache(customchecks):
+    global permanent_customchecks_check_thread_running
+    permanent_customchecks_check_thread_running = True
     max_workers = 4
     if 'DEFAULT' in customchecks:
         if 'max_worker_threads' in customchecks['DEFAULT']:
@@ -498,7 +586,7 @@ def collect_customchecks_data_for_cache(customchecks):
     
     executor = futures.ThreadPoolExecutor(max_workers=max_workers)
     
-    while True:
+    while not thread_stop_requested:
         need_to_be_checked = []
         for check_name in customchecks:
             if check_name is not 'DEFAULT' and check_name is not 'default':
@@ -537,16 +625,21 @@ def collect_customchecks_data_for_cache(customchecks):
             executor.submit(process_customcheck_results, future_checks) #, timeout=biggestTimeout
         
         time.sleep(1)
-    
+    permanent_customchecks_check_thread_running = False
+    if verbose:
+        print('stopped permanent_customchecks_check_thread')
 
 def notify_oitc(oitc):
+    global oitc_notification_thread_running
     global cached_check_data
+    
     time.sleep(1)
     if oitc['url'].strip() and oitc['apikey'].strip() and int(oitc['interval']):
+        oitc_notification_thread_running = True
         noty_interval = int(oitc['interval'])
         if noty_interval <= 0:
             noty_interval = 5
-        while True:
+        while not thread_stop_requested:
             time.sleep(noty_interval)
             if len(cached_check_data) > 0:
                 try:
@@ -569,14 +662,20 @@ def notify_oitc(oitc):
                         traceback.print_exc()
                     if verbose:
                         print ('An error occured while trying to notify your configured openITCOCKPIT instance! Enable --stacktrace to get more information.')
+    oitc_notification_thread_running = False
+    if verbose:
+        print('stopped oitc_notification_thread')
 
-def run(server_class=HTTPServer, handler_class=MyServer, config=config, enableSSL=False):
+def process_webserver(enableSSL=False):
+    global permanent_webserver_thread_running
+    permanent_webserver_thread_running = True
+    
     protocol = 'http'
     if config['default']['address'] == "":
         config['default']['address'] = "127.0.0.1"
         
     server_address = ('', int(config['default']['port']))
-    httpd = server_class(server_address, handler_class)
+    httpd = HTTPServer(server_address, MyServer)
     
     if enableSSL:
         import ssl
@@ -584,12 +683,19 @@ def run(server_class=HTTPServer, handler_class=MyServer, config=config, enableSS
         httpd.socket = ssl.wrap_socket(httpd.socket, keyfile=config['default']['keyfile'], certfile=config['default']['certfile'], server_side=True)
     if verbose:
         print("Server startet at %s://%s:%s with a check interval of %d seconds"%(protocol, config['default']['address'], str(config['default']['port']), int(config['default']['interval'])))
-    try:
-        httpd.serve_forever()        
-    except KeyboardInterrupt:
-        print("")
-        sys.exit(0)
-        
+    
+    while not thread_stop_requested:
+        try:
+            httpd.handle_request()
+        except:
+            if verbose:
+                print('Webserver died, try to restart ..')
+        sleep(1)
+    del httpd
+    permanent_webserver_thread_running = False
+    if verbose:
+        print('stopped permanent_webserver_thread')
+
 
 def print_help():
     print('usage: ./oitc_agent.py -v -i <check interval seconds> -p <port number> -a <ip address> -c <config path> --certfile <certfile path> --keyfile <keyfile path> --auth <user>:<password> --oitc-url <url> --oitc-apikey <api key> --oitc-interval <seconds>')
@@ -601,7 +707,7 @@ def print_help():
     print('--customchecks <file path>   : custom check config file path')
     print('--auth <user>:<password>     : enable http basic auth')
     print('-v --verbose                 : enable verbose mode')
-    print('--stacktrace                 : print stackstrace for possible exceptions')
+    print('--stacktrace                 : print stacktrace for possible exceptions')
     print('-h --help                    : print this help message and exit')
     print('\nAdd there parameters to enable transfer of check results to a openITCOCKPIT server:')
     print('--oitc-url <url>             : openITCOCKPIT url (https://demo.openitcockpit.io)')
@@ -615,7 +721,14 @@ def print_help():
     print('\nSample config file for custom check commands:')
     print(sample_customcheck_config)
 
-if __name__ == '__main__':
+def load_configuration():
+    global config
+    global verbose
+    global stacktrace
+    global added_oitc_parameter
+    global configpath
+    global enableSSL
+    
     try:
         opts, args = getopt.getopt(sys.argv[1:],"h:i:p:a:c:v",["interval=","port=","address=","config=","customchecks=","certfile=","keyfile=","auth=","oitc-url=","oitc-apikey=","oitc-interval=","verbose","stacktrace","help"])
     except getopt.GetoptError:
@@ -708,6 +821,46 @@ if __name__ == '__main__':
             if verbose:
                 print("could not read certfile or keyfile\nfall back to default http server")
     
+def fake_webserver_request():
+    protocol = 'http'
+    if enableSSL:
+        protocol = 'https'
+    complete_address = protocol + '://' + config['default']['address'] + ':' + str(config['default']['port'])
+
+    if isPython3:
+        urllib.request.urlopen(complete_address).read()
+    else:
+        urllib2.urlopen(complete_address).read()
+    
+def reload_all():
+    global thread_stop_requested
+    
+    if initialized:
+        thread_stop_requested = True
+        
+        try:
+            fake_webserver_request()
+        except:
+            if stacktrace:
+                traceback.print_exc()
+        
+        while thread_stop_requested:
+            if permanent_check_thread_running or permanent_webserver_thread_running or oitc_notification_thread_running or permanent_customchecks_check_thread_running:
+                sleep(1)
+            else:
+                thread_stop_requested = False
+        reset_global_options()
+    
+    load_configuration()
+    return True
+    
+def load_main_processing():
+    global initialized
+    
+    while not reload_all():
+        sleep(1)
+    initialized = True
+    
     if 'oitc' in config and (config['oitc']['enabled'] in (1, "1", "true", "True", True) or added_oitc_parameter == 3):
         oitc_notification_thread(notify_oitc, (config['oitc'],))
     
@@ -719,7 +872,17 @@ if __name__ == '__main__':
                 customchecks.read_file(customchecks_configfile)
             if customchecks:
                 permanent_customchecks_check_thread(collect_customchecks_data_for_cache, (customchecks,))
-
+                
     permanent_check_thread(collect_data_for_cache, (int(config['default']['interval']),))
-    run(enableSSL=enableSSL)
+    permanent_webserver_thread(process_webserver, (enableSSL,))
 
+if __name__ == '__main__':
+    
+    load_main_processing()
+    
+    try:
+        while True:
+            sleep(1000)
+    except KeyboardInterrupt:
+        print("... see you ...\n")
+        sys.exit(0)
