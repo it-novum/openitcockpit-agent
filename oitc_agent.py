@@ -9,7 +9,7 @@
 #
 # Windows:
 #   Download & install current python version from https://www.python.org/downloads/windows/
-#   open cmd and execute:   python.exe -m pip install psutil
+#   open cmd and execute:   python.exe -m pip install psutil configparser
 #
 # Debian:       
 #       python3:
@@ -20,7 +20,7 @@
 #       python2:
 #               apt-get install python python-psutil
 #               pip uninstall psutil
-#               pip install futures configparser subprocess32
+#               pip install configparser futures subprocess32
 #
 # Darwin:
 #               brew install python3
@@ -90,7 +90,6 @@ enableSSL = False
 cached_check_data = {}
 cached_customchecks_check_data = {}
 configpath = ""
-customchecks_configpath = ""
 verbose = False
 stacktrace = False
 
@@ -103,7 +102,8 @@ sample_config = """
   keyfile = 
   verbose = false
   stacktrace = false
-  # auth = user:pass
+  auth = 
+  customchecks = 
 [oitc]
   url = 
   apikey = 
@@ -112,7 +112,7 @@ sample_config = """
 """
 
 sample_customcheck_config = """
-[DEFAULT]
+[default]
   # max_worker_threads should be increased with increasing number of custom checks
   # but consider: each thread needs (a bit) memory
   max_worker_threads = 4
@@ -120,12 +120,12 @@ sample_customcheck_config = """
   command = whoami
   interval = 30
   timeout = 5
-  disabled = false
+  enabled = true
 [uname]
   command = uname -a
   interval = 15
   timeout = 5
-  disabled = true
+  enabled = false
 """
 
 config = configparser.ConfigParser(allow_no_value=True)
@@ -490,6 +490,10 @@ def collect_customchecks_data_for_cache(customchecks):
     if 'DEFAULT' in customchecks:
         if 'max_worker_threads' in customchecks['DEFAULT']:
             max_workers = int(customchecks['DEFAULT']['max_worker_threads'])
+    if 'default' in customchecks:
+        if 'max_worker_threads' in customchecks['default']:
+            max_workers = int(customchecks['default']['max_worker_threads'])
+            
     if verbose:
         print('Start thread pool with max. ' + str(max_workers) + ' workers')
     
@@ -498,8 +502,8 @@ def collect_customchecks_data_for_cache(customchecks):
     while True:
         need_to_be_checked = []
         for check_name in customchecks:
-            if check_name is not 'DEFAULT':
-                if 'command' in customchecks[check_name] and ('disabled' not in customchecks[check_name] or customchecks[check_name]['disabled'] == "false"):
+            if check_name is not 'DEFAULT' and check_name is not 'default':
+                if 'command' in customchecks[check_name] and ('enabled' not in customchecks[check_name] or customchecks[check_name]['enabled'] in (1, "1", "true", "True", True)):
                     command = customchecks[check_name]['command']
                     interval = int(config['default']['interval'])
                     timeout = 60
@@ -624,8 +628,6 @@ if __name__ == '__main__':
         config.readfp(io.BytesIO(sample_config))
     
     for opt, arg in opts:
-        if opt == "--customchecks":
-            customchecks_configpath = str(arg)
         if opt in ("-c", "--config"):
             configpath = str(arg)
         elif opt in ("-v", "--verbose"):
@@ -675,6 +677,8 @@ if __name__ == '__main__':
         elif opt == "--oitc-interval":
             config['oitc']['interval'] = str(arg)
             added_oitc_parameter += 1
+        elif opt == "--customchecks":
+            config['default']['customchecks'] = str(arg)
     
     if config['default']['verbose'] in (1, "1", "true", "True", True):
         verbose = True
@@ -707,15 +711,16 @@ if __name__ == '__main__':
     if 'oitc' in config and (config['oitc']['enabled'] in (1, "1", "true", "True", True) or added_oitc_parameter == 3):
         oitc_notification_thread(notify_oitc, (config['oitc'],))
     
-    if customchecks_configpath != "":
-        if file_readable(customchecks_configpath):
-            with open(customchecks_configpath, 'r') as customchecks_configfile:
+    if config['default']['customchecks'] != "":
+        if file_readable(config['default']['customchecks']):
+            with open(config['default']['customchecks'], 'r') as customchecks_configfile:
                 if verbose:
-                    print('load custom check config file "' + customchecks_configpath + '"')
+                    print('load custom check config file "' + config['default']['customchecks'] + '"')
                 customchecks.read_file(customchecks_configfile)
             if customchecks:
                 permanent_customchecks_check_thread(collect_customchecks_data_for_cache, (customchecks,))
-    
+    print(config['default']['customchecks'])
+    print(configpath)
     permanent_check_thread(collect_data_for_cache, (int(config['default']['interval']),))
     run(ssl=enableSSL)
 
