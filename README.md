@@ -93,6 +93,44 @@ Post data:
 <?php echo $_POST['checkdata'];
 ```
 
+#### Update mode
+
+You can update the agent config and customconfig on the fly by sending a post request with json formatted data
+
+Example:
+```
+{
+    "config": {
+        "interval": 15,
+        "port": 3334,
+        "address": "127.0.0.1",
+        "certfile": "/path",
+        "keyfile": "/path",
+        "verbose": "1",
+        "stacktrace": "1",
+        "auth": "user:pass",
+        "customchecks": "/path"
+    }
+    "customchecks": {
+        "default": {
+            "max_worker_threads": 8
+        },
+        "username": {
+            "command": "whoami",
+            "interval": 30,
+            "timeout": 5,
+            "enabled": "1"
+        }
+        "uname": {
+            "command": "uname -a",
+            "interval": 15,
+            "timeout": 5,
+            "enabled": "0"
+        }
+    }
+}
+```
+
 ---
 
 ## Sample files
