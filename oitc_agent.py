@@ -404,7 +404,7 @@ class MyServer(BaseHTTPRequestHandler):
             if str(config['default']['auth']).strip() and self.headers.get('Authorization') == None:
                 self.do_AUTHHEAD()
                 self.wfile.write('no auth header received'.encode())
-            elif self.headers.get('Authorization') == 'Basic ' + config['default']['auth']:
+            elif self.headers.get('Authorization') == 'Basic ' + config['default']['auth'] or config['default']['auth'] == "":
                 self._set_headers()
                 self.wfile.write(json.dumps(cached_check_data).encode())
             elif str(config['default']['auth']).strip():
@@ -571,21 +571,22 @@ def notify_oitc(oitc):
                     if verbose:
                         print ('An error occured while trying to notify your configured openITCOCKPIT instance! Enable --stacktrace to get more information.')
 
-def run(server_class=HTTPServer, handler_class=MyServer, config=config, ssl=False):
-    server_address = ('', int(config['default']['port']))
-    httpd = server_class(server_address, handler_class)
+def run(server_class=HTTPServer, handler_class=MyServer, config=config, enableSSL=False):
     protocol = 'http'
-    
     if config['default']['address'] == "":
         config['default']['address'] = "127.0.0.1"
-    if ssl:
+        
+    server_address = ('', int(config['default']['port']))
+    httpd = server_class(server_address, handler_class)
+    
+    if enableSSL:
         import ssl
         protocol = 'https'
         httpd.socket = ssl.wrap_socket(httpd.socket, keyfile=config['default']['keyfile'], certfile=config['default']['certfile'], server_side=True)
     if verbose:
         print("Server startet at %s://%s:%s with a check interval of %d seconds"%(protocol, config['default']['address'], str(config['default']['port']), int(config['default']['interval'])))
     try:
-        httpd.serve_forever()
+        httpd.serve_forever()        
     except KeyboardInterrupt:
         print("")
         sys.exit(0)
@@ -719,8 +720,7 @@ if __name__ == '__main__':
                 customchecks.read_file(customchecks_configfile)
             if customchecks:
                 permanent_customchecks_check_thread(collect_customchecks_data_for_cache, (customchecks,))
-    print(config['default']['customchecks'])
-    print(configpath)
+
     permanent_check_thread(collect_data_for_cache, (int(config['default']['interval']),))
-    run(ssl=enableSSL)
+    run(enableSSL=enableSSL)
 
