@@ -46,6 +46,12 @@ Custom: ```python oitc_agent.py -v -i <check interval seconds> -p <port number> 
 Windows: ```python.exe oitc_agent.py```
 
 #### Pull mode (publish data as json threw a web server)
+
+Default url to get check results: ```http://address:port```
+
+Default url to get current configuration: ```http://address:port/config```
+
+
 Options (script start parameters overwrite options in config file):
 
 |option| value | description | 
@@ -97,7 +103,14 @@ Post data:
 
 You can update the agent config and customconfig on the fly by sending a post request with json formatted data
 
-Example:
+Default configuration update url: ```http://address:port```
+
+Command Example:
+```
+curl -d @new_config.json http://127.0.0.1:3333 -u user:pass
+```
+
+JSON Example (file: new_config.json):
 ```
 {
     "config": {
