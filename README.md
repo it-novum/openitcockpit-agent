@@ -64,6 +64,7 @@ Options (script start parameters overwrite options in config file):
 |--auth       |user:password       |enable http basic auth     | 
 |-v --verbose       |       |enable verbose mode (information/errors without stackstrace)     | 
 |--stacktrace       |       |print stackstrace for possible exceptions     | 
+|--config-update-mode       |       |enable configuration update mode threw post request and /config to get current configuration     | 
 |-h --help       |       |print a help message and exit     | 
 
 Add there parameters to enable ssl encrypted http(s) server:
@@ -86,17 +87,18 @@ openssl req -nodes -new -x509 -keyout server.key -out server.cert
 
 #### Push mode (send data as post request to a url endpoint)
 
-Add there parameters to enable transfer of check results to a openITCOCKPIT server:
+Add there parameters (all required) to enable transfer of check results to a openITCOCKPIT server:
 
 |option| value | description | 
 | ------ | ------ | ----------- | 
+|--oitc-host       |host id       |openITCOCKPIT host id     | 
 |--oitc-url       |url       |openITCOCKPIT url (https://demo.openitcockpit.io)     | 
 |--oitc-apikey       |api key       |openITCOCKPIT api key     | 
 |--oitc-interval       |seconds       |transfer interval in seconds     | 
 
 Post data:
 ```
-<?php echo $_POST['checkdata'];
+<?php echo 'Host ID: ' . $_POST['host'] . ' - ' . $_POST['checkdata'];
 ```
 
 #### Update mode
@@ -108,44 +110,6 @@ Default configuration update url: ```http://address:port```
 Command Example:
 ```
 curl -d @new_config.json http://127.0.0.1:3333 -u user:pass
-```
-
-JSON Example (file: new_config.json):
-```
-{
-    "config": {
-        "interval": 15,
-        "port": 3333,
-        "address": "127.0.0.1",
-        "certfile": "/path",
-        "keyfile": "",
-        "verbose": "1",
-        "stacktrace": "0",
-        "auth": "user:pass",
-        "customchecks": "/path",
-        "oitc-url": "https://demo.openitcockpit.io",
-        "oitc-apikey": "",
-        "oitc-interval": 60,
-        "oitc-enabled": "0"
-    },
-    "customchecks": {
-        "default": {
-            "max_worker_threads": 8
-        },
-        "username": {
-            "command": "whoami",
-            "interval": 30,
-            "timeout": 5,
-            "enabled": "1"
-        },
-        "uname": {
-            "command": "uname -a",
-            "interval": 15,
-            "timeout": 5,
-            "enabled": "0"
-        }
-    }
-}
 ```
 
 ---
@@ -187,4 +151,42 @@ Sample config file for custom check commands:
   interval = 15
   timeout = 5
   enabled = false
+```
+
+JSON Example (file: new_config.json) for update mode and http://address:port/config result:
+```
+{
+    "config": {
+        "interval": 15,
+        "port": 3333,
+        "address": "127.0.0.1",
+        "certfile": "/path",
+        "keyfile": "",
+        "verbose": "1",
+        "stacktrace": "0",
+        "auth": "user:pass",
+        "customchecks": "/path",
+        "oitc-url": "https://demo.openitcockpit.io",
+        "oitc-apikey": "",
+        "oitc-interval": 60,
+        "oitc-enabled": "0"
+    },
+    "customchecks": {
+        "default": {
+            "max_worker_threads": 8
+        },
+        "username": {
+            "command": "whoami",
+            "interval": 30,
+            "timeout": 5,
+            "enabled": "1"
+        },
+        "uname": {
+            "command": "uname -a",
+            "interval": 15,
+            "timeout": 5,
+            "enabled": "0"
+        }
+    }
+}
 ```
