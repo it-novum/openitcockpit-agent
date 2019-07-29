@@ -38,7 +38,6 @@ import getopt
 import platform
 import time
 import json
-import simplejson
 import socket
 import configparser
 import traceback
@@ -567,7 +566,6 @@ class MyServer(BaseHTTPRequestHandler):
         return data
     
     def _process_get_data(self):
-        print(self.path)
         self._set_headers()
         
         if self.path == "/":
