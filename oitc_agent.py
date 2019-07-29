@@ -113,9 +113,11 @@ sample_config = """
   keyfile = 
   verbose = false
   stacktrace = false
+  config-update-mode = false
   auth = 
   customchecks = 
 [oitc]
+  host = 
   url = 
   apikey = 
   interval = 60
@@ -462,8 +464,15 @@ def check_update_data(data):
                         newconfig['default']['stacktrace'] = "true"
                     else:
                         newconfig['default']['stacktrace'] = "false"
+                if 'config-update-mode' in jdata[key]:
+                    if jdata[key]['config-update-mode'] in (1, "1", "true", "True"):
+                        newconfig['default']['config-update-mode'] = "true"
+                    else:
+                        newconfig['default']['config-update-mode'] = "false"
                 if 'customchecks' in jdata[key]:
                     newconfig['default']['customchecks'] = str(jdata[key]['customchecks'])
+                if 'oitc-host' in jdata[key]:
+                    newconfig['oitc']['host'] = str(jdata[key]['oitc-host'])
                 if 'oitc-url' in jdata[key]:
                     newconfig['oitc']['url'] = str(jdata[key]['oitc-url'])
                 if 'oitc-apikey' in jdata[key]:
@@ -570,7 +579,7 @@ class MyServer(BaseHTTPRequestHandler):
         
         if self.path == "/":
             self.wfile.write(json.dumps(cached_check_data).encode())
-        elif self.path == "/config":
+        elif self.path == "/config" and config['default']['config-update-mode'] in (1, "1", "true", "True", True):
             self.wfile.write(json.dumps(self.build_json_config()).encode())
     
     def do_GET(self):
@@ -597,20 +606,23 @@ class MyServer(BaseHTTPRequestHandler):
                 
     def do_POST(self):
         try:
-            if 'auth' in config['default']:
-                if str(config['default']['auth']).strip() and self.headers.get('Authorization') == None:
-                    self.do_AUTHHEAD()
-                    self.wfile.write('no auth header received'.encode())
-                elif self.headers.get('Authorization') == 'Basic ' + config['default']['auth'] or config['default']['auth'] == "":
+            if config['default']['config-update-mode'] in (1, "1", "true", "True", True):
+                if 'auth' in config['default']:
+                    if str(config['default']['auth']).strip() and self.headers.get('Authorization') == None:
+                        self.do_AUTHHEAD()
+                        self.wfile.write('no auth header received'.encode())
+                    elif self.headers.get('Authorization') == 'Basic ' + config['default']['auth'] or config['default']['auth'] == "":
+                        self._process_post_data(data=self.rfile.read(int(self.headers['Content-Length'])))
+                        self.wfile.write(json.dumps({'success': True}).encode())
+                    elif str(config['default']['auth']).strip():
+                        self.do_AUTHHEAD()
+                        self.wfile.write(self.headers.get('Authorization').encode())
+                        self.wfile.write('not authenticated'.encode())
+                else:
                     self._process_post_data(data=self.rfile.read(int(self.headers['Content-Length'])))
                     self.wfile.write(json.dumps({'success': True}).encode())
-                elif str(config['default']['auth']).strip():
-                    self.do_AUTHHEAD()
-                    self.wfile.write(self.headers.get('Authorization').encode())
-                    self.wfile.write('not authenticated'.encode())
             else:
-                self._process_post_data(data=self.rfile.read(int(self.headers['Content-Length'])))
-                self.wfile.write(json.dumps({'success': True}).encode())
+                self.wfile.write(json.dumps({'success': False}).encode())
         except:
             traceback.print_exc
             print('caught something in do_POST')
@@ -773,14 +785,14 @@ def notify_oitc(oitc):
             if len(cached_check_data) > 0:
                 try:
                     if isPython3:
-                        data = bytes(urllib.parse.urlencode({'checkdata': cached_check_data}).encode())
+                        data = bytes(urllib.parse.urlencode({'checkdata': cached_check_data, 'host': oitc['host']}).encode())
                         req = urllib.request.Request(oitc['url'].strip())
                         req.add_header('Authorization', 'X-OITC-API '+oitc['apikey'].strip())
                         handler = urllib.request.urlopen(req, data)
                         if verbose:
                             print(handler.read().decode('utf-8'))
                     else:
-                        data = bytes(urllib.urlencode({'checkdata': cached_check_data}).encode())
+                        data = bytes(urllib.urlencode({'checkdata': cached_check_data, 'host': oitc['host']}).encode())
                         req = urllib2.Request(oitc['url'].strip())
                         req.add_header('Authorization', 'X-OITC-API '+oitc['apikey'].strip())
                         handler = urllib2.urlopen(req, data)
@@ -833,12 +845,14 @@ def print_help():
     print('-p --port <number>           : webserver port number')
     print('-a --address <ip address>    : webserver ip address')
     print('-c --config <config path>    : config file path')
+    print('--config-update-mode         : enable config update mode threw post request and /config to get current configuration')
     print('--customchecks <file path>   : custom check config file path')
     print('--auth <user>:<password>     : enable http basic auth')
     print('-v --verbose                 : enable verbose mode')
     print('--stacktrace                 : print stacktrace for possible exceptions')
     print('-h --help                    : print this help message and exit')
-    print('\nAdd there parameters to enable transfer of check results to a openITCOCKPIT server:')
+    print('\nAdd there parameters (all required) to enable transfer of check results to a openITCOCKPIT server:')
+    print('--oitc-host <host id>        : host id from openITCOCKPIT')
     print('--oitc-url <url>             : openITCOCKPIT url (https://demo.openitcockpit.io)')
     print('--oitc-apikey <api key>      : openITCOCKPIT api key')
     print('--oitc-interval <seconds>    : transfer interval in seconds')
@@ -859,7 +873,7 @@ def load_configuration():
     global enableSSL
     
     try:
-        opts, args = getopt.getopt(sys.argv[1:],"h:i:p:a:c:v",["interval=","port=","address=","config=","customchecks=","certfile=","keyfile=","auth=","oitc-url=","oitc-apikey=","oitc-interval=","verbose","stacktrace","help"])
+        opts, args = getopt.getopt(sys.argv[1:],"h:i:p:a:c:v",["interval=","port=","address=","config=","customchecks=","certfile=","keyfile=","auth=","oitc-host=","oitc-url=","oitc-apikey=","oitc-interval=","config-update-mode","verbose","stacktrace","help"])
     except getopt.GetoptError:
         print_help()
         sys.exit(2)
@@ -910,6 +924,11 @@ def load_configuration():
             config['default']['verbose'] = "true"
         elif opt == "--stacktrace":
             config['default']['stacktrace'] = "true"
+        elif opt == "--config-update-mode":
+            config['default']['config-update-mode'] = "true"
+        elif opt == "--oitc-host":
+            config['oitc']['host'] = str(arg)
+            added_oitc_parameter += 1
         elif opt == "--oitc-url":
             config['oitc']['url'] = str(arg)
             added_oitc_parameter += 1
@@ -990,7 +1009,7 @@ def load_main_processing():
         sleep(1)
     initialized = True
     
-    if 'oitc' in config and (config['oitc']['enabled'] in (1, "1", "true", "True", True) or added_oitc_parameter == 3):
+    if 'oitc' in config and (config['oitc']['enabled'] in (1, "1", "true", "True", True) or added_oitc_parameter == 4):
         oitc_notification_thread(notify_oitc, (config['oitc'],))
     
     if config['default']['customchecks'] != "":
