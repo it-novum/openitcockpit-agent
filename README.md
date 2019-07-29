@@ -109,7 +109,11 @@ Example:
         "verbose": "1",
         "stacktrace": "0",
         "auth": "user:pass",
-        "customchecks": "/path"
+        "customchecks": "/path",
+        "oitc-url": "https://demo.openitcockpit.io",
+        "oitc-apikey": "",
+        "oitc-interval": 60,
+        "oitc-enabled": "0"
     },
     "customchecks": {
         "default": {
