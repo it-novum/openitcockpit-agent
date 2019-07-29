@@ -435,7 +435,7 @@ def check_update_data(data):
         jdata = json.loads(data.decode('utf-8'))
 
         for key in jdata:
-            if key == 'config':
+            if key == 'config' and file_readable(configpath):
                 newconfig = configparser.ConfigParser(allow_no_value=True)
                 newconfig['default'] = {}
                 newconfig['oitc'] = {}
@@ -487,12 +487,17 @@ def check_update_data(data):
                         
                 if configpath != "":
                     with open(configpath, 'w') as configfile:
+                        if verbose:
+                            print('update agent configuration')
                         newconfig.write(configfile)
                 else:
                     if verbose:
                         print('no valid configpath')
+            elif key == 'config' and not file_readable(configpath):
+                if verbose:
+                    print('agent configuration file not readable')
             
-            if key == 'customchecks':
+            if key == 'customchecks' and file_readable(config['default']['customchecks']):
                 newcustomchecks = configparser.ConfigParser(allow_no_value=True)
                 if isPython3:
                     newcustomchecks.read_string(sample_customcheck_config)
@@ -522,10 +527,15 @@ def check_update_data(data):
                             
                 if config['default']['customchecks'] != "":
                     with open(config['default']['customchecks'], 'w') as configfile:
+                        if verbose:
+                            print('update customchecks configuration')
                         newcustomchecks.write(configfile)
                 else:
                     if verbose:
                         print('no valid customchecks configpath')
+            elif key == 'customchecks' and not file_readable(config['default']['customchecks']):
+                if verbose:
+                    print('customchecks configuration file not readable')
             
         load_main_processing()
         
