@@ -454,12 +454,12 @@ def check_update_data(data):
                 if 'auth' in jdata[key]:
                     newconfig['default']['auth'] = str(jdata[key]['auth'])
                 if 'verbose' in jdata[key]:
-                    if jdata[key]['verbose'] in ("1", "true", "True"):
+                    if jdata[key]['verbose'] in (1, "1", "true", "True"):
                         newconfig['default']['verbose'] = "true"
                     else:
                         newconfig['default']['verbose'] = "false"
                 if 'stacktrace' in jdata[key]:
-                    if jdata[key]['stacktrace'] in ("1", "true", "True"):
+                    if jdata[key]['stacktrace'] in (1, "1", "true", "True"):
                         newconfig['default']['stacktrace'] = "true"
                     else:
                         newconfig['default']['stacktrace'] = "false"
@@ -472,7 +472,7 @@ def check_update_data(data):
                 if 'oitc-interval' in jdata[key]:
                     newconfig['oitc']['interval'] = str(jdata[key]['oitc-interval'])
                 if 'oitc-enabled' in jdata[key]:
-                    if jdata[key]['oitc-enabled'] in ("1", "true", "True"):
+                    if jdata[key]['oitc-enabled'] in (1, "1", "true", "True"):
                         newconfig['oitc']['enabled'] = "true"
                     else:
                         newconfig['oitc']['enabled'] = "false"
@@ -509,7 +509,7 @@ def check_update_data(data):
                                 newcustomchecks[customkey]['timeout'] = str(jdata[key][customkey]['timeout'])
                         if 'enabled' in jdata[key][customkey]:
                             newcustomchecks[customkey]['enabled'] = "false"
-                            if jdata[key][customkey]['enabled'] in ("1", "true", "True"):
+                            if jdata[key][customkey]['enabled'] in (1, "1", "true", "True"):
                                 newcustomchecks[customkey]['enabled'] = "true"
                             
                 if config['default']['customchecks'] != "":
@@ -540,6 +540,41 @@ class MyServer(BaseHTTPRequestHandler):
         self.send_header('Content-type', 'text/html')
         self.end_headers()
     
+    def build_json_config(self):
+        data = {}
+        data['config'] = {}
+        data['customchecks'] = {}
+        
+        for key in config['default']:
+            data['config'][key] = config['default'][key]
+        for key in config['oitc']:
+            data['config']['oitc-'+key] = config['oitc'][key]
+        
+        for customkey in customchecks:
+            data['customchecks'][customkey] = {}
+            if customkey == 'default':
+                data['customchecks'][customkey]['max_worker_threads'] = customchecks[customkey]['max_worker_threads']
+            else:
+                for customkeyoption in customchecks[customkey]:
+                    data['customchecks'][customkey][customkeyoption] = customchecks[customkey][customkeyoption]
+        
+        if 'DEFAULT' in data['customchecks']:
+            del data['customchecks']['DEFAULT']
+            
+        if data['config']['auth'] != "":
+            data['config']['auth'] = str(base64.b64decode(data['config']['auth']), "utf-8")
+        
+        return data
+    
+    def _process_get_data(self):
+        print(self.path)
+        self._set_headers()
+        
+        if self.path == "/":
+            self.wfile.write(json.dumps(cached_check_data).encode())
+        elif self.path == "/config":
+            self.wfile.write(json.dumps(self.build_json_config()).encode())
+    
     def do_GET(self):
         try:
             if 'auth' in config['default']:
@@ -547,15 +582,13 @@ class MyServer(BaseHTTPRequestHandler):
                     self.do_AUTHHEAD()
                     self.wfile.write('no auth header received'.encode())
                 elif self.headers.get('Authorization') == 'Basic ' + config['default']['auth'] or config['default']['auth'] == "":
-                    self._set_headers()
-                    self.wfile.write(json.dumps(cached_check_data).encode())
+                    self._process_get_data()
                 elif str(config['default']['auth']).strip():
                     self.do_AUTHHEAD()
                     self.wfile.write(self.headers.get('Authorization').encode())
                     self.wfile.write('not authenticated'.encode())
             else:
-                self._set_headers()
-                self.wfile.write(json.dumps(cached_check_data).encode())
+                self._process_get_data()
         except:
             if stacktrace:
                 traceback.print_exc
