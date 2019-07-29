@@ -102,15 +102,15 @@ Example:
 {
     "config": {
         "interval": 15,
-        "port": 3334,
+        "port": 3333,
         "address": "127.0.0.1",
         "certfile": "/path",
-        "keyfile": "/path",
+        "keyfile": "",
         "verbose": "1",
-        "stacktrace": "1",
+        "stacktrace": "0",
         "auth": "user:pass",
         "customchecks": "/path"
-    }
+    },
     "customchecks": {
         "default": {
             "max_worker_threads": 8
@@ -120,7 +120,7 @@ Example:
             "interval": 30,
             "timeout": 5,
             "enabled": "1"
-        }
+        },
         "uname": {
             "command": "uname -a",
             "interval": 15,

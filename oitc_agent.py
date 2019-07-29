@@ -28,8 +28,6 @@
 #
 
 
-# next step: finish _process_post_data
-
 
 import sys
 import os
@@ -40,6 +38,7 @@ import getopt
 import platform
 import time
 import json
+import simplejson
 import socket
 import configparser
 import traceback
@@ -133,7 +132,7 @@ sample_customcheck_config = """
   command = whoami
   interval = 30
   timeout = 5
-  enabled = true
+  enabled = false
 [uname]
   command = uname -a
   interval = 15
@@ -430,6 +429,105 @@ def isBase64(s):
     except Exception:
         return False
     
+def check_update_data(data):
+    try:
+        jdata = json.loads(data.decode('utf-8'))
+
+        for key in jdata:
+            if key == 'config':
+                newconfig = configparser.ConfigParser(allow_no_value=True)
+                newconfig['default'] = {}
+                newconfig['oitc'] = {}
+                
+                if 'interval' in jdata[key]:
+                    if int(jdata[key]['interval']) > 0:
+                        newconfig['default']['interval'] = str(jdata[key]['interval'])
+                if 'port' in jdata[key]:
+                    if int(jdata[key]['port']) > 0:
+                        newconfig['default']['port'] = str(jdata[key]['port'])
+                if 'address' in jdata[key]:
+                    newconfig['default']['address'] = str(jdata[key]['address'])
+                if 'certfile' in jdata[key]:
+                    newconfig['default']['certfile'] = str(jdata[key]['certfile'])
+                if 'keyfile' in jdata[key]:
+                    newconfig['default']['keyfile'] = str(jdata[key]['keyfile'])
+                if 'auth' in jdata[key]:
+                    newconfig['default']['auth'] = str(jdata[key]['auth'])
+                if 'verbose' in jdata[key]:
+                    if jdata[key]['verbose'] in ("1", "true", "True"):
+                        newconfig['default']['verbose'] = "true"
+                    else:
+                        newconfig['default']['verbose'] = "false"
+                if 'stacktrace' in jdata[key]:
+                    if jdata[key]['stacktrace'] in ("1", "true", "True"):
+                        newconfig['default']['stacktrace'] = "true"
+                    else:
+                        newconfig['default']['stacktrace'] = "false"
+                if 'customchecks' in jdata[key]:
+                    newconfig['default']['customchecks'] = str(jdata[key]['customchecks'])
+                if 'oitc-url' in jdata[key]:
+                    newconfig['oitc']['url'] = str(jdata[key]['oitc-url'])
+                if 'oitc-apikey' in jdata[key]:
+                    newconfig['oitc']['apikey'] = str(jdata[key]['oitc-apikey'])
+                if 'oitc-interval' in jdata[key]:
+                    newconfig['oitc']['interval'] = str(jdata[key]['oitc-interval'])
+                if 'oitc-enabled' in jdata[key]:
+                    if jdata[key]['oitc-enabled'] in ("1", "true", "True"):
+                        newconfig['oitc']['enabled'] = "true"
+                    else:
+                        newconfig['oitc']['enabled'] = "false"
+                        
+                if configpath != "":
+                    with open(configpath, 'w') as configfile:
+                        newconfig.write(configfile)
+                else:
+                    if verbose:
+                        print('no valid configpath')
+            
+            if key == 'customchecks':
+                newcustomchecks = configparser.ConfigParser(allow_no_value=True)
+                if isPython3:
+                    newcustomchecks.read_string(sample_customcheck_config)
+                else:
+                    newcustomchecks.readfp(io.BytesIO(sample_customcheck_config))
+                
+                for customkey in jdata[key]:
+                    newcustomchecks[customkey] = {}
+                    
+                    if customkey == 'default':
+                        if 'max_worker_threads' in jdata[key][customkey]:
+                            newcustomchecks[customkey]['max_worker_threads'] = str(jdata[key][customkey]['max_worker_threads'])
+                    else:
+                    
+                        if 'command' in jdata[key][customkey]:
+                            newcustomchecks[customkey]['command'] = str(jdata[key][customkey]['command'])
+                        if 'interval' in jdata[key][customkey]:
+                            if int(jdata[key][customkey]['interval']) > 0:
+                                newcustomchecks[customkey]['interval'] = str(jdata[key][customkey]['interval'])
+                        if 'timeout' in jdata[key][customkey]:
+                            if int(jdata[key][customkey]['timeout']) > 0:
+                                newcustomchecks[customkey]['timeout'] = str(jdata[key][customkey]['timeout'])
+                        if 'enabled' in jdata[key][customkey]:
+                            newcustomchecks[customkey]['enabled'] = "false"
+                            if jdata[key][customkey]['enabled'] in ("1", "true", "True"):
+                                newcustomchecks[customkey]['enabled'] = "true"
+                            
+                if config['default']['customchecks'] != "":
+                    with open(config['default']['customchecks'], 'w') as configfile:
+                        newcustomchecks.write(configfile)
+                else:
+                    if verbose:
+                        print('no valid customchecks configpath')
+            
+        load_main_processing()
+        
+    except Exception as e:
+        if stacktrace:
+            traceback.print_exc
+            print(e)
+        elif verbose:
+            print('an error occured during new config processing')
+    
 class MyServer(BaseHTTPRequestHandler):
     def _set_headers(self):
         self.send_response(200)
@@ -463,8 +561,8 @@ class MyServer(BaseHTTPRequestHandler):
                 traceback.print_exc
                 
     def _process_post_data(self, data):
-        data = json.loads(str(data.decode('utf-8')))
-        print(data['config'])
+        executor = futures.ThreadPoolExecutor(max_workers=1)
+        executor.submit(check_update_data, data)
                 
     def do_POST(self):
         try:
@@ -590,7 +688,7 @@ def collect_customchecks_data_for_cache(customchecks):
         need_to_be_checked = []
         for check_name in customchecks:
             if check_name is not 'DEFAULT' and check_name is not 'default':
-                if 'command' in customchecks[check_name] and ('enabled' not in customchecks[check_name] or customchecks[check_name]['enabled'] in (1, "1", "true", "True", True)):
+                if 'command' in customchecks[check_name] and customchecks[check_name]['command'] != '' and ('enabled' not in customchecks[check_name] or customchecks[check_name]['enabled'] in (1, "1", "true", "True", True)):
                     command = customchecks[check_name]['command']
                     interval = int(config['default']['interval'])
                     timeout = 60
