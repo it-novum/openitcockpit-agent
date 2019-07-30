@@ -205,10 +205,36 @@ class Collect:
         processes = []
         customchecks = {}
         
+        tmpProcessList = []
+        
+        
         for pid in pids:
             try:
                 p = psutil.Process(pid)
                 
+                try:
+                    if hasattr(p, "cpu_percent") and callable(p.cpu_percent):
+                        cpu_percent = p.cpu_percent(interval=None)
+                    else:
+                        cpu_percent = p.get_cpu_percent(interval=None)
+                except:
+                    if stacktrace:
+                        traceback.print_exc()
+                    if verbose:
+                        print ("'%s' Process is not allowing us to get the CPU usage!" % name if name != "" else str(pid))
+                
+                tmpProcessList.append(p)
+            except:
+                if stacktrace:
+                    traceback.print_exc()
+                if verbose:
+                    print ("An error occured during process check! Enable --stacktrace to get more information.")
+        
+        for p in tmpProcessList:
+            try:
+                
+                pid = p.pid
+                ppid = None
                 status = ""
                 username = ""
                 nice = None
@@ -221,7 +247,27 @@ class Collect:
                 num_fds = {}
                 io_counters = {}
                 open_files = ""
+                children = []
                 
+                try:
+                    if callable(p.parent):
+                        ppid = p.parent().pid
+                except:
+                    if stacktrace:
+                        traceback.print_exc()
+                    if verbose:
+                        print ("'%s' Process is not allowing us to get the parent process id!" % str(pid))
+                
+                try:
+                    if callable(p.children):
+                        children = [ child.pid for child in p.children(recursive=True) ]
+                except:
+                    if stacktrace:
+                        traceback.print_exc()
+                    if verbose:
+                        print ("'%s' Process is not allowing us to get the child process ids!" % str(pid))
+                
+                        
                 try:
                     if callable(p.status):
                         status = p.status()
@@ -290,9 +336,9 @@ class Collect:
                     
                 try:
                     if hasattr(p, "cpu_percent") and callable(p.cpu_percent):
-                        cpu_percent = p.cpu_percent()
+                        cpu_percent = p.cpu_percent(interval=None)
                     else:
-                        cpu_percent = p.get_cpu_percent()
+                        cpu_percent = p.get_cpu_percent(interval=None)
                 except:
                     if stacktrace:
                         traceback.print_exc()
@@ -359,6 +405,8 @@ class Collect:
                     'exec': exe,
                     'cmdline': cmdline,
                     'pid': pid,
+                    'ppid': ppid,
+                    'children': children,
                     'status': status,
                     'username': username,
                     'cpu_percent': cpu_percent,
