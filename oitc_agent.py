@@ -223,7 +223,7 @@ class Collect:
             ) for disk in psutil.disk_partitions() ]
        
 
-        diskIOTotal = psutil.disk_io_counters(perdisk=False)._asdict()
+        #diskIOTotal = psutil.disk_io_counters(perdisk=False)._asdict()
         
         #diskIO = psutil.disk_io_counters(perdisk=True)
         diskIO = { disk: iops._asdict() for disk,iops in psutil.disk_io_counters(perdisk=True).items() }
@@ -245,6 +245,24 @@ class Collect:
                 tot_ios = diskIODiff['read_count'] + diskIODiff['write_count']
                 diskIO[disk]['total_iops'] = tot_ios / diskIODiff['timestamp']
                 diskIO[disk]['load_percent'] = diskIODiff['busy_time'] / (diskIODiff['timestamp'] * 1000.) * 100.
+                
+                if diskIODiff['read_count']:
+                    diskIO[disk]['read_avg_wait'] = diskIODiff['read_time'] / diskIODiff['read_count']
+                    diskIO[disk]['read_avg_size'] = diskIODiff['read_bytes'] / diskIODiff['read_count']
+                else:
+                    diskIO[disk]['read_avg_wait'] = 0
+                    diskIO[disk]['read_avg_size'] = 0
+                    
+                if diskIODiff['write_count']:
+                    diskIO[disk]['write_avg_wait'] = diskIODiff['write_time'] / diskIODiff['write_count']
+                    diskIO[disk]['write_avg_size'] = diskIODiff['write_bytes'] / diskIODiff['write_count']
+                else:
+                    diskIO[disk]['write_avg_wait'] = 0
+                    diskIO[disk]['write_avg_size'] = 0
+                
+                if tot_ios:
+                    diskIO[disk]['total_avg_wait'] = (diskIODiff['read_time'] + diskIODiff['write_time']) / tot_ios
+                    diskIO[disk]['total_avg_wait'] = 0
         
         cached_diskstats = diskIO
 
@@ -503,7 +521,7 @@ class Collect:
         out = {
             'disks': disks,
             'disk_io': diskIO,
-            'disk_io_total': diskIOTotal,
+            #'disk_io_total': diskIOTotal,
     
             'cpu_total_percentage': cpuTotalPercentage,
             'cpu_percentage': cpuPercentage,
