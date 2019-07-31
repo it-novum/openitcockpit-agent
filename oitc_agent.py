@@ -32,7 +32,7 @@
 import sys
 import os
 import io
-from os import access, R_OK
+from os import access, R_OK, devnull
 from os.path import isfile
 import getopt
 import platform
@@ -43,6 +43,7 @@ import configparser
 import traceback
 import base64
 from time import sleep
+from contextlib import contextmanager,redirect_stderr,redirect_stdout
 
 isPython3 = False
 system = 'linux'
@@ -161,6 +162,14 @@ def reset_global_options():
     globals()['config'] = configparser.ConfigParser(allow_no_value=True)
     globals()['customchecks'] = configparser.ConfigParser(allow_no_value=True)
 
+
+@contextmanager
+def suppress_stdout_stderr():
+    """A context manager that redirects stdout and stderr to devnull"""
+    with open(devnull, 'w') as fnull:
+        with redirect_stderr(fnull) as err, redirect_stdout(fnull) as out:
+            yield (err, out)
+
 class Collect:
     def getData(self):
         # CPU #
@@ -217,13 +226,14 @@ class Collect:
                         cpu_percent = p.cpu_percent(interval=None)
                     else:
                         cpu_percent = p.get_cpu_percent(interval=None)
+                        
+                    tmpProcessList.append(p)
                 except:
                     if stacktrace:
                         traceback.print_exc()
                     if verbose:
                         print ("'%s' Process is not allowing us to get the CPU usage!" % name if name != "" else str(pid))
                 
-                tmpProcessList.append(p)
             except:
                 if stacktrace:
                     traceback.print_exc()
@@ -257,10 +267,12 @@ class Collect:
                         traceback.print_exc()
                     if verbose:
                         print ("'%s' Process is not allowing us to get the parent process id!" % str(pid))
-                
                 try:
                     if callable(p.children):
-                        children = [ child.pid for child in p.children(recursive=True) ]
+                        with suppress_stdout_stderr():
+                            for child in p.children(recursive=True):
+                                children.append(child.pid)
+                                
                 except:
                     if stacktrace:
                         traceback.print_exc()
