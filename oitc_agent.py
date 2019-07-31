@@ -92,6 +92,7 @@ agentVersion = "1.0.0"
 enableSSL = False
 cached_check_data = {}
 cached_customchecks_check_data = {}
+cached_diskstats = {}
 configpath = ""
 verbose = False
 stacktrace = False
@@ -174,8 +175,27 @@ def suppress_stdout_stderr():
         finally:
             sys.stdout = old_stdout
 
+def wrapdiff(last, curr):
+    """ Calculate the difference between last and curr.
+        If last > curr, try to guess the boundary at which the value must have wrapped
+        by trying the maximum values of 64, 32 and 16 bit signed and unsigned ints.
+    """
+    
+    if last <= curr:
+        return curr - last
+
+    boundary = None
+    for chkbound in (64,63,32,31,16,15):
+        if last > 2**chkbound:
+            break
+        boundary = chkbound
+    if boundary is None:
+        raise ArithmeticError("Couldn't determine boundary")
+    return 2**boundary - last + curr
+
 class Collect:
     def getData(self):
+        global cached_diskstats
         # CPU #
         cpuTotalPercentage = psutil.cpu_percent()
         cpuPercentage = psutil.cpu_percent(interval=0, percpu=True)
@@ -203,10 +223,30 @@ class Collect:
             ) for disk in psutil.disk_partitions() ]
        
 
-        diskIOTotal = psutil.disk_io_counters(perdisk=False)
-        #diskIO = psutil.disk_io_counters(perdisk=True)
+        diskIOTotal = psutil.disk_io_counters(perdisk=False)._asdict()
         
+        #diskIO = psutil.disk_io_counters(perdisk=True)
         diskIO = { disk: iops._asdict() for disk,iops in psutil.disk_io_counters(perdisk=True).items() }
+        diskIO['timestamp'] = time.time()
+        
+        for disk in diskIO:
+            if disk != "timestamp" and disk in cached_diskstats:
+                
+                diskIODiff = {}
+                diskIODiff['timestamp'] = wrapdiff(float(cached_diskstats['timestamp']), float(diskIO['timestamp']))
+                
+                for attr in diskIO[disk]:
+                    diff = wrapdiff(float(cached_diskstats[disk][attr]), float(diskIO[disk][attr]))
+                    diskIODiff[attr] = diff;
+                
+                diskIO[disk]['read_iops'] = diskIODiff['read_count'] / diskIODiff['timestamp']
+                diskIO[disk]['write_iops'] = diskIODiff['write_count'] / diskIODiff['timestamp']
+                
+                tot_ios = diskIODiff['read_count'] + diskIODiff['write_count']
+                diskIO[disk]['total_iops'] = tot_ios / diskIODiff['timestamp']
+                diskIO[disk]['load_percent'] = diskIODiff['busy_time'] / (diskIODiff['timestamp'] * 1000.) * 100.
+        
+        cached_diskstats = diskIO
 
         if hasattr(psutil, "pids"):
             pids = psutil.pids()
@@ -463,7 +503,7 @@ class Collect:
         out = {
             'disks': disks,
             'disk_io': diskIO,
-            'disk_io_total': diskIOTotal._asdict(),
+            'disk_io_total': diskIOTotal,
     
             'cpu_total_percentage': cpuTotalPercentage,
             'cpu_percentage': cpuPercentage,
