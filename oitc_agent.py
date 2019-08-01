@@ -182,7 +182,7 @@ def wrapdiff(last, curr):
     """
     
     if last <= curr:
-        return curr - last
+        return float(curr - last)
 
     boundary = None
     for chkbound in (64,63,32,31,16,15):
@@ -191,7 +191,7 @@ def wrapdiff(last, curr):
         boundary = chkbound
     if boundary is None:
         raise ArithmeticError("Couldn't determine boundary")
-    return 2**boundary - last + curr
+    return float(2**boundary - last + curr)
 
 class Collect:
     def getData(self):
@@ -244,24 +244,27 @@ class Collect:
                 
                 tot_ios = diskIODiff['read_count'] + diskIODiff['write_count']
                 diskIO[disk]['total_iops'] = tot_ios / diskIODiff['timestamp']
-                diskIO[disk]['load_percent'] = diskIODiff['busy_time'] / (diskIODiff['timestamp'] * 1000.) * 100.
+                #diskIO[disk]['tot_ticks'] = diskIODiff['busy_time']
+                #diskIO[disk]['interval'] = diskIODiff['timestamp']
+                if 'busy_time' in diskIODiff:
+                    diskIO[disk]['load_percent'] = diskIODiff['busy_time'] / (diskIODiff['timestamp'] * 1000.) * 100.
                 
                 if diskIODiff['read_count']:
-                    diskIO[disk]['read_avg_wait'] = diskIODiff['read_time'] / diskIODiff['read_count']
-                    diskIO[disk]['read_avg_size'] = diskIODiff['read_bytes'] / diskIODiff['read_count']
+                    diskIO[disk]['read_avg_wait'] = float(diskIODiff['read_time'] / diskIODiff['read_count'])
+                    diskIO[disk]['read_avg_size'] = float(diskIODiff['read_bytes'] / diskIODiff['read_count'])
                 else:
                     diskIO[disk]['read_avg_wait'] = 0
                     diskIO[disk]['read_avg_size'] = 0
                     
                 if diskIODiff['write_count']:
-                    diskIO[disk]['write_avg_wait'] = diskIODiff['write_time'] / diskIODiff['write_count']
-                    diskIO[disk]['write_avg_size'] = diskIODiff['write_bytes'] / diskIODiff['write_count']
+                    diskIO[disk]['write_avg_wait'] = float(diskIODiff['write_time'] / diskIODiff['write_count'])
+                    diskIO[disk]['write_avg_size'] = float(diskIODiff['write_bytes'] / diskIODiff['write_count'])
                 else:
                     diskIO[disk]['write_avg_wait'] = 0
                     diskIO[disk]['write_avg_size'] = 0
                 
                 if tot_ios:
-                    diskIO[disk]['total_avg_wait'] = (diskIODiff['read_time'] + diskIODiff['write_time']) / tot_ios
+                    diskIO[disk]['total_avg_wait'] = float((diskIODiff['read_time'] + diskIODiff['write_time']) / tot_ios)
                     diskIO[disk]['total_avg_wait'] = 0
         
         cached_diskstats = diskIO
