@@ -97,6 +97,7 @@ configpath = ""
 verbose = False
 stacktrace = False
 added_oitc_parameter = 0
+temperatureIsFahrenheit = False
 initialized = False
 
 thread_stop_requested = False
@@ -118,6 +119,7 @@ sample_config = """
   config-update-mode = false
   auth = 
   customchecks = 
+  temperature-fahrenheit = false
 [oitc]
   host = 
   url = 
@@ -225,50 +227,102 @@ class Collect:
 
         #diskIOTotal = psutil.disk_io_counters(perdisk=False)._asdict()
         
-        #diskIO = psutil.disk_io_counters(perdisk=True)
-        diskIO = { disk: iops._asdict() for disk,iops in psutil.disk_io_counters(perdisk=True).items() }
-        diskIO['timestamp'] = time.time()
-        
-        for disk in diskIO:
-            if disk != "timestamp" and disk in cached_diskstats:
-                
-                diskIODiff = {}
-                diskIODiff['timestamp'] = wrapdiff(float(cached_diskstats['timestamp']), float(diskIO['timestamp']))
-                
-                for attr in diskIO[disk]:
-                    diff = wrapdiff(float(cached_diskstats[disk][attr]), float(diskIO[disk][attr]))
-                    diskIODiff[attr] = diff;
-                
-                diskIO[disk]['read_iops'] = diskIODiff['read_count'] / diskIODiff['timestamp']
-                diskIO[disk]['write_iops'] = diskIODiff['write_count'] / diskIODiff['timestamp']
-                
-                tot_ios = diskIODiff['read_count'] + diskIODiff['write_count']
-                diskIO[disk]['total_iops'] = tot_ios / diskIODiff['timestamp']
-                #diskIO[disk]['tot_ticks'] = diskIODiff['busy_time']
-                #diskIO[disk]['interval'] = diskIODiff['timestamp']
-                if 'busy_time' in diskIODiff:
-                    diskIO[disk]['load_percent'] = diskIODiff['busy_time'] / (diskIODiff['timestamp'] * 1000.) * 100.
-                
-                if diskIODiff['read_count']:
-                    diskIO[disk]['read_avg_wait'] = float(diskIODiff['read_time'] / diskIODiff['read_count'])
-                    diskIO[disk]['read_avg_size'] = float(diskIODiff['read_bytes'] / diskIODiff['read_count'])
-                else:
-                    diskIO[disk]['read_avg_wait'] = 0
-                    diskIO[disk]['read_avg_size'] = 0
+        diskIO = None
+        if hasattr(psutil, "disk_io_counters"):
+            #diskIO = psutil.disk_io_counters(perdisk=True)
+            diskIO = { disk: iops._asdict() for disk,iops in psutil.disk_io_counters(perdisk=True).items() }
+            diskIO['timestamp'] = time.time()
+            
+            for disk in diskIO:
+                if disk != "timestamp" and disk in cached_diskstats:
                     
-                if diskIODiff['write_count']:
-                    diskIO[disk]['write_avg_wait'] = float(diskIODiff['write_time'] / diskIODiff['write_count'])
-                    diskIO[disk]['write_avg_size'] = float(diskIODiff['write_bytes'] / diskIODiff['write_count'])
-                else:
-                    diskIO[disk]['write_avg_wait'] = 0
-                    diskIO[disk]['write_avg_size'] = 0
-                
-                if tot_ios:
-                    diskIO[disk]['total_avg_wait'] = float((diskIODiff['read_time'] + diskIODiff['write_time']) / tot_ios)
-                    diskIO[disk]['total_avg_wait'] = 0
+                    diskIODiff = {}
+                    diskIODiff['timestamp'] = wrapdiff(float(cached_diskstats['timestamp']), float(diskIO['timestamp']))
+                    
+                    for attr in diskIO[disk]:
+                        diff = wrapdiff(float(cached_diskstats[disk][attr]), float(diskIO[disk][attr]))
+                        diskIODiff[attr] = diff;
+                    
+                    diskIO[disk]['read_iops'] = diskIODiff['read_count'] / diskIODiff['timestamp']
+                    diskIO[disk]['write_iops'] = diskIODiff['write_count'] / diskIODiff['timestamp']
+                    
+                    tot_ios = diskIODiff['read_count'] + diskIODiff['write_count']
+                    diskIO[disk]['total_iops'] = tot_ios / diskIODiff['timestamp']
+                    #diskIO[disk]['tot_ticks'] = diskIODiff['busy_time']
+                    #diskIO[disk]['interval'] = diskIODiff['timestamp']
+                    if 'busy_time' in diskIODiff:
+                        diskIO[disk]['load_percent'] = diskIODiff['busy_time'] / (diskIODiff['timestamp'] * 1000.) * 100.
+                    
+                    if diskIODiff['read_count']:
+                        diskIO[disk]['read_avg_wait'] = float(diskIODiff['read_time'] / diskIODiff['read_count'])
+                        diskIO[disk]['read_avg_size'] = float(diskIODiff['read_bytes'] / diskIODiff['read_count'])
+                    else:
+                        diskIO[disk]['read_avg_wait'] = 0
+                        diskIO[disk]['read_avg_size'] = 0
+                        
+                    if diskIODiff['write_count']:
+                        diskIO[disk]['write_avg_wait'] = float(diskIODiff['write_time'] / diskIODiff['write_count'])
+                        diskIO[disk]['write_avg_size'] = float(diskIODiff['write_bytes'] / diskIODiff['write_count'])
+                    else:
+                        diskIO[disk]['write_avg_wait'] = 0
+                        diskIO[disk]['write_avg_size'] = 0
+                    
+                    if tot_ios:
+                        diskIO[disk]['total_avg_wait'] = float((diskIODiff['read_time'] + diskIODiff['write_time']) / tot_ios)
+                        diskIO[disk]['total_avg_wait'] = 0
+            
+            cached_diskstats = diskIO
         
-        cached_diskstats = diskIO
+        netIO = None
+        if hasattr(psutil, "net_io_counters"):
+            netIO = { device: data._asdict() for device,data in psutil.net_io_counters(pernic=True).items() }
+        
+        net_stats = None
+        if hasattr(psutil, "net_if_stats"):
+            net_stats = { device: data._asdict() for device,data in psutil.net_if_stats().items() }
 
+        sensors = {}
+        try:
+            if hasattr(psutil, "sensors_temperatures"):
+                sensors['temperatures'] = {}
+                for device,data in psutil.sensors_temperatures(fahrenheit=temperatureIsFahrenheit).items():
+                    sensors['temperatures'][device] = []
+                    for value in data:
+                        sensors['temperatures'][device].append(value._asdict())
+            else:
+                sensors['temperatures'] = {}
+        except:
+            if stacktrace:
+                traceback.print_exc()
+            if verbose:
+                print ("Could not get temperature sensor data!")
+        
+        try:
+            if hasattr(psutil, "sensors_fans"):
+                sensors['fans'] = {}
+                for device,data in psutil.sensors_fans().items():
+                    sensors['fans'][device] = []
+                    for value in data:
+                        sensors['fans'][device].append(value._asdict())
+            else:
+                sensors['fans'] = {}
+        except:
+            if stacktrace:
+                traceback.print_exc()
+            if verbose:
+                print ("Could not get fans sensor data!")
+        
+        try:
+            if hasattr(psutil, "sensors_battery"):
+                sensors['battery'] = psutil.sensors_battery()._asdict()
+            else:
+                sensors['battery'] = None
+        except:
+            if stacktrace:
+                traceback.print_exc()
+            if verbose:
+                print ("Could not get battery sensor data!")
+        
         if hasattr(psutil, "pids"):
             pids = psutil.pids()
         else:
@@ -525,6 +579,10 @@ class Collect:
             'disks': disks,
             'disk_io': diskIO,
             #'disk_io_total': diskIOTotal,
+            'net_io': netIO,
+            'net_stats': net_stats,
+            
+            'sensors': sensors,
     
             'cpu_total_percentage': cpuTotalPercentage,
             'cpu_percentage': cpuPercentage,
@@ -596,6 +654,11 @@ def check_update_data(data):
                         newconfig['default']['config-update-mode'] = "false"
                 if 'customchecks' in jdata[key]:
                     newconfig['default']['customchecks'] = str(jdata[key]['customchecks'])
+                if 'temperature-fahrenheit' in jdata[key]:
+                    if jdata[key]['temperature-fahrenheit'] in (1, "1", "true", "True"):
+                        newconfig['default']['temperature-fahrenheit'] = "true"
+                    else:
+                        newconfig['default']['temperature-fahrenheit'] = "false"
                 if 'oitc-host' in jdata[key]:
                     newconfig['oitc']['host'] = str(jdata[key]['oitc-host'])
                 if 'oitc-url' in jdata[key]:
@@ -981,6 +1044,7 @@ def print_help():
     print('-a --address <ip address>    : webserver ip address')
     print('-c --config <config path>    : config file path')
     print('--config-update-mode         : enable config update mode threw post request and /config to get current configuration')
+    print('--temperature-fahrenheit     : set temperature to fahrenheit if enabled (else use celsius)')
     print('--customchecks <file path>   : custom check config file path')
     print('--auth <user>:<password>     : enable http basic auth')
     print('-v --verbose                 : enable verbose mode')
@@ -1006,9 +1070,10 @@ def load_configuration():
     global added_oitc_parameter
     global configpath
     global enableSSL
+    global temperatureIsFahrenheit
     
     try:
-        opts, args = getopt.getopt(sys.argv[1:],"h:i:p:a:c:v",["interval=","port=","address=","config=","customchecks=","certfile=","keyfile=","auth=","oitc-host=","oitc-url=","oitc-apikey=","oitc-interval=","config-update-mode","verbose","stacktrace","help"])
+        opts, args = getopt.getopt(sys.argv[1:],"h:i:p:a:c:v",["interval=","port=","address=","config=","customchecks=","certfile=","keyfile=","auth=","oitc-host=","oitc-url=","oitc-apikey=","oitc-interval=","config-update-mode","temperature-fahrenheit","verbose","stacktrace","help"])
     except getopt.GetoptError:
         print_help()
         sys.exit(2)
@@ -1061,6 +1126,8 @@ def load_configuration():
             config['default']['stacktrace'] = "true"
         elif opt == "--config-update-mode":
             config['default']['config-update-mode'] = "true"
+        elif opt == "--temperature-fahrenheit":
+            config['default']['temperature-fahrenheit'] = "true"
         elif opt == "--oitc-host":
             config['oitc']['host'] = str(arg)
             added_oitc_parameter += 1
@@ -1085,6 +1152,11 @@ def load_configuration():
         stacktrace = True
     else:
         stacktrace = False
+        
+    if config['default']['temperature-fahrenheit'] in (1, "1", "true", "True", True):
+        temperatureIsFahrenheit = True
+    else:
+        temperatureIsFahrenheit = False
     
     if 'auth' in config['default'] and str(config['default']['auth']).strip():
         if not isBase64(config['default']['auth']):
