@@ -580,13 +580,15 @@ class Collect:
                 'system': platform.system(),
                 'kernel_version': platform.release(),
                 'mac_version': platform.mac_ver()[0],
-                'agent_version': agentVersion
+                'agent_version': agentVersion,
+                'temperature_unit': 'F' if temperatureIsFahrenheit else 'C'
             }
         except:
             agent = {
                 'last_updated': time.ctime(),
                 'last_updated_timestamp': round(time.time()),
-                'agent_version': agentVersion
+                'agent_version': agentVersion,
+                'temperature_unit': 'F' if temperatureIsFahrenheit else 'C'
             }
 
         out = {
