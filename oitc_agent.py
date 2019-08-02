@@ -65,6 +65,17 @@ if (sys.version_info > (3, 0)):
     import subprocess
     from subprocess import Popen, PIPE
 else:
+    print('#########################################################')
+    print('#             !!!   Python 2 Warning   !!!              #')
+    print('#                                                       #')
+    print('# Python 2 is End Of Life and will not be maintained    #')
+    print('# past  January 1, 2020!                                #')
+    print('# https://www.python.org/dev/peps/pep-0373/             #')
+    print('#                                                       #')
+    print('# Update your system to Python 3!                       #')
+    print('#########################################################')
+    print('')
+    
     from concurrent import futures
     import urllib
     import urllib2
@@ -76,6 +87,9 @@ else:
     import subprocess32 as subprocess
 try:
     import psutil
+    if psutil.version_info < (5, 5, 0):
+        raise ImportError('psutil version too old!')
+        
 except ImportError:
     if system is 'windows':
         print('Install Python psutil: python.exe -m pip install psutil')
@@ -1048,7 +1062,7 @@ def print_help():
     print('--customchecks <file path>   : custom check config file path')
     print('--auth <user>:<password>     : enable http basic auth')
     print('-v --verbose                 : enable verbose mode')
-    print('--stacktrace                 : print stacktrace for possible exceptions')
+    print('-s --stacktrace              : print stacktrace for possible exceptions')
     print('-h --help                    : print this help message and exit')
     print('\nAdd there parameters (all required) to enable transfer of check results to a openITCOCKPIT server:')
     print('--oitc-host <host id>        : host id from openITCOCKPIT')
@@ -1073,7 +1087,7 @@ def load_configuration():
     global temperatureIsFahrenheit
     
     try:
-        opts, args = getopt.getopt(sys.argv[1:],"h:i:p:a:c:v",["interval=","port=","address=","config=","customchecks=","certfile=","keyfile=","auth=","oitc-host=","oitc-url=","oitc-apikey=","oitc-interval=","config-update-mode","temperature-fahrenheit","verbose","stacktrace","help"])
+        opts, args = getopt.getopt(sys.argv[1:],"h:i:p:a:c:v:s",["interval=","port=","address=","config=","customchecks=","certfile=","keyfile=","auth=","oitc-host=","oitc-url=","oitc-apikey=","oitc-interval=","config-update-mode","temperature-fahrenheit","verbose","stacktrace","help"])
     except getopt.GetoptError:
         print_help()
         sys.exit(2)
@@ -1088,7 +1102,7 @@ def load_configuration():
             configpath = str(arg)
         elif opt in ("-v", "--verbose"):
             verbose = True
-        elif opt == "--stacktrace":
+        elif opt in ("-s", "--stacktrace"):
             stacktrace = True
     
     if configpath is not "":
@@ -1122,7 +1136,7 @@ def load_configuration():
             config['default']['auth'] = str(base64.b64encode(arg.encode())).encode("utf-8")
         elif opt in ("-v", "--verbose"):
             config['default']['verbose'] = "true"
-        elif opt == "--stacktrace":
+        elif opt in ("-s", "--stacktrace"):
             config['default']['stacktrace'] = "true"
         elif opt == "--config-update-mode":
             config['default']['config-update-mode'] = "true"
