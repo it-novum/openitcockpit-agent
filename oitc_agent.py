@@ -3,7 +3,7 @@
 # supports python2.7 and python3.7
 #
 #
-# start with parameters:    ./oitc_agent.py interval=30 port=3333 address=127.0.0.1
+# start with parameters:    ./oitc_agent.py -i 30 -p 3333 -a 127.0.0.1
 #
 # Download & install python
 #
@@ -87,7 +87,8 @@ else:
     import subprocess32 as subprocess
 try:
     import psutil
-    if psutil.version_info < (5, 5, 0):
+    if isPython3 and psutil.version_info < (5, 5, 0):
+        print('psutil >= 5.5.0 required!')
         raise ImportError('psutil version too old!')
         
 except ImportError:
@@ -387,7 +388,7 @@ class Collect:
             if hasattr(psutil, "sensors_battery"):
                 sensors['battery'] = psutil.sensors_battery()._asdict()
             else:
-                sensors['battery'] = None
+                sensors['battery'] = {}
         except:
             if stacktrace:
                 traceback.print_exc()
@@ -423,7 +424,9 @@ class Collect:
                         traceback.print_exc()
                     if verbose:
                         print ("'%s' Process is not allowing us to get the CPU usage!" % name if name != "" else str(pid))
-                
+            
+            except psutil.NoSuchProcess:
+                continue;
             except:
                 if stacktrace:
                     traceback.print_exc()
@@ -449,26 +452,28 @@ class Collect:
                 open_files = ""
                 children = []
                 
-                try:
-                    if callable(p.parent):
-                        ppid = p.parent().pid
-                except:
-                    if stacktrace:
-                        traceback.print_exc()
-                    if verbose:
-                        print ("'%s' Process is not allowing us to get the parent process id!" % str(pid))
-                try:
-                    if callable(p.children):
-                        with suppress_stdout_stderr():
-                            for child in p.children(recursive=True):
-                                children.append(child.pid)
-                                
-                except:
-                    if stacktrace:
-                        traceback.print_exc()
-                    if verbose:
-                        print ("'%s' Process is not allowing us to get the child process ids!" % str(pid))
-                
+                if pid not in (1, 2):
+                    try:
+                        if callable(p.parent):
+                            ppid = p.parent().pid
+                    except (psutil.NoSuchProcess, FileNotFoundError, ProcessLookupError):
+                        continue;
+                    except AttributeError:
+                        if stacktrace:
+                            traceback.print_exc()
+                        if verbose:
+                            print ("'%s' Process is not allowing us to get the parent process id!" % str(pid))
+                    
+                    try:
+                        if callable(p.children):
+                            with suppress_stdout_stderr():
+                                for child in p.children(recursive=True):
+                                    children.append(child.pid)
+                    except:
+                        if stacktrace:
+                            traceback.print_exc()
+                        if verbose:
+                            print ("'%s' Process is not allowing us to get the child process ids!" % str(pid))
                         
                 try:
                     if callable(p.status):
@@ -568,7 +573,7 @@ class Collect:
                         traceback.print_exc()
                     if verbose:
                         print ("'%s' Process is not allowing us to get the percent of memory usage!" % name if name != "" else str(pid))
-                        
+
                 try:
                     if hasattr(p, "num_fds") and callable(p.num_fds):
                         num_fds = p.num_fds()
@@ -620,6 +625,8 @@ class Collect:
                     'nice_level': nice
                 }
                 processes.append(process)
+            except psutil.NoSuchProcess:
+                continue;
             except:
                 if stacktrace:
                     traceback.print_exc()
