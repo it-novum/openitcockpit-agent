@@ -1146,7 +1146,7 @@ def load_configuration():
     global temperatureIsFahrenheit
     
     try:
-        opts, args = getopt.getopt(sys.argv[1:],"h:i:p:a:c:v:s",["interval=","port=","address=","config=","customchecks=","certfile=","keyfile=","auth=","oitc-host=","oitc-url=","oitc-apikey=","oitc-interval=","config-update-mode","temperature-fahrenheit","verbose","stacktrace","help"])
+        opts, args = getopt.getopt(sys.argv[1:],"h:i:p:a:c:vs",["interval=","port=","address=","config=","customchecks=","certfile=","keyfile=","auth=","oitc-host=","oitc-url=","oitc-apikey=","oitc-interval=","config-update-mode","temperature-fahrenheit","verbose","stacktrace","help"])
     except getopt.GetoptError:
         print_help()
         sys.exit(2)
@@ -1225,6 +1225,7 @@ def load_configuration():
         stacktrace = True
     else:
         stacktrace = False
+
         
     if config['default']['temperature-fahrenheit'] in (1, "1", "true", "True", True):
         temperatureIsFahrenheit = True
