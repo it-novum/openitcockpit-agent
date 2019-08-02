@@ -106,7 +106,8 @@ agentVersion = "1.0.0"
 enableSSL = False
 cached_check_data = {}
 cached_customchecks_check_data = {}
-cached_diskstats = {}
+cached_diskIO = {}
+cached_netIO = {}
 configpath = ""
 verbose = False
 stacktrace = False
@@ -211,7 +212,9 @@ def wrapdiff(last, curr):
 
 class Collect:
     def getData(self):
-        global cached_diskstats
+        global cached_diskIO
+        global cached_netIO
+        
         # CPU #
         cpuTotalPercentage = psutil.cpu_percent()
         cpuPercentage = psutil.cpu_percent(interval=0, percpu=True)
@@ -248,13 +251,13 @@ class Collect:
             diskIO['timestamp'] = time.time()
             
             for disk in diskIO:
-                if disk != "timestamp" and disk in cached_diskstats:
+                if disk != "timestamp" and disk in cached_diskIO:
                     
                     diskIODiff = {}
-                    diskIODiff['timestamp'] = wrapdiff(float(cached_diskstats['timestamp']), float(diskIO['timestamp']))
+                    diskIODiff['timestamp'] = wrapdiff(float(cached_diskIO['timestamp']), float(diskIO['timestamp']))
                     
                     for attr in diskIO[disk]:
-                        diff = wrapdiff(float(cached_diskstats[disk][attr]), float(diskIO[disk][attr]))
+                        diff = wrapdiff(float(cached_diskIO[disk][attr]), float(diskIO[disk][attr]))
                         diskIODiff[attr] = diff;
                     
                     diskIO[disk]['read_iops'] = diskIODiff['read_count'] / diskIODiff['timestamp']
@@ -285,11 +288,65 @@ class Collect:
                         diskIO[disk]['total_avg_wait'] = float((diskIODiff['read_time'] + diskIODiff['write_time']) / tot_ios)
                         diskIO[disk]['total_avg_wait'] = 0
             
-            cached_diskstats = diskIO
+            cached_diskIO = diskIO
         
         netIO = None
         if hasattr(psutil, "net_io_counters"):
             netIO = { device: data._asdict() for device,data in psutil.net_io_counters(pernic=True).items() }
+            netIO['timestamp'] = time.time()
+            
+            for device in netIO:
+                if device != "timestamp" and device in cached_netIO:
+                    
+                    netIODiff = {}
+                    netIODiff['timestamp'] = wrapdiff(float(cached_netIO['timestamp']), float(netIO['timestamp']))
+                    
+                    for attr in netIO[device]:
+                        diff = wrapdiff(float(cached_netIO[device][attr]), float(netIO[device][attr]))
+                        netIODiff[attr] = diff;
+                        
+                    if netIODiff['bytes_sent']:
+                        netIO[device]['avg_bytes_sent_ps'] = float(netIODiff['bytes_sent'] / netIODiff['timestamp'])
+                    else:
+                        netIO[device]['avg_bytes_sent_ps'] = 0
+                    
+                    if netIODiff['bytes_recv']:
+                        netIO[device]['avg_bytes_recv_ps'] = float(netIODiff['bytes_recv'] / netIODiff['timestamp'])
+                    else:
+                        netIO[device]['avg_bytes_recv_ps'] = 0
+                        
+                    if netIODiff['packets_sent']:
+                        netIO[device]['avg_packets_sent_ps'] = float(netIODiff['packets_sent'] / netIODiff['timestamp'])
+                    else:
+                        netIO[device]['avg_packets_sent_ps'] = 0
+                    
+                    if netIODiff['packets_recv']:
+                        netIO[device]['avg_packets_recv_ps'] = float(netIODiff['packets_recv'] / netIODiff['timestamp'])
+                    else:
+                        netIO[device]['avg_packets_recv_ps'] = 0
+                        
+                    if netIODiff['errin']:
+                        netIO[device]['avg_errin'] = float(netIODiff['errin'] / netIODiff['timestamp'])
+                    else:
+                        netIO[device]['avg_errin'] = 0
+                        
+                    if netIODiff['errout']:
+                        netIO[device]['avg_errout'] = float(netIODiff['errout'] / netIODiff['timestamp'])
+                    else:
+                        netIO[device]['avg_errout'] = 0
+                        
+                    if netIODiff['dropin']:
+                        netIO[device]['avg_dropin'] = float(netIODiff['dropin'] / netIODiff['timestamp'])
+                    else:
+                        netIO[device]['avg_dropin'] = 0
+                        
+                    if netIODiff['dropout']:
+                        netIO[device]['avg_dropout'] = float(netIODiff['dropout'] / netIODiff['timestamp'])
+                    else:
+                        netIO[device]['avg_dropout'] = 0
+                    
+                
+            cached_netIO = netIO
         
         net_stats = None
         if hasattr(psutil, "net_if_stats"):
