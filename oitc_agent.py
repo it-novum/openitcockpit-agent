@@ -287,6 +287,7 @@ class Collect:
                     
                     if tot_ios:
                         diskIO[disk]['total_avg_wait'] = float((diskIODiff['read_time'] + diskIODiff['write_time']) / tot_ios)
+                    else:
                         diskIO[disk]['total_avg_wait'] = 0
             
             cached_diskIO = diskIO
