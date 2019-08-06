@@ -424,7 +424,7 @@ class Collect:
                     if stacktrace:
                         traceback.print_exc()
                     if verbose:
-                        print ("'%s' Process is not allowing us to get the CPU usage!" % name if name != "" else str(pid))
+                        print ("'%s' Process is not allowing us to get the CPU usage!" % (name if name != "" else str(pid)))
             
             except psutil.NoSuchProcess:
                 continue;
@@ -457,13 +457,13 @@ class Collect:
                     try:
                         if callable(p.parent):
                             ppid = p.parent().pid
-                    except (psutil.NoSuchProcess, FileNotFoundError, ProcessLookupError):
+                    except (psutil.NoSuchProcess, ProcessLookupError):
                         continue;
                     except AttributeError:
                         if stacktrace:
                             traceback.print_exc()
                         if verbose:
-                            print ("'%s' Process is not allowing us to get the parent process id!" % str(pid))
+                            print ("'%s' Process is not allowing us to get the parent process id!" % (str(pid)))
                     
                     try:
                         if callable(p.children):
@@ -474,139 +474,163 @@ class Collect:
                         if stacktrace:
                             traceback.print_exc()
                         if verbose:
-                            print ("'%s' Process is not allowing us to get the child process ids!" % str(pid))
+                            print ("'%s' Process is not allowing us to get the child process ids!" % (str(pid)))
                         
                 try:
                     if callable(p.status):
                         status = p.status()
                     else:
                         status = p.status
+                except (psutil.NoSuchProcess, ProcessLookupError):
+                        continue;
                 except:
                     if stacktrace:
                         traceback.print_exc()
                     if verbose:
-                        print ("'%s' Process is not allowing us to get the status option!" % name if name != "" else str(pid))
+                        print ("'%s' Process is not allowing us to get the status option!" % (name if name != "" else str(pid)))
                 
                 try:
                     if callable(p.username):
                         username = p.username()
                     else:
                         username = p.username
+                except (psutil.NoSuchProcess, ProcessLookupError):
+                        continue;
                 except:
                     if stacktrace:
                         traceback.print_exc()
                     if verbose:
-                        print ("'%s' Process is not allowing us to get the username option!" % name if name != "" else str(pid))
+                        print ("'%s' Process is not allowing us to get the username option!" % (name if name != "" else str(pid)))
                     
                 try:
                     if callable(p.nice):
                         nice = p.nice()
                     else:
                         nice = p.nice
+                except (psutil.NoSuchProcess, ProcessLookupError):
+                        continue;
                 except:
                     if stacktrace:
                         traceback.print_exc()
                     if verbose:
-                        print ("'%s' Process is not allowing us to get the nice option!" % name if name != "" else str(pid))
+                        print ("'%s' Process is not allowing us to get the nice option!" % (name if name != "" else str(pid)))
                     
                 try:
                     if callable(p.name):
                         name = p.name()
                     else:
                         name = p.name
+                except (psutil.NoSuchProcess, ProcessLookupError):
+                        continue;
                 except:
                     if stacktrace:
                         traceback.print_exc()
                     if verbose:
-                        print ("'%s' Process is not allowing us to get the name option!" % name if name != "" else str(pid))
+                        print ("'%s' Process is not allowing us to get the name option!" % (name if name != "" else str(pid)))
                     
                 try:
                     if callable(p.exe):
                         exe = p.exe()
                     else:
                         exe = p.exe
+                except (psutil.NoSuchProcess, ProcessLookupError):
+                        continue;
                 except:
                     if stacktrace:
                         traceback.print_exc()
                     if verbose:
-                        print ("'%s' Process is not allowing us to get the exec option!" % name if name != "" else str(pid))
+                        print ("'%s' Process is not allowing us to get the exec option!" % (name if name != "" else str(pid)))
                         
                 try:
                     if callable(p.cmdline):
                         cmdline = p.cmdline()
                     else:
                         cmdline = p.cmdline
+                except (psutil.NoSuchProcess, ProcessLookupError):
+                        continue;
                 except:
                     if stacktrace:
                         traceback.print_exc()
                     if verbose:
-                        print ("'%s' Process is not allowing us to get the cmdline option!" % name if name != "" else str(pid))
+                        print ("'%s' Process is not allowing us to get the cmdline option!" % (name if name != "" else str(pid)))
                     
                 try:
                     if hasattr(p, "cpu_percent") and callable(p.cpu_percent):
                         cpu_percent = p.cpu_percent(interval=None)
                     else:
                         cpu_percent = p.get_cpu_percent(interval=None)
+                except (psutil.NoSuchProcess, ProcessLookupError):
+                        continue;
                 except:
                     if stacktrace:
                         traceback.print_exc()
                     if verbose:
-                        print ("'%s' Process is not allowing us to get the CPU usage!" % name if name != "" else str(pid))
+                        print ("'%s' Process is not allowing us to get the CPU usage!" % (name if name != "" else str(pid)))
                         
                 try:
                     if hasattr(p, "memory_info") and callable(p.memory_info):
                         memory_info = p.memory_info()._asdict()
                     else:
                         memory_info = p.get_memory_info()._asdict()
+                except (psutil.NoSuchProcess, ProcessLookupError):
+                        continue;
                 except:
                     if stacktrace:
                         traceback.print_exc()
                     if verbose:
-                        print ("'%s' Process is not allowing us to get memory usage information!" % name if name != "" else str(pid))
+                        print ("'%s' Process is not allowing us to get memory usage information!" % (name if name != "" else str(pid)))
                     
                 try:
                     if hasattr(p, "memory_percent") and callable(p.memory_percent):
                         memory_percent = p.memory_percent()
                     else:
                         memory_percent = p.get_memory_percent()
+                except (psutil.NoSuchProcess, ProcessLookupError):
+                        continue;
                 except:
                     if stacktrace:
                         traceback.print_exc()
                     if verbose:
-                        print ("'%s' Process is not allowing us to get the percent of memory usage!" % name if name != "" else str(pid))
+                        print ("'%s' Process is not allowing us to get the percent of memory usage!" % (name if name != "" else str(pid)))
 
                 try:
                     if hasattr(p, "num_fds") and callable(p.num_fds):
                         num_fds = p.num_fds()
                     elif hasattr(p, "get_num_fds") and callable(p.get_num_fds):
                         num_fds = p.get_num_fds()
+                except (psutil.NoSuchProcess, ProcessLookupError):
+                        continue;
                 except:
                     if stacktrace:
                         traceback.print_exc()
                     if verbose:
-                        print ("'%s' Process is not allowing us to get the num_fds option!" % name if name != "" else str(pid))
+                        print ("'%s' Process is not allowing us to get the num_fds option!" % (name if name != "" else str(pid)))
                 
                 try:
                     if hasattr(p, "io_counters") and callable(p.io_counters):
                         io_counters = p.io_counters.__dict__
                     elif hasattr(p, "get_io_counters") and callable(p.get_io_counters):
                         io_counters = p.get_io_counters().__dict__
+                except (psutil.NoSuchProcess, ProcessLookupError):
+                        continue;
                 except:
                     if stacktrace:
                         traceback.print_exc()
                     if verbose:
-                        print ("'%s' Process is not allowing us to get the IO counters!" % name if name != "" else str(pid))
+                        print ("'%s' Process is not allowing us to get the IO counters!" % (name if name != "" else str(pid)))
                 
                 try:
                     if hasattr(p, "open_files") and callable(p.open_files):
                         open_files = p.open_files()
                     else:
                         open_files = p.get_open_files()
+                except (psutil.NoSuchProcess, ProcessLookupError):
+                        continue;
                 except psutil.AccessDenied:
                     if stacktrace:
                         traceback.print_exc()
                     if verbose:
-                        print ("'%s' Process is not allowing us to get the open_files option!" % name if name != "" else str(pid))
+                        print ("'%s' Process is not allowing us to get the open_files option!" % (name if name != "" else str(pid)))
                     
                 process = {
                     'name': name,
@@ -936,7 +960,7 @@ def collect_data_for_cache(check_interval):
 
 def run_customcheck_command(check):
     if verbose:
-        print('start custom check "' + check['name'] + '" with timeout ' + str(check['timeout']) + ' at '+str(round(time.time())))
+        print('start custom check "%s" with timeout %s at %s' % (str(check['name']), str(check['timeout']), str(round(time.time()))))
     cached_customchecks_check_data[check['name']]['running'] = "true";
     cached_customchecks_check_data[check['name']]['command'] = check['command']
     
@@ -955,7 +979,7 @@ def run_customcheck_command(check):
             cached_customchecks_check_data[check['name']]['returncode'] = p.returncode
         except subprocess.TimeoutExpired:
             if verbose:
-                print('custom check "' + check['name'] + '" timed out')
+                print('custom check "%s" timed out' % (check['name']))
             p.kill()    #not needed; just to be sure
             cached_customchecks_check_data[check['name']]['result'] = None
             cached_customchecks_check_data[check['name']]['error'] = 'Command timeout after ' + str(check['timeout']) + ' seconds'
@@ -965,7 +989,7 @@ def run_customcheck_command(check):
         if stacktrace:
             traceback.print_exc()
         if verbose:
-            print ('An error occured while running the custom check "' + check['name'] + '"! Enable --stacktrace to get more information.')
+            print ('An error occured while running the custom check "%s"! Enable --stacktrace to get more information.' % (check['name']))
     
     cached_customchecks_check_data[check['name']]['last_updated_timestamp'] = round(time.time())
     cached_customchecks_check_data[check['name']]['last_updated'] = time.ctime()
@@ -980,12 +1004,12 @@ def process_customcheck_results(future_checks):
             if not future.result(): #if run_customcheck_command do not return True (exception/error)
                 del cached_customchecks_check_data[check['name']]['running']
             if verbose:
-                print('custom check "' + check['name'] + '" stopped')
+                print('custom check "%s" stopped' % (check['name']))
         except:
             if stacktrace:
                 traceback.print_exc()
             if verbose:
-                print ('An error occured while checking custom check "' + check['name'] + '" alive! Enable --stacktrace to get more information.')
+                print ('An error occured while checking custom check "%s" alive! Enable --stacktrace to get more information.' % (check['name']))
     
     if len(cached_customchecks_check_data) > 0:
         cached_check_data['customchecks'] = cached_customchecks_check_data;
@@ -1002,7 +1026,7 @@ def collect_customchecks_data_for_cache(customchecks):
             max_workers = int(customchecks['default']['max_worker_threads'])
             
     if verbose:
-        print('Start thread pool with max. ' + str(max_workers) + ' workers')
+        print('Start thread pool with max. %s workers' % (str(max_workers)))
     
     executor = futures.ThreadPoolExecutor(max_workers=max_workers)
     
@@ -1102,7 +1126,7 @@ def process_webserver(enableSSL=False):
         protocol = 'https'
         httpd.socket = ssl.wrap_socket(httpd.socket, keyfile=config['default']['keyfile'], certfile=config['default']['certfile'], server_side=True)
     if verbose:
-        print("Server startet at %s://%s:%s with a check interval of %d seconds"%(protocol, config['default']['address'], str(config['default']['port']), int(config['default']['interval'])))
+        print("Server startet at %s://%s:%s with a check interval of %d seconds" % (protocol, config['default']['address'], str(config['default']['port']), int(config['default']['interval'])))
     
     while not thread_stop_requested:
         try:
@@ -1176,12 +1200,12 @@ def load_configuration():
         if file_readable(configpath):
             with open(configpath, 'r') as configfile:
                 if verbose:
-                    print('load agent config file "' + configpath + '"')
+                    print('load agent config file "%s"' % (configpath))
                 config.read_file(configfile)
         else:
             with open(configpath, 'w') as configfile:
                 if verbose:
-                    print('create new default agent config file "' + configpath + '"')
+                    print('create new default agent config file "%s"' % (configpath))
                 config.write(configfile)
     
     added_oitc_parameter = 0
@@ -1305,7 +1329,7 @@ def load_main_processing():
         if file_readable(config['default']['customchecks']):
             with open(config['default']['customchecks'], 'r') as customchecks_configfile:
                 if verbose:
-                    print('load custom check config file "' + config['default']['customchecks'] + '"')
+                    print('load custom check config file "%s"' % (config['default']['customchecks']))
                 customchecks.read_file(customchecks_configfile)
             if customchecks:
                 permanent_customchecks_check_thread(collect_customchecks_data_for_cache, (customchecks,))
