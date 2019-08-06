@@ -400,6 +400,26 @@ class Collect:
             pids = psutil.pids()
         else:
             pids = psutil.get_pid_list()
+        
+        system_load_avg = []
+        try:
+            if hasattr(psutil, "getloadavg"):
+                system_load_avg = psutil.getloadavg()
+        except:
+            if stacktrace:
+                traceback.print_exc()
+            if verbose:
+                print ("Could not get average system load!")
+                
+        users = []
+        try:
+            if hasattr(psutil, "users"):
+                users = [ user._asdict() for user in psutil.users() ]
+        except:
+            if stacktrace:
+                traceback.print_exc()
+            if verbose:
+                print ("Could not get users, connected to the system!")
 
         #processes = [ psutil.Process(pid).as_dict() for pid in pids ]
         windows_services = []
@@ -693,6 +713,9 @@ class Collect:
             'cpu_percentage': cpuPercentage,
             'cpu_total_percentage_detailed': cpuTotalPercentageDetailed,
             'cpu_percentage_detailed': cpuPercentageDetailed,
+            
+            'system_load': system_load_avg,
+            'users': users,
             
             'memory': memory._asdict(),
             'swap': swap._asdict(),
