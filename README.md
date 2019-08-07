@@ -70,8 +70,9 @@ Options (script start parameters overwrite options in config file):
 |--customchecks       |file path       |custom check config file path (absolute path recommended)    | 
 |--auth       |user:password       |enable http basic auth     | 
 |-v --verbose       |       |enable verbose mode (information/errors without stackstrace)     | 
-|--stacktrace       |       |print stackstrace for possible exceptions     | 
+|-s --stacktrace       |       |print stackstrace for possible exceptions     | 
 |--config-update-mode       |       |enable configuration update mode threw post request and /config to get current configuration     | 
+|--temperature-fahrenheit       |       |set temperature to fahrenheit if enabled (else use celsius)     | 
 |-h --help       |       |print a help message and exit     | 
 
 Add there parameters to enable ssl encrypted http(s) server:
@@ -133,9 +134,12 @@ Sample config file (with default script values):
   keyfile = 
   verbose = false
   stacktrace = false
+  config-update-mode = false
   auth = 
   customchecks = 
+  temperature-fahrenheit = false
 [oitc]
+  host = 
   url = 
   apikey = 
   interval = 60
@@ -169,14 +173,17 @@ JSON Example (file: new_config.json) for update mode and http://address:port/con
         "address": "127.0.0.1",
         "certfile": "/path",
         "keyfile": "",
-        "verbose": "1",
-        "stacktrace": "0",
+        "verbose": "true",
+        "stacktrace": "false",
+        "config-update-mode": "false",
         "auth": "user:pass",
         "customchecks": "/path",
+        "temperature-fahrenheit": "false",
+        "oitc-host": "hostid_123456",
         "oitc-url": "https://demo.openitcockpit.io",
         "oitc-apikey": "",
         "oitc-interval": 60,
-        "oitc-enabled": "0"
+        "oitc-enabled": "false"
     },
     "customchecks": {
         "default": {
