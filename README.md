@@ -3,7 +3,9 @@ Monitoring agent for openITCOCKPIT
 
 1. [Installation](#Installation)
 2. [Usage](#Usage)
-2. [Sample files](#Sample-files)
+3. [Sample files](#Sample-files)
+4. [Agent build instructions](#Agent-build-instructions)
+
 
 ## Installation
 #### Dependencies
@@ -189,4 +191,73 @@ JSON Example (file: new_config.json) for update mode and http://address:port/con
         }
     }
 }
+```
+
+
+## Agent build instructions
+
+### Python 3 - Linux
+
+##### Create python virtual environment
+Make sure pip for python3 is installed
+
+```
+apt install python3-pip
+pip install --upgrade virtualenv
+python3 -m venv ./python3-linux-env
+source ./python3-linux-env/bin/activate
+./python3-linux-env/bin/pip install -r requirements.txt pyinstaller
+deactivate
+
+zip -rq ./environments/python3-linux-env.zip python3-linux-env
+```
+
+#### Build executable with pyinstaller
+
+```
+apt install unzip
+unzip -q ./environments/python3-linux-env.zip
+
+source ./python3-linux-env/bin/activate
+sudo ./python3-linux-env/bin/python3 ./python3-linux-env/bin/pyinstaller oitc_agent.py --onefile
+deactivate
+sudo mv ./dist/oitc_agent ./executables/openitcockpit-agent-python3.run
+sudo rm -r ./dist ./build ./__pycache__ oitc_agent.spec
+sudo chmod +x ./executables/openitcockpit-agent-python3.run
+
+sudo rm -rf python3-linux-env
+```
+
+---
+
+### Python 2.7 - Linux
+
+#### Create python virtual environment
+Make sure pip for python2 is installed
+
+```
+apt install python-pip
+pip2 install --upgrade virtualenv
+virtualenv -p python2.7 ./python2.7-linux-env
+source ./python2.7-linux-env/bin/activate
+./python2.7-linux-env/bin/pip2 install -r requirements_python2.txt pyinstaller
+deactivate
+
+zip -rq ./environments/python2.7-linux-env.zip python2.7-linux-env
+```
+
+#### Build executable with pyinstaller
+
+```
+apt install unzip
+unzip -q ./environments/python2.7-linux-env.zip
+
+source ./python2.7-linux-env/bin/activate
+sudo ./python2.7-linux-env/bin/python2 ./python2.7-linux-env/bin/pyinstaller oitc_agent.py --onefile
+deactivate
+sudo mv ./dist/oitc_agent ./executables/openitcockpit-agent-python2.run
+sudo rm -r ./dist ./build oitc_agent.spec
+sudo chmod +x ./executables/openitcockpit-agent-python2.run
+
+sudo rm -rf python2.7-linux-env
 ```
