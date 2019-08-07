@@ -7,6 +7,8 @@ Monitoring agent for openITCOCKPIT
 4. [Agent build instructions](#Agent-build-instructions)
 
 
+---
+
 ## Installation
 #### Dependencies
 
@@ -38,6 +40,9 @@ Monitoring agent for openITCOCKPIT
 - Install python version (2.x) and psutil: ```apt-get install python python-psutil```
 - Uninstall psutil pip package to use the newer apt package version: ```pip uninstall psutil```
 - Install dependencies: ```pip install configparser futures subprocess32```
+
+
+---
 
 ## Usage
 
@@ -193,6 +198,7 @@ JSON Example (file: new_config.json) for update mode and http://address:port/con
 }
 ```
 
+---
 
 ## Agent build instructions
 
@@ -227,8 +233,6 @@ sudo chmod +x ./executables/openitcockpit-agent-python3.run
 
 sudo rm -rf python3-linux-env
 ```
-
----
 
 ### Python 2.7 - Linux
 
