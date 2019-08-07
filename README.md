@@ -272,3 +272,76 @@ sudo chmod +x ./executables/openitcockpit-agent-python2.run
 
 sudo rm -rf python2.7-linux-env
 ```
+
+### Python 3 - Windows
+
+#### Using a real Windows
+
+Make sure python3 and pip for python3 is installed
+
+Download & install latest python version (3.x) from https://www.python.org/downloads/windows/
+
+Run powershell as Administrator and execute the following commands
+
+##### Create python virtual environment and build executable with pyinstaller on windows
+
+```
+cd /
+python.exe -m venv ./python3-windows-env
+.\python3-windows-env\Scripts\activate.bat
+.\python3-windows-env\Scripts\pip.exe install configparser psutil>=5.5.0 pyinstaller
+.\python3-windows-env\Scripts\pyinstaller.exe oitc_agent.py --onefile
+.\python3-windows-env\Scripts\deactivate.bat
+
+mv .\dist\oitc_agent.exe .\openitcockpit-agent-python3.exe
+
+rm -r -fo .\dist
+rm -r -fo .\build
+rm -r -fo .\__pycache__
+rm -r -fo .\oitc_agent.spec
+# rm -r -fo .\python3-windows-env
+```
+
+
+#### Using wine (not recommended -> psutil too old; version check need to be fixed in script before building)
+
+##### Initial wine and python installation:
+
+```
+apt-get install wine wine32
+wget https://www.python.org/ftp/python/3.4.4/python-3.4.4.amd64.msi
+wine msiexec /i python-3.4.4.amd64.msi /L*v log.txt
+```
+
+##### Create python virtual environment
+
+```
+wine ~/.wine/drive_c/Python34/python.exe -m venv ./python3-wine-env
+wine cmd
+./python3-wine-env/Scripts/activate.bat
+./python3-wine-env/Scripts/pip.exe install configparser psutil==3.4.2 pyinstaller
+./python3-wine-env/Scripts/deactivate.bat
+exit
+
+zip -rq ./environments/python3-wine-env.zip python3-wine-env
+rm -rf python3-wine-env
+```
+
+#### Build executable with pyinstaller on linux
+
+```
+apt install unzip
+unzip -q ./environments/python3-wine-env.zip
+
+wine cmd
+./python3-wine-env/Scripts/activate.bat
+./python3-wine-env/Scripts/pyinstaller.exe oitc_agent.py --onefile
+./python3-wine-env/Scripts/deactivate.bat
+exit
+
+sudo mv ./dist/oitc_agent.exe ./executables/openitcockpit-agent-python3.exe
+sudo rm -r ./dist ./build ./__pycache__ oitc_agent.spec
+sudo chmod +x ./executables/openitcockpit-agent-python3.exe
+
+sudo rm -rf python3-wine-env
+```
