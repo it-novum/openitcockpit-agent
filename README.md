@@ -209,6 +209,13 @@ JSON Example (file: new_config.json) for update mode and http://address:port/con
 
 ## Agent build instructions
 
+Clone this repository to your filesystem and run the following commands in the repository folder
+
+```
+git clone https://github.com/it-novum/openitcockpit-agent.git
+cd openitcockpit-agent
+```
+
 ### Python 3 - Linux
 
 ##### Create python virtual environment
@@ -344,4 +351,40 @@ sudo rm -r ./dist ./build ./__pycache__ oitc_agent.spec
 sudo chmod +x ./executables/openitcockpit-agent-python3.exe
 
 sudo rm -rf python3-wine-env
+```
+
+### Python 3 - macOS
+
+Make sure python3 is installed
+
+```
+brew install python
+# export PATH="/usr/local/opt/python/libexec/bin:$PATH"
+```
+
+##### Create python virtual environment
+
+```
+python3 -m venv ./python3-macos-env
+source ./python3-macos-env/bin/activate
+./python3-macos-env/bin/python3 -m pip install -r requirements.txt pyinstaller
+deactivate
+zip -rq ./environments/python3-macos-env.zip python3-macos-env
+rm -rf python3-macos-env
+```
+
+#### Build executable with pyinstaller on macOS
+
+```
+unzip -q ./environments/python3-macos-env.zip
+source ./python3-macos-env/bin/activate
+
+./python3-macos-env/bin/python3 ./python3-macos-env/bin/pyinstaller oitc_agent.py --onefile
+deactivate
+
+mv ./dist/oitc_agent ./executables/openitcockpit-agent-python3.macos
+rm -r ./dist ./build ./__pycache__ oitc_agent.spec
+chmod +x ./executables/openitcockpit-agent-python3.macos
+
+rm -rf python3-macos-env
 ```
