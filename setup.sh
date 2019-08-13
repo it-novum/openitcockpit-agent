@@ -30,7 +30,7 @@ function write_service_file {
 
 function write_launchd_file {
     curl -sS "$download_url_launchd" -o "$launchd_file"
-    sed -i "s/\\<string\\>\\/etc\\/openitcockpit-agent\\/config.conf\\<\\/string\\>/\\<string\\>${config_file//\//\\/}\\<\\/string\\>/" "$launchd_file"
+    sed -i "" "s/\\/etc\\/openitcockpit-agent\\/config.conf/${config_file//\//\\/}/" "$launchd_file"
 }
 
 function write_config_file {
@@ -111,7 +111,7 @@ download_url_config="https://git.binsky.org/uploads/-/system/personal_snippet/9/
 download_url_customchecks="https://git.binsky.org/uploads/-/system/personal_snippet/9/50a9caeacca7c440863af2fb0a6892fb/customchecks.cnf"
 download_url_initd="https://git.binsky.org/uploads/-/system/personal_snippet/9/df317ebefa7dc2d59a9ea2091f3dcba4/openitcockpit-agent.initd"
 download_url_service="https://git.binsky.org/uploads/-/system/personal_snippet/9/c31d48851ae7bcc6b51dd2b4ec67c9a4/openitcockpit-agent.service"
-download_url_launchd="https://git.binsky.org/uploads/-/system/personal_snippet/9/c31d48851ae7bcc6b51dd2b4ec67c9a4/openitcockpit-agent.service"
+download_url_launchd="https://git.binsky.org/uploads/-/system/personal_snippet/9/94f681275cf9019fa673fb5a37d4d756/com.it-novum.openitcockpit.agent.plist"
 
 if pgrep systemd-journal > /dev/null; then
     use_initd=0
@@ -171,13 +171,13 @@ else
     echo "You can leave the default options and just press enter if you are ok with them."
     echo ""
 
-    read -r -p "Agent config file path: " -e -i $config_file custom_config_file
+    read -r -p "Agent config file path: ($config_file) " -e custom_config_file
 
     if [ "$custom_config_file" != "" ]; then
         config_file=$custom_config_file
     fi
 
-    read -r -p "Customcheck config file path: " -e -i $customchecks_file custom_customchecks_file
+    read -r -p "Customcheck config file path: ($customchecks_file) " -e custom_customchecks_file
 
     if [ "$custom_customchecks_file" != "" ]; then
         customchecks_file=$custom_customchecks_file

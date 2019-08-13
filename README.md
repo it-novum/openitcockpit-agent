@@ -25,6 +25,10 @@ Download and run setup.sh as root:
 ```
 /bin/bash <(curl -sS https://git.binsky.org/uploads/-/system/personal_snippet/9/63e13f9f00266538b3bce8f45774f06b/setup.sh)
 ```
+or
+```
+curl -sS https://git.binsky.org/uploads/-/system/personal_snippet/9/bd1ed125b2f6e5b19540dbcf9f3b3d88/setup.sh -o /tmp/setup.sh && bash /tmp/setup.sh && rm /tmp/setup.sh
+```
 
 ## Developer installation
 
