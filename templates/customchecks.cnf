@@ -1,0 +1,14 @@
+[default]
+# max_worker_threads should be increased with increasing number of custom checks
+# but consider: each thread needs (a bit) memory
+max_worker_threads = 8
+[username]
+command = whoami
+interval = 30
+timeout = 5
+enabled = false
+[uname]
+command = uname -a
+interval = 15
+timeout = 5
+enabled = false 

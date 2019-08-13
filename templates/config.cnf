@@ -1,0 +1,18 @@
+[default]
+interval = 30
+port = 3333
+address = 127.0.0.1
+certfile = 
+keyfile = 
+verbose = false
+stacktrace = false
+config-update-mode = false
+auth = 
+customchecks = 
+temperature-fahrenheit = false
+[oitc]
+host = 
+url = 
+apikey = 
+interval = 60
+enabled = false 

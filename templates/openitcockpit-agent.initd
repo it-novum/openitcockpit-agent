@@ -1,0 +1,52 @@
+#! /bin/sh
+#
+### BEGIN INIT INFO
+# Provides: openitcockpit-agent
+# Required-Start: $network $remote_fs $syslog
+# Required-Stop:
+# Default-Start: 2 3 4 5
+# Default-Stop: 0 1 6
+# Description: Starts openitcockpit-agent
+### END INIT INFO
+
+PIDFILE=/var/run/openitcockpit-agent.pid
+LOGFILE=/var/log/openitcockpit-agent.log
+
+openitcockpit_agent=/usr/bin/openitcockpit-agent
+test -x /usr/bin/openitcockpit-agent || exit 5
+
+if [ "$(id -u)" -ne 0 ]
+    then echo "Sorry, you need to run this as root"
+    exit
+fi
+
+case "$1" in
+    start)
+        if [ -f /var/run/$PIDNAME ] && kill -0 $(cat /var/run/$PIDNAME); then
+            echo 'Service already running' >&2
+            return 1
+        fi
+        echo "Starting openitcockpit agent ..." >&2
+        CMD="$openitcockpit_agent &> \"$LOGFILE\" & echo \$!"
+        su -c "$CMD" $RUNAS > "$PIDFILE"
+        echo 'Service started' >&2
+        #startproc $openitcockpit_agent
+        ;;
+    stop)
+        if [ ! -f "$PIDFILE" ] || ! kill -0 $(cat "$PIDFILE") >/dev/null 2>&1; then
+            echo 'Service not running' >&2
+            return 1
+        fi
+        echo "Shutting down openitcockpit agent" >&2
+        pkill -F $PIDFILE
+        ;;
+    restart)
+        $0 stop
+        $0 start
+        ;;
+    *)
+        echo "Usage: $0 {start|stop|restart}"
+        exit 1
+        ;;
+esac
+exit
