@@ -28,6 +28,11 @@ function write_service_file {
     sed -i "s/ExecStart=\\/usr\\/bin\\/openitcockpit-agent/ExecStart=\\/usr\\/bin\\/openitcockpit-agent\\ --config\\ ${config_file//\//\\/}/" "$service_file"
 }
 
+function write_launchd_file {
+    curl -sS "$download_url_launchd" -o "$launchd_file"
+    sed -i "s/\\<string\\>\\/etc\\/openitcockpit-agent\\/config.conf\\<\\/string\\>/\\<string\\>${config_file//\//\\/}\\<\\/string\\>/" "$launchd_file"
+}
+
 function write_config_file {
     curl -sS "$download_url_config" -o "$config_file"
 }
@@ -40,32 +45,32 @@ function download_agent {
     #if [ "$OS" == "debian" ] || [ "$OS" == "ubuntu" ]; then
     #    curl -sS "$download_url_agent_linux" -o /usr/bin/openitcockpit-agent
     #elif [ "$OS" == "centos" ]; then
-    curl -sS "$download_url_agent_centos_python3" -o /usr/bin/openitcockpit-agent
+    if [ "$OS" == "darwin" ]; then
+        curl -sS "$download_url_agent_macos" -o /usr/bin/openitcockpit-agent
+    else
+        curl -sS "$download_url_agent_centos_python3" -o /usr/bin/openitcockpit-agent
+    fi
     #fi
     chmod +x /usr/bin/openitcockpit-agent
 }
 
 function agent_start {
-    if [[ $use_initd -eq 0 ]]; then
+    if [[ $use_initd -eq 0 ]] && [ "$OS" != "darwin" ]; then
         systemctl start openitcockpit-agent
-    else
+    elif [ "$OS" != "darwin" ]; then
         $initd_file start
+    elif [ "$OS" == "darwin" ]; then
+        /bin/launchctl start com.it-novum.openitcockpit.agent
     fi
 }
 
 function agent_stop {
-    if [[ $use_initd -eq 0 ]]; then
+    if [[ $use_initd -eq 0 ]] && [ "$OS" != "darwin" ]; then
         systemctl stop openitcockpit-agent
-    else
+    elif [ "$OS" != "darwin" ]; then
         $initd_file stop
-    fi
-}
-
-function agent_restart {
-    if [[ $use_initd -eq 0 ]]; then
-        systemctl restart openitcockpit-agent
-    else
-        $initd_file restart
+    elif [ "$OS" == "darwin" ]; then
+        /bin/launchctl stop com.it-novum.openitcockpit.agent
     fi
 }
 
@@ -82,15 +87,18 @@ elif [[ -e /etc/debian_version ]]; then
     OS=debian
 elif [[ -e /etc/centos-release || -e /etc/redhat-release ]]; then
     OS=centos
+elif [ "$(uname)" == "Darwin" ]; then
+    OS=darwin
 fi
 
-if [ "$OS" != "debian" ] && [ "$OS" != "ubuntu" ] && [ "$OS" != "centos" ] && [ "$OS" != "opensuse" ]; then
-    echo "Looks like you aren't running this installer on Debian, Ubuntu, CentOS or openSUSE"
+if [ "$OS" != "debian" ] && [ "$OS" != "ubuntu" ] && [ "$OS" != "centos" ] && [ "$OS" != "opensuse" ] && [ "$OS" != "darwin" ]; then
+    echo "Looks like you aren't running this installer on Debian, Ubuntu, CentOS, openSUSE or macOS"
     exit
 fi
 
 service_file=/etc/systemd/system/openitcockpit-agent.service
 initd_file=/etc/init.d/openitcockpit-agent
+launchd_file=/Library/LaunchDaemons/com.it-novum.openitcockpit.agent.plist
 use_initd=1
 
 config_file=/etc/openitcockpit-agent/config.conf
@@ -98,16 +106,18 @@ customchecks_file=/etc/openitcockpit-agent/customchecks.conf
 
 download_url_agent_linux="https://git.binsky.org/uploads/-/system/personal_snippet/9/c21c8d1956da3c98add64e098a32deda/openitcockpit-agent-python3.run"
 download_url_agent_centos_python3="https://git.binsky.org/uploads/-/system/personal_snippet/9/f63cc269549221b2a9d1bf21c2c5569e/openitcockpit-agent-python3-old_glibc_centos.run"
+download_url_agent_macos="https://git.binsky.org/uploads/-/system/personal_snippet/9/b666fbbd07e083689b91470f6c49f2c2/openitcockpit-agent-python3.macos"
 download_url_config="https://git.binsky.org/uploads/-/system/personal_snippet/9/71c3a42780b3b84b650322b4220a0d83/config.cnf"
 download_url_customchecks="https://git.binsky.org/uploads/-/system/personal_snippet/9/50a9caeacca7c440863af2fb0a6892fb/customchecks.cnf"
 download_url_initd="https://git.binsky.org/uploads/-/system/personal_snippet/9/df317ebefa7dc2d59a9ea2091f3dcba4/openitcockpit-agent.initd"
 download_url_service="https://git.binsky.org/uploads/-/system/personal_snippet/9/c31d48851ae7bcc6b51dd2b4ec67c9a4/openitcockpit-agent.service"
+download_url_launchd="https://git.binsky.org/uploads/-/system/personal_snippet/9/c31d48851ae7bcc6b51dd2b4ec67c9a4/openitcockpit-agent.service"
 
 if pgrep systemd-journal > /dev/null; then
     use_initd=0
 fi
 
-if [[ -e $service_file ]] || [[ -e $initd_file ]]; then
+if [[ -e $service_file ]] || [[ -e $initd_file ]] || [[ -e $launchd_file ]]; then
     while :
     do
         echo ""
@@ -131,9 +141,12 @@ if [[ -e $service_file ]] || [[ -e $initd_file ]]; then
             if [[ -e $service_file ]]; then
                 systemctl disable openitcockpit-agent
                 rm -f /usr/bin/openitcockpit-agent $service_file
-            else
+            elif [[ -e $initd_file ]]; then
                 /lib/systemd/systemd-sysv-install disable openitcockpit-agent
                 rm -f /usr/bin/openitcockpit-agent $initd_file
+            elif [[ -e $launchd_file ]]; then
+                /bin/launchctl unload $launchd_file
+                rm -f /usr/bin/openitcockpit-agent $launchd_file
             fi
             
             if [ -d "/etc/openitcockpit-agent" ]; then
@@ -174,10 +187,12 @@ else
     mkdir -p "$(dirname "$config_file")"
     mkdir -p "$(dirname "$customchecks_file")"
 
-    if [[ $use_initd -eq 0 ]]; then
+    if [[ $use_initd -eq 0 ]] && [ "$OS" != "darwin" ]; then
         write_service_file
-    else
+    elif [ "$OS" != "darwin" ]; then
         write_initd_file
+    elif [ "$OS" == "darwin" ]; then
+        write_launchd_file
     fi
     
     if [ ! -f "$config_file" ]; then
@@ -199,22 +214,30 @@ else
 
     download_agent
 
-    if [[ $use_initd -eq 0 ]]; then
+    if [[ $use_initd -eq 0 ]] && [ "$OS" != "darwin" ]; then
         systemctl daemon-reload
         systemctl enable openitcockpit-agent
-    else
+        systemctl start openitcockpit-agent
+    elif [ "$OS" != "darwin" ]; then
         /lib/systemd/systemd-sysv-install enable openitcockpit-agent
+        ${initd_file} start
+    elif [ "$OS" == "darwin" ]; then
+        /bin/launchctl load $launchd_file
+        /bin/launchctl start $launchd_file
     fi
     
 
     echo ""
-    echo "Agent successfully installed!"
-    if [[ $use_initd -eq 0 ]]; then
+    echo "Agent successfully installed and started!"
+    if [[ $use_initd -eq 0 ]] && [ "$OS" != "darwin" ]; then
         echo "Start agent with: systemctl start openitcockpit-agent"
         echo "After editing the config file restart the agent with: systemctl restart openitcockpit-agent"
-    else
+    elif [ "$OS" != "darwin" ]; then
         echo "Start agent with: ${initd_file} start"
         echo "After editing the config file restart the agent with: ${initd_file} restart"
+    elif [ "$OS" == "darwin" ]; then
+        echo "Start agent with: /bin/launchctl start ${launchd_file}"
+        echo "After editing the config file restart the agent with: /bin/launchctl stop ${launchd_file} && /bin/launchctl start ${launchd_file}"
     fi
     echo ""
 fi
