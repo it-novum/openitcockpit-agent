@@ -84,7 +84,7 @@ elif [[ -e /etc/centos-release || -e /etc/redhat-release ]]; then
     OS=centos
 fi
 
-if [ "$OS" == "debian" ] || [ "$OS" == "ubuntu" ] || [ "$OS" == "centos" ] || [ "$OS" == "opensuse" ]
+if [ "$OS" != "debian" ] && [ "$OS" != "ubuntu" ] && [ "$OS" != "centos" ] && [ "$OS" != "opensuse" ]; then
     echo "Looks like you aren't running this installer on Debian, Ubuntu, CentOS or openSUSE"
     exit
 fi
@@ -103,7 +103,7 @@ download_url_customchecks="https://git.binsky.org/uploads/-/system/personal_snip
 download_url_initd="https://git.binsky.org/uploads/-/system/personal_snippet/9/df317ebefa7dc2d59a9ea2091f3dcba4/openitcockpit-agent.initd"
 download_url_service="https://git.binsky.org/uploads/-/system/personal_snippet/9/c31d48851ae7bcc6b51dd2b4ec67c9a4/openitcockpit-agent.service"
 
-if pgrep systemd-journal; then
+if pgrep systemd-journal > /dev/null; then
     use_initd=0
 fi
 
