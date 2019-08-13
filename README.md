@@ -15,7 +15,7 @@ Monitoring agent for openITCOCKPIT
 
 Supported & tested systems:
 - Ubuntu 14, 16, 18 and higher
-- Debian 9, 10 and higher
+- Debian 8, 9, 10 and higher
 - openSUSE Leap 42.3 and higher
 - centOS 7 and higher
 
@@ -23,7 +23,7 @@ Supported & tested systems:
 
 Download and run setup.sh as root:
 ```
-/bin/bash <(curl -sS https://git.binsky.org/uploads/-/system/personal_snippet/9/48120f09fa05d250ad5fef83b41b7a36/setup.sh)
+/bin/bash <(curl -sS https://git.binsky.org/uploads/-/system/personal_snippet/9/63e13f9f00266538b3bce8f45774f06b/setup.sh)
 ```
 
 ## Developer installation
