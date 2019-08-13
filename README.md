@@ -31,6 +31,8 @@ Monitoring agent for openITCOCKPIT
 - Install dependencies: ```pip3 install psutil configparser```
 
 ### Linux (Debian / Ubuntu)
+- glibc >= 2.28
+
 #### python3
 - Install latest python version (3.x) and psutil >= 5.5.0: ```apt-get install python3 python3-psutil```
 - Uninstall psutil pip package if version < 5.5.0: ```pip3 uninstall psutil```
@@ -216,6 +218,24 @@ git clone https://github.com/it-novum/openitcockpit-agent.git
 cd openitcockpit-agent
 ```
 
+### Python 3 - CentOS
+
+```
+yum install python36 python36-pip python36-devel
+python3 -m venv ./python3-centos-env
+source ./python3-centos-env/bin/activate
+./python3-centos-env/bin/pip install -r requirements.txt pyinstaller
+./python3-centos-env/bin/python3 ./python3-centos-env/bin/pyinstaller oitc_agent.py --onefile
+deactivate
+
+mv ./dist/oitc_agent ./executables/openitcockpit-agent-python3-old_glibc_centos.run
+rm -r ./dist ./build ./__pycache__ oitc_agent.spec
+chmod +x ./executables/openitcockpit-agent-python3-old_glibc_centos.run
+
+zip -rq ./environments/python3-centos-env.zip python3-centos-env
+rm -rf python3-centos-env
+```
+
 ### Python 3 - Linux
 
 ##### Create python virtual environment
@@ -223,7 +243,6 @@ Make sure pip for python3 is installed
 
 ```
 apt install python3-pip
-pip install --upgrade virtualenv
 python3 -m venv ./python3-linux-env
 source ./python3-linux-env/bin/activate
 ./python3-linux-env/bin/pip install -r requirements.txt pyinstaller

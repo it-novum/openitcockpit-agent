@@ -37,7 +37,11 @@ function write_customchecks_file {
 }
 
 function download_agent {
-    curl -sS "$download_url_agent_linux" -o /usr/bin/openitcockpit-agent
+    #if [ "$OS" == "debian" ] || [ "$OS" == "ubuntu" ]; then
+    #    curl -sS "$download_url_agent_linux" -o /usr/bin/openitcockpit-agent
+    #elif [ "$OS" == "centos" ]; then
+    curl -sS "$download_url_agent_centos_python3" -o /usr/bin/openitcockpit-agent
+    #fi
     chmod +x /usr/bin/openitcockpit-agent
 }
 
@@ -70,12 +74,18 @@ if [[ "$EUID" -ne 0 ]]; then
     exit
 fi
 
-if [[ -e /etc/debian_version ]]; then
+if [ -f /etc/os-release ]; then
+    # freedesktop.org and systemd
+    . /etc/os-release
+    OS=$ID
+elif [[ -e /etc/debian_version ]]; then
     OS=debian
 elif [[ -e /etc/centos-release || -e /etc/redhat-release ]]; then
     OS=centos
-else
-    echo "Looks like you aren't running this installer on Debian, Ubuntu or CentOS"
+fi
+
+if [ "$OS" == "debian" ] || [ "$OS" == "ubuntu" ] || [ "$OS" == "centos" ] || [ "$OS" == "opensuse" ]
+    echo "Looks like you aren't running this installer on Debian, Ubuntu, CentOS or openSUSE"
     exit
 fi
 
@@ -87,6 +97,7 @@ config_file=/etc/openitcockpit-agent/config.conf
 customchecks_file=/etc/openitcockpit-agent/customchecks.conf
 
 download_url_agent_linux="https://git.binsky.org/uploads/-/system/personal_snippet/9/c21c8d1956da3c98add64e098a32deda/openitcockpit-agent-python3.run"
+download_url_agent_centos_python3="https://git.binsky.org/uploads/-/system/personal_snippet/9/f63cc269549221b2a9d1bf21c2c5569e/openitcockpit-agent-python3-old_glibc_centos.run"
 download_url_config="https://git.binsky.org/uploads/-/system/personal_snippet/9/71c3a42780b3b84b650322b4220a0d83/config.cnf"
 download_url_customchecks="https://git.binsky.org/uploads/-/system/personal_snippet/9/50a9caeacca7c440863af2fb0a6892fb/customchecks.cnf"
 download_url_initd="https://git.binsky.org/uploads/-/system/personal_snippet/9/df317ebefa7dc2d59a9ea2091f3dcba4/openitcockpit-agent.initd"
