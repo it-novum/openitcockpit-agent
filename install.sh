@@ -254,7 +254,7 @@ EOF
     $($CMD)
 
     if [ "$enableConfig" == "1" ]; then
-        CMD="update-rc.d -f openitcockpit-agent defaults > /dev/null"
+        CMD="update-rc.d -f openitcockpit-agent defaults"
         if [ "$isRoot" == "0" ]; then
             PREFIX="sudo "
             CMD="$PREFIX$CMD"
