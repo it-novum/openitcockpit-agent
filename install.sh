@@ -7,7 +7,7 @@ set -e
 set -u
 
 # Print all commands (debug option)
-#set -x
+set -x
 
 ### Define Variables ###
 
@@ -16,7 +16,8 @@ customChecksConfigFile="/etc/openitcockpit-agent/customchecks.cnf"
 OSXconfigFile="/Library/openitcockpit-agent/config.cnf"
 OSXcustomChecksConfigFile="/Library/openitcockpit-agent/customchecks.cnf"
 
-agentDownloadUrlLinuxBase="https://git.binsky.org/uploads/-/system/personal_snippet/9/c21c8d1956da3c98add64e098a32deda/openitcockpit-agent"
+agentDownloadUrlLinuxBase="https://git.binsky.org/uploads/-/system/personal_snippet/9/8af5c39ed50debbf5611c179469316cc/openitcockpit-agent-python3.linux.bin"
+agentDownloadUrlMacOSBase="https://git.binsky.org/uploads/-/system/personal_snippet/9/46c6c7e2b4e15519752494dbac502d49/openitcockpit-agent-python3.macos.bin"
 
 
 agentBinary="/usr/local/bin/openitcockpit-agent"
@@ -55,9 +56,10 @@ function start_agent {
 }
 
 function download_agent {
-    #URL="${agentDownloadUrlLinuxBase}.linux.bin"
-    
-    URL="https://git.binsky.org/uploads/-/system/personal_snippet/9/b666fbbd07e083689b91470f6c49f2c2/openitcockpit-agent-python3.macos"
+    URL="$agentDownloadUrlLinuxBase"
+    if [ "$OS" == "Darwin" ]; then
+        URL="$agentDownloadUrlMacOSBase"
+    fi
     CMD="curl -fsSL $URL -o $agentBinary"
     
     if [ "$isRoot" == "0" ]; then
@@ -75,7 +77,7 @@ function download_agent {
 }
 
 function create_systemd_service {
-read -r -d '' content << EOM
+content=$(cat <<EOF
 [Unit]
 Description=openITCOCKPIT Monitoring Agent
 Documentation=https://openitcockpit.io
@@ -91,14 +93,14 @@ StandardError=inherit
 
 [Install]
 WantedBy=multi-user.target
-EOM
+EOF
+)
 
-    CMD='echo "$content" > /lib/systemd/system/openitcockpit-agent.service'
     if [ "$isRoot" == "0" ]; then
-        PREFIX="sudo "
-        CMD="$PREFIX$CMD"
+        sudo sh -c "echo \"$content\" > /lib/systemd/system/openitcockpit-agent.service"
+    else
+        echo "$content" > /lib/systemd/system/openitcockpit-agent.service
     fi
-    $($CMD)
 
     CMD="systemctl daemon-reload"
     if [ "$isRoot" == "0" ]; then
@@ -159,7 +161,7 @@ function create_sysvinit_service {
         enableConfig="1"
     fi
     
-read -r -d '' content << EOM
+content=$(cat <<EOF
 #!/bin/bash
 
 ### BEGIN INIT INFO
@@ -235,14 +237,14 @@ case \$1 in
         exit 1
     ;;
 esac
-EOM
+EOF
+)
 
-    CMD='echo "$content" > /etc/init.d/openitcockpit-agent'
     if [ "$isRoot" == "0" ]; then
-        PREFIX="sudo "
-        CMD="$PREFIX$CMD"
+        sudo sh -c "echo \"$content\" > /etc/init.d/openitcockpit-agent"
+    else
+        echo "$content" > /etc/init.d/openitcockpit-agent
     fi
-    $($CMD)
 
     if [ "$enableConfig" == "1" ]; then
         CMD="update-rc.d -f openitcockpit-agent defaults"

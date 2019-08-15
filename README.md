@@ -19,15 +19,16 @@ Supported & tested systems:
 - openSUSE Leap 42.3 and higher
 - centOS 7 and higher
 
-### Linux
+### Linux and macOS
 
-Download and run setup.sh as root:
+Download and run setup.sh with root privileges:
 ```
-/bin/bash <(curl -sS https://git.binsky.org/uploads/-/system/personal_snippet/9/63e13f9f00266538b3bce8f45774f06b/setup.sh)
+curl -sS https://git.binsky.org/uploads/-/system/personal_snippet/9/3a02fd0e65cf5da30e6df356d4951b79/install.sh | /bin/bash
 ```
-or
+
+Remove with:
 ```
-curl -sS https://git.binsky.org/uploads/-/system/personal_snippet/9/bd1ed125b2f6e5b19540dbcf9f3b3d88/setup.sh -o /tmp/setup.sh && bash /tmp/setup.sh && rm /tmp/setup.sh
+curl -sS https://git.binsky.org/uploads/-/system/personal_snippet/9/7aaeeda0528fe3faaf86b9bbe6904023/uninstall.sh | /bin/bash
 ```
 
 ## Developer installation
