@@ -23,12 +23,12 @@ Supported & tested systems:
 
 Download and run setup.sh with root privileges:
 ```
-curl -sS https://git.binsky.org/uploads/-/system/personal_snippet/9/3a02fd0e65cf5da30e6df356d4951b79/install.sh | /bin/bash
+curl -sS https://git.binsky.org/uploads/-/system/personal_snippet/9/e56b987aaa6eea033046df64eb9b9253/install.sh | /bin/bash
 ```
 
 Remove with:
 ```
-curl -sS https://git.binsky.org/uploads/-/system/personal_snippet/9/7aaeeda0528fe3faaf86b9bbe6904023/uninstall.sh | /bin/bash
+curl -sS https://git.binsky.org/uploads/-/system/personal_snippet/9/673752b9aaa1101df3126409cdb72e72/uninstall.sh | /bin/bash
 ```
 
 ## Developer installation
