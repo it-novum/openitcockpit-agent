@@ -23,7 +23,7 @@ Supported & tested systems:
 
 Download and run setup.sh with root privileges:
 ```
-curl -sS https://git.binsky.org/uploads/-/system/personal_snippet/9/e56b987aaa6eea033046df64eb9b9253/install.sh | /bin/bash
+curl -sS https://git.binsky.org/uploads/-/system/personal_snippet/9/3b7b3278d37699f0a934ccb50e9ecb10/install.sh | /bin/bash
 ```
 
 Remove with:
