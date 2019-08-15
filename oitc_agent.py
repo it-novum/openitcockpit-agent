@@ -137,7 +137,7 @@ sample_config = """
   customchecks = 
   temperature-fahrenheit = false
 [oitc]
-  host = 
+  hostuuid = 
   url = 
   apikey = 
   interval = 60
@@ -787,8 +787,8 @@ def check_update_data(data):
                         newconfig['default']['temperature-fahrenheit'] = "true"
                     else:
                         newconfig['default']['temperature-fahrenheit'] = "false"
-                if 'oitc-host' in jdata[key]:
-                    newconfig['oitc']['host'] = str(jdata[key]['oitc-host'])
+                if 'oitc-hostuuid' in jdata[key]:
+                    newconfig['oitc']['hostuuid'] = str(jdata[key]['oitc-hostuuid'])
                 if 'oitc-url' in jdata[key]:
                     newconfig['oitc']['url'] = str(jdata[key]['oitc-url'])
                 if 'oitc-apikey' in jdata[key]:
@@ -1111,14 +1111,14 @@ def notify_oitc(oitc):
             if len(cached_check_data) > 0:
                 try:
                     if isPython3:
-                        data = bytes(urllib.parse.urlencode({'checkdata': cached_check_data, 'host': oitc['host']}).encode())
+                        data = bytes(urllib.parse.urlencode({'checkdata': cached_check_data, 'hostuuid': oitc['hostuuid']}).encode())
                         req = urllib.request.Request(oitc['url'].strip())
                         req.add_header('Authorization', 'X-OITC-API '+oitc['apikey'].strip())
                         handler = urllib.request.urlopen(req, data)
                         if verbose:
                             print(handler.read().decode('utf-8'))
                     else:
-                        data = bytes(urllib.urlencode({'checkdata': cached_check_data, 'host': oitc['host']}).encode())
+                        data = bytes(urllib.urlencode({'checkdata': cached_check_data, 'hostuuid': oitc['hostuuid']}).encode())
                         req = urllib2.Request(oitc['url'].strip())
                         req.add_header('Authorization', 'X-OITC-API '+oitc['apikey'].strip())
                         handler = urllib2.urlopen(req, data)
@@ -1179,7 +1179,7 @@ def print_help():
     print('-s --stacktrace              : print stacktrace for possible exceptions')
     print('-h --help                    : print this help message and exit')
     print('\nAdd there parameters (all required) to enable transfer of check results to a openITCOCKPIT server:')
-    print('--oitc-host <host id>        : host id from openITCOCKPIT')
+    print('--oitc-hostuuid <host uuid>  : host uuid from openITCOCKPIT')
     print('--oitc-url <url>             : openITCOCKPIT url (https://demo.openitcockpit.io)')
     print('--oitc-apikey <api key>      : openITCOCKPIT api key')
     print('--oitc-interval <seconds>    : transfer interval in seconds')
@@ -1201,7 +1201,7 @@ def load_configuration():
     global temperatureIsFahrenheit
     
     try:
-        opts, args = getopt.getopt(sys.argv[1:],"h:i:p:a:c:vs",["interval=","port=","address=","config=","customchecks=","certfile=","keyfile=","auth=","oitc-host=","oitc-url=","oitc-apikey=","oitc-interval=","config-update-mode","temperature-fahrenheit","verbose","stacktrace","help"])
+        opts, args = getopt.getopt(sys.argv[1:],"h:i:p:a:c:vs",["interval=","port=","address=","config=","customchecks=","certfile=","keyfile=","auth=","oitc-hostuuid=","oitc-url=","oitc-apikey=","oitc-interval=","config-update-mode","temperature-fahrenheit","verbose","stacktrace","help"])
     except getopt.GetoptError:
         print_help()
         sys.exit(2)
@@ -1256,8 +1256,8 @@ def load_configuration():
             config['default']['config-update-mode'] = "true"
         elif opt == "--temperature-fahrenheit":
             config['default']['temperature-fahrenheit'] = "true"
-        elif opt == "--oitc-host":
-            config['oitc']['host'] = str(arg)
+        elif opt == "--oitc-hostuuid":
+            config['oitc']['hostuuid'] = str(arg)
             added_oitc_parameter += 1
         elif opt == "--oitc-url":
             config['oitc']['url'] = str(arg)

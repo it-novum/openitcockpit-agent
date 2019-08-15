@@ -123,7 +123,7 @@ Add there parameters (all required) to enable transfer of check results to a ope
 
 |option| value | description | 
 | ------ | ------ | ----------- | 
-|--oitc-host       |host id       |openITCOCKPIT host id     | 
+|--oitc-hostuuid   |host uuid       |openITCOCKPIT host uuid     | 
 |--oitc-url       |url       |openITCOCKPIT url (https://demo.openitcockpit.io)     | 
 |--oitc-apikey       |api key       |openITCOCKPIT api key     | 
 |--oitc-interval       |seconds       |transfer interval in seconds     | 
@@ -163,7 +163,7 @@ Sample config file (with default script values):
   customchecks = 
   temperature-fahrenheit = false
 [oitc]
-  host = 
+  hostuuid = 
   url = 
   apikey = 
   interval = 60
@@ -203,7 +203,7 @@ JSON Example (file: new_config.json) for update mode and http://address:port/con
         "auth": "user:pass",
         "customchecks": "/path",
         "temperature-fahrenheit": "false",
-        "oitc-host": "hostid_123456",
+        "oitc-hostuuid": "hostid_123456",
         "oitc-url": "https://demo.openitcockpit.io",
         "oitc-apikey": "",
         "oitc-interval": 60,
