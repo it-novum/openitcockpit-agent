@@ -1,0 +1,67 @@
+[default]
+
+# Determines in seconds how often the agent will schedule all internal checks
+interval = 30
+
+# Port of the Agents buil-in web server
+port = 3333
+
+# Bind address of the build-in web server
+address = 127.0.0.1
+
+# If a certificate file is given, the agent will switch to https only
+# Example: /etc/ssl/certs/ssl-cert-snakeoil.pem
+certfile =
+
+# Private key file of the given TLS certificate
+# Example: /etc/ssl/private/ssl-cert-snakeoil.key;
+keyfile =
+
+# Print most messages
+verbose = false
+
+# Print all messages with stacktrace
+# For developers
+stacktrace = false
+
+# Enable remote read and write of THIS config file and custom checks defenition
+# Examples:
+#   Read config: curl http://127.0.0.1:3333/config
+#   Write config: curl -X POST -d '{"config": {"interval": "60", "port": "3333", "address": "127.0.0.1", "certfile": "/etc/ssl/certs/ssl-cert-snakeoil.pem", "keyfile": "/etc/ssl/private/ssl-cert-snakeoil.key", "verbose": "true", "stacktrace": "false", "config-update-mode": "true", "auth": "", "customchecks": "", "temperature-fahrenheit": "false", "oitc-host": "", "oitc-url": "", "oitc-apikey": "", "oitc-interval": "60", "oitc-enabled": "false"}, "customchecks": {}}' http://127.0.0.1:3333/config
+config-update-mode = false
+
+# Enable Basic Authentication
+# Disabled if blank
+# Example: auth = user:password
+auth =
+
+# Remote Plugin Execution
+# Path to config will where custom checks can be defined
+customchecks = /etc/openitcockpit-agent/customchecks.cnf
+
+# Return temperature values as fahrenheit
+temperature-fahrenheit = false
+
+# By default openITCOCKPIT will pull check results from the openITCOCKPIT Agent.
+# In a Cloud environments or behind a NAT network it could become handy
+# if the openITCOCKPIT Agent will push the results to the openITCOCKPIT Server
+[oitc]
+
+# Enable Push Mode
+enabled = false
+
+# The UUID of the Host.
+# You can find this information in the openITCOCKPIT interface
+# Example: 402357e4-dc34-4f5b-a86d-e59cfbb3ffe7
+hostuuid =
+
+# Address of the openITCOCKPIT Server
+# Example: https://openitcockpit.io/receiver
+url = 
+
+# API-Key of the openITCOCKPIT Server
+apikey =
+
+# Determines in seconds how often the agent will push
+# check results to the openITCOCKPIT Server
+interval = 60
