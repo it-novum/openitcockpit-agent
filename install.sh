@@ -52,7 +52,7 @@ function start_agent {
         PREFIX="sudo "
         CMD="$PREFIX$CMD"
     fi
-    $($CMD)
+    runstartAgent=$($CMD)
 }
 
 function download_agent {
@@ -166,7 +166,7 @@ content=`cat <<EOF
 
 ### BEGIN INIT INFO
 # Provides: openitcockpit-agent
-# Required-Start: \$network \$remote_fs \$syslog
+# Required-Start: \\$network \\$remote_fs \\$syslog
 # Required-Stop:
 # Default-Start: 2 3 4 5
 # Default-Stop: 0 1 6
@@ -182,28 +182,28 @@ DAEMON_OPTS="--config $configFile"
 PIDFILE=/var/run/openitcockpit-agent.pid
 export PATH="/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
 
-if [ \$# -lt 1 ]
+if [ \\$# -lt 1 ]
 then
-    echo "\$0 <start|stop|restart|status>"
+    echo "\\$0 <start|stop|restart|status>"
     exit 1
 fi
 
-case \$1 in
+case \\$1 in
     start)
         echo "Starting openITCOCKPIT Monitoring Agent"
-        start-stop-daemon --start --pidfile \$PIDFILE --make-pidfile --background --exec \$DAEMON --chuid root:root -- \$DAEMON_OPTS
+        start-stop-daemon --start --pidfile \\$PIDFILE --make-pidfile --background --exec \\$DAEMON --chuid root:root -- \\$DAEMON_OPTS
     ;;
 
     stop)
         echo "Stopping openITCOCKPIT Monitoring Agent"
-        start-stop-daemon --stop --quiet --oknodo --pidfile \$PIDFILE
-        while start-stop-daemon --pidfile \$PIDFILE --status; do
+        start-stop-daemon --stop --quiet --oknodo --pidfile \\$PIDFILE
+        while start-stop-daemon --pidfile \\$PIDFILE --status; do
             sleep .1
-            if [ \$i -ge 100 ]; then
+            if [ \\$i -ge 100 ]; then
                 echo "openITCOCKPIT Monitoring Agent stop failed"
                 exit 1
             else
-                i=\$(( i + 1 ))
+                i=\\$(( i + 1 ))
                 echo -n "."
             fi
         done
@@ -211,15 +211,15 @@ case \$1 in
     
     restart|reload|force-reload)
         echo "Restarting openITCOCKPIT Monitoring Agent"
-        \$0 stop
-        \$0 start
+        \\$0 stop
+        \\$0 start
     ;;
     
     status)
-        if start-stop-daemon --pidfile=\$PIDFILE --status
+        if start-stop-daemon --pidfile=\\$PIDFILE --status
         then
-            PID=`cat \$PIDFILE`
-            echo "openITCOCKPIT Monitoring Agent is running (pid \$PID)."
+            PID=\\\`cat \\$PIDFILE\\\`
+            echo "openITCOCKPIT Monitoring Agent is running (pid \\$PID)."
             exit 0
         else
             echo "openITCOCKPIT Monitoring Agent is not running"
@@ -233,7 +233,7 @@ case \$1 in
     ;;
     
     *)
-        echo "Unknown command \$1."
+        echo "Unknown command \\$1."
         exit 1
     ;;
 esac
@@ -245,14 +245,21 @@ EOF
     else
         echo "$content" > /etc/init.d/openitcockpit-agent
     fi
+    
+    CMD="chmod +x /etc/init.d/openitcockpit-agent"
+    if [ "$isRoot" == "0" ]; then
+        PREFIX="sudo "
+        CMD="$PREFIX$CMD"
+    fi
+    $($CMD)
 
     if [ "$enableConfig" == "1" ]; then
-        CMD="update-rc.d -f openitcockpit-agent defaults"
+        CMD="update-rc.d -f openitcockpit-agent defaults > /dev/null"
         if [ "$isRoot" == "0" ]; then
             PREFIX="sudo "
             CMD="$PREFIX$CMD"
         fi
-        $($CMD)
+        runUpdateRc=$($CMD)
     fi
 }
 
