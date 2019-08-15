@@ -161,7 +161,7 @@ function create_sysvinit_service {
         enableConfig="1"
     fi
     
-content=$(cat <<EOF
+content=`cat <<EOF
 #!/bin/bash
 
 ### BEGIN INIT INFO
@@ -238,7 +238,7 @@ case \$1 in
     ;;
 esac
 EOF
-)
+`
 
     if [ "$isRoot" == "0" ]; then
         sudo sh -c "echo \"$content\" > /etc/init.d/openitcockpit-agent"

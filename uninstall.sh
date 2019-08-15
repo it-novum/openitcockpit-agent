@@ -30,7 +30,7 @@ function stop_agent {
         sudo systemctl daemon-reload
     elif [ "$OS" == "Darwin" ]; then
         sudo /bin/launchctl stop com.it-novum.openitcockpit.agent
-        sudo /bin/launchctl unload com.it-novum.openitcockpit.agent
+        sudo /bin/launchctl unload /Library/LaunchDaemons/com.it-novum.openitcockpit.agent.plist
         
         if [ -f "/Library/LaunchDaemons/com.it-novum.openitcockpit.agent.plist" ]; then
             sudo rm "/Library/LaunchDaemons/com.it-novum.openitcockpit.agent.plist"
