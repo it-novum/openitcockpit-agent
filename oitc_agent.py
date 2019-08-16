@@ -50,6 +50,33 @@ system = 'linux'
 
 if sys.platform == 'win32' or sys.platform == 'win64':
     system = 'windows'
+    import win32serviceutil
+    import win32service
+    import win32event
+    import servicemanager
+
+
+    class AppServerSvc (win32serviceutil.ServiceFramework):
+        _svc_name_ = "oitcAgent"
+        _svc_display_name_ = "openITCOCKPIT Monitoring Agent Service"
+
+        def __init__(self,args):
+            win32serviceutil.ServiceFramework.__init__(self,args)
+            self.hWaitStop = win32event.CreateEvent(None,0,0,None)
+            socket.setdefaulttimeout(60)
+
+        def SvcStop(self):
+            self.ReportServiceStatus(win32service.SERVICE_STOP_PENDING)
+            win32event.SetEvent(self.hWaitStop)
+
+        def SvcDoRun(self):
+            servicemanager.LogMsg(servicemanager.EVENTLOG_INFORMATION_TYPE, servicemanager.PYS_SERVICE_STARTED, (self._svc_name_,''))
+            self.main()
+
+        def main(self):
+            pass
+
+    
 if sys.platform == 'darwin' or (system == 'linux' and 'linux' not in sys.platform):
     system = 'darwin'
 
@@ -1361,7 +1388,9 @@ def load_main_processing():
     permanent_webserver_thread(process_webserver, (enableSSL,))
 
 if __name__ == '__main__':
-    
+    if system == "windows":
+        win32serviceutil.HandleCommandLine(AppServerSvc)
+        
     load_main_processing()
     
     try:

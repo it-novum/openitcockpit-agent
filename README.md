@@ -342,7 +342,7 @@ Run powershell as Administrator and execute the following commands
 cd /
 python.exe -m venv ./python3-windows-env
 .\python3-windows-env\Scripts\activate.bat
-.\python3-windows-env\Scripts\pip.exe install configparser psutil>=5.5.0 pyinstaller
+.\python3-windows-env\Scripts\pip.exe install configparser psutil>=5.5.0 servicemanager pywinservicemanager pyinstaller
 .\python3-windows-env\Scripts\pyinstaller.exe oitc_agent.py --onefile
 .\python3-windows-env\Scripts\deactivate.bat
 
