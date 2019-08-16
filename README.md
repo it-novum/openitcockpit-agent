@@ -13,11 +13,15 @@ Monitoring agent for openITCOCKPIT
 
 ## Productive installation
 
+Require glibc >= 2.17
+
 Supported & tested systems:
-- Ubuntu 14, 16, 18 and higher
-- Debian 8, 9, 10 and higher
-- openSUSE Leap 42.3 and higher
-- centOS 7 and higher
+- macOS 10.12 (Sierra), 10.13 (High Sierra), 10.14 (Mojave)
+- Ubuntu 14, 16, 18
+- Debian 8, 9, 10
+- openSUSE Leap 42.3
+- centOS 7
+- Arch Linux (2019.08.01)
 
 ### Linux and macOS
 
