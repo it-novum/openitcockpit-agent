@@ -13,17 +13,21 @@ Monitoring agent for openITCOCKPIT
 
 ## Productive installation
 
+Require glibc >= 2.17
+
 Supported & tested systems:
-- Ubuntu 14, 16, 18 and higher
-- Debian 8, 9, 10 and higher
-- openSUSE Leap 42.3 and higher
-- centOS 7 and higher
+- macOS 10.12 (Sierra), 10.13 (High Sierra), 10.14 (Mojave)
+- Ubuntu 14, 16, 18
+- Debian 8, 9, 10
+- openSUSE Leap 42.3
+- centOS 7
+- Arch Linux (2019.08.01)
 
 ### Linux and macOS
 
 Download and run setup.sh with root privileges:
 ```
-curl -sS https://git.binsky.org/uploads/-/system/personal_snippet/9/e56b987aaa6eea033046df64eb9b9253/install.sh | /bin/bash
+curl -sS https://git.binsky.org/uploads/-/system/personal_snippet/9/3b7b3278d37699f0a934ccb50e9ecb10/install.sh | /bin/bash
 ```
 
 Remove with:
