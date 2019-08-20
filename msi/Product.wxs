@@ -1,0 +1,129 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<Wix xmlns='http://schemas.microsoft.com/wix/2006/wi'>
+
+  <!--
+    Many thanks to:
+    - https://helgeklein.com/blog/2014/09/real-world-example-wix-msi-application-installer/
+    - https://wiki.gnome.org/msitools/HowTo/CreateMSI
+    - https://blogs.technet.microsoft.com/alexshev/2008/02/09/from-msi-to-wix-part-2-arp-support/
+  -->
+
+  <?define VersionNumber="1.0.0" ?>
+  
+  <?define UpgradeCode="D9C60150-5F94-4CA2-8E40-58506D94A827" ?> <!-- DO NOT CHANGE ANYMORE -->
+  <?define InfoURL="https://openitcockpit.io/" ?>
+
+  <Product Id="*" Name="!(loc.ApplicationName)" Language="!(loc.Language)" Version="$(var.VersionNumber)"
+    Manufacturer="!(loc.ManufacturerFullName)" UpgradeCode="$(var.UpgradeCode)" >
+    
+    <Package Id="*" InstallerVersion="400" Compressed="yes" InstallScope="perMachine"
+      Description="!(loc.ProductDescription)" Comments="!(loc.Comments) $(var.VersionNumber)" />
+
+    <!-- License agreement text: dummy. Real text is set in WXS file -->
+    <WixVariable Id="WixUILicenseRtf" Value="dummy" />
+      
+    <!-- UI customization -->
+    <WixVariable Id="WixUIBannerBmp" Value="images\BannerTop.bmp" />
+    <WixVariable Id="WixUIDialogBmp" Value="images\Dialog.bmp" />
+    
+    <!-- Define icons (ID should not be longer than 18 chars and must end with ".exe") -->
+    <Icon Id="Icon.exe" SourceFile="images\app.ico" />
+    <!-- Set properties for add/remove programs -->
+    <Property Id="ARPPRODUCTICON" Value="Icon.exe" />
+    <Property Id="ARPHELPLINK" Value="$(var.InfoURL)" />
+    <Property Id="ARPNOREPAIR" Value="yes" Secure="yes" />      <!-- Remove repair -->
+    <Property Id="ARPNOMODIFY" Value="yes" Secure="yes" />      <!-- Remove modify -->
+
+    <!-- Upgrade logic -->
+    <!-- AllowSameVersionUpgrades -> Always upgrade, never allow two versions to be installed next to each other -->
+    <!-- AllowSameVersionUpgrades causes ICE61 which must be ignored -->
+    <MajorUpgrade DowngradeErrorMessage="!(loc.NewerInstalled)" AllowSameVersionUpgrades="yes" />
+
+    <!-- This is the main installer sequence run when the product is actually installed -->
+    <InstallExecuteSequence>
+      <!-- Determine the install location after the install path has been validated by the installer -->
+      <Custom Action="SetARPINSTALLLOCATION" After="InstallValidate"></Custom>
+    </InstallExecuteSequence>
+    <!-- Set up ARPINSTALLLOCATION property (http://blogs.technet.com/b/alexshev/archive/2008/02/09/from-msi-to-wix-part-2.aspx) -->
+    <CustomAction Id="SetARPINSTALLLOCATION" Property="ARPINSTALLLOCATION" Value="[INSTALLDIR]" />
+
+    <!-- 
+      Launch conditions:   
+        1. Check minimum OS version 
+           If not, the installation is aborted.
+           By doing the (Installed OR ...) property means that this condition will only be evaluated if the app is being installed and not on uninstall or changing
+        
+        Note: Under a Product element, a condition becomes a LaunchCondition entry. 
+    -->
+    <Condition Message="!(loc.OS2Old)">
+      <![CDATA[Installed OR (VersionNT >= 600)]]>
+    </Condition>
+
+    <Condition Message="!(loc.x64VersionRequired)">
+      <![CDATA[NOT VersionNT64]]>
+    </Condition>
+
+    <!-- Save the command line value INSTALLDIR and restore it later in the sequence or it will be overwritten by the value saved to the registry during an upgrade -->
+    <!-- http://robmensching.com/blog/posts/2010/5/2/the-wix-toolsets-remember-property-pattern/ -->
+    <CustomAction Id='SaveCmdLineValueINSTALLDIR' Property='CMDLINE_INSTALLDIR' Value='[INSTALLDIR]' Execute='firstSequence' />
+    <CustomAction Id='SetFromCmdLineValueINSTALLDIR' Property='INSTALLDIR' Value='[CMDLINE_INSTALLDIR]' Execute='firstSequence' />
+    <InstallUISequence>
+      <Custom Action='SaveCmdLineValueINSTALLDIR' Before='AppSearch' />
+        <Custom Action='SetFromCmdLineValueINSTALLDIR' After='AppSearch'>
+        CMDLINE_INSTALLDIR
+      </Custom>
+    </InstallUISequence>
+    <InstallExecuteSequence>
+      <Custom Action='SaveCmdLineValueINSTALLDIR' Before='AppSearch' />
+        <Custom Action='SetFromCmdLineValueINSTALLDIR' After='AppSearch'>
+          CMDLINE_INSTALLDIR
+        </Custom>
+    </InstallExecuteSequence>
+
+    <!-- Determine the directory of a previous installation (if one exists). If not INSTALLDIR stays empty -->
+    <Property Id="INSTALLDIR">
+      <RegistrySearch Id="DetermineInstallLocation" Type="raw" Root="HKLM" Key="Software\!(loc.ManufacturerName)\InstalledProducts\!(loc.ApplicationName)" Name="InstallLocation" />
+    </Property>
+
+    <Media Id="1" Cabinet="Sample.cab" EmbedCab="yes" />
+        
+    <Directory Id="TARGETDIR" Name="SourceDir">
+      <Directory Id="ProgramFiles64Folder" Name="PFiles">
+        <Directory Id="ProgramFilesHK" Name="!(loc.ManufacturerName)">
+          <Directory Id="INSTALLDIR" Name="!(loc.ApplicationName)">
+
+            <!-- Installation directory as a component so it can be emptied during uninstall (by default files added by someone other than Windows Installer are not removed) -->
+            <Component Id="INSTALLDIR_comp" Guid="EBF690DB-93C8-41E4-A40B-A4CE0DFDA3AD">
+              <CreateFolder />
+              <RemoveFile Id="RemoveFilesFromAppDirectory" Name="*.*" On="uninstall" />
+            </Component>
+
+            <Component Id="MainExecutable" Guid="EDD45F38-6647-4132-818F-D4D4C6F5535F">
+              <File Id="oitcAgentExe"       Name="openitcockpit-agent-python3.exe" Source="..\executables\openitcockpit-agent-python3.exe" KeyPath="yes"/>
+              <File Id="exampleAgentConfig" Name="openitcockpit-agent-python3.exe" Source="..\example_config.cnf" KeyPath="yes"/>
+            </Component>
+
+          </Directory>
+        </Directory>
+      </Directory>
+
+      <!-- Registry entries -->
+      <Component Id="RegValInstallLocation_comp" Guid="65992395-B61F-42D6-8684-E5DED99EF7A6">
+        <!-- Do NOT use the application's default registry key here, because THIS key will be removed on uninstall
+        (important when installing a newer version, because that is uninstall followed by install) -->
+        <RegistryKey Root="HKLM" Key="Software\!(loc.ManufacturerName)\InstalledProducts\!(loc.ApplicationName)">
+          <RegistryValue Name="InstallLocation" Value="[INSTALLDIR]" Type="string" KeyPath="yes" />
+          <!--<RegistryValue Name="Servers" Value="[SERVERS]" Type="string" />-->
+        </RegistryKey>
+      </Component>
+
+    </Directory>
+    
+    <Feature Id='Complete' Level='1'>
+      <ComponentRef Id='MainExecutable' />
+
+      <ComponentRef Id="RegValInstallLocation_comp" />
+    </Feature>
+      
+  </Product>
+</Wix>
