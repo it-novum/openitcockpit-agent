@@ -9,7 +9,7 @@
 #
 # Windows:
 #   Download & install current python version from https://www.python.org/downloads/windows/
-#   open cmd and execute:   python.exe -m pip install psutil configparser
+#   open cmd and execute:   python.exe -m pip install psutil configparser --user
 #
 # Debian:       
 #       python3:
@@ -21,6 +21,10 @@
 #               apt-get install python python-psutil
 #               pip uninstall psutil
 #               pip install configparser futures subprocess32
+# Ubuntu:
+#       Python 3:
+#               apt-get install python3 python3-pip
+#               pip3 install configparser psutil
 #
 # Darwin:
 #               brew install python3
@@ -44,38 +48,10 @@ import traceback
 import base64
 from time import sleep
 from contextlib import contextmanager
+import signal
 
 isPython3 = False
 system = 'linux'
-
-if sys.platform == 'win32' or sys.platform == 'win64':
-    system = 'windows'
-    import win32serviceutil
-    import win32service
-    import win32event
-    import servicemanager
-
-
-    class AppServerSvc (win32serviceutil.ServiceFramework):
-        _svc_name_ = "oitcAgent"
-        _svc_display_name_ = "openITCOCKPIT Monitoring Agent Service"
-
-        def __init__(self,args):
-            win32serviceutil.ServiceFramework.__init__(self,args)
-            self.hWaitStop = win32event.CreateEvent(None,0,0,None)
-            socket.setdefaulttimeout(60)
-
-        def SvcStop(self):
-            self.ReportServiceStatus(win32service.SERVICE_STOP_PENDING)
-            win32event.SetEvent(self.hWaitStop)
-
-        def SvcDoRun(self):
-            servicemanager.LogMsg(servicemanager.EVENTLOG_INFORMATION_TYPE, servicemanager.PYS_SERVICE_STARTED, (self._svc_name_,''))
-            self.main()
-
-        def main(self):
-            pass
-
     
 if sys.platform == 'darwin' or (system == 'linux' and 'linux' not in sys.platform):
     system = 'darwin'
@@ -129,6 +105,9 @@ except ImportError:
         print('Install Python psutil: pip install psutil')
     sys.exit(1)
 
+def signal_handler(sig, frame):
+    print("... see you ...\n")
+    exit(0)
 
 agentVersion = "1.0.0"
 enableSSL = False
@@ -1388,14 +1367,16 @@ def load_main_processing():
     permanent_webserver_thread(process_webserver, (enableSSL,))
 
 if __name__ == '__main__':
-    if system == "windows":
-        win32serviceutil.HandleCommandLine(AppServerSvc)
-        
+    signal.signal(signal.SIGINT, signal_handler)
+    signal.signal(signal.SIGTERM, signal_handler)
+
     load_main_processing()
     
     try:
         while True:
-            sleep(1000)
-    except KeyboardInterrupt:
-        print("... see you ...\n")
-        sys.exit(0)
+            signal.pause()
+    except AttributeError:
+        # signal.pause() is missing for Windows; wait 1ms and loop instead
+        while True:
+            time.sleep(1)
+
