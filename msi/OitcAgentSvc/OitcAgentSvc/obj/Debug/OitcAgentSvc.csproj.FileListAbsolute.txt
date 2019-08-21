@@ -1,0 +1,10 @@
+C:\Users\dziegler\source\repos\OitcAgentSvc\OitcAgentSvc\obj\Debug\OitcAgentSvc.csprojAssemblyReference.cache
+C:\Users\dziegler\source\repos\OitcAgentSvc\OitcAgentSvc\obj\Debug\OitcAgentSvc.csproj.CoreCompileInputs.cache
+C:\Users\dziegler\source\repos\OitcAgentSvc\OitcAgentSvc\bin\Debug\OitcAgentSvc.exe
+C:\Users\dziegler\source\repos\OitcAgentSvc\OitcAgentSvc\bin\Debug\OitcAgentSvc.pdb
+C:\Users\dziegler\source\repos\OitcAgentSvc\OitcAgentSvc\obj\Debug\OitcAgentSvc.exe
+C:\Users\dziegler\source\repos\OitcAgentSvc\OitcAgentSvc\obj\Debug\OitcAgentSvc.pdb
+C:\Users\dziegler\source\repos\OitcAgentSvc\OitcAgentSvc\bin\Debug\OitcAgentSvc.exe.manifest
+C:\Users\dziegler\source\repos\OitcAgentSvc\OitcAgentSvc\bin\Debug\OitcAgentSvc.application
+C:\Users\dziegler\source\repos\OitcAgentSvc\OitcAgentSvc\obj\Debug\OitcAgentSvc.exe.manifest
+C:\Users\dziegler\source\repos\OitcAgentSvc\OitcAgentSvc\obj\Debug\OitcAgentSvc.application

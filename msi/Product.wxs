@@ -100,8 +100,20 @@
 
             <Component Id="MainExecutables" Guid="EDD45F38-6647-4132-818F-D4D4C6F5535F" KeyPath="yes">
               <File Id="oitcAgentExe"       Name="openitcockpit-agent-python3.exe" Source="..\executables\openitcockpit-agent-python3.exe" />
-              <File Id="nssmExe"            Name="nssm.exe" Source="nssm\win64\nssm.exe" />
               <File Id="exampleAgentConfig" Name="config.cnf" Source="..\example_config.cnf" />
+            </Component>
+
+            <Component Id="ServiceComp" Guid="CA7377FB-31D3-40F7-9B74-68490D7285DA">
+              <File Id="OitcAgentSvcExe"    Name="OitcAgentSvc.exe" Source="..\executables\OitcAgentSvc.exe"  KeyPath="yes" />
+
+              <!--
+              <ServiceInstall Id="ServiceInstaller" Name="MyService" Type="ownProcess" Vital="yes" DisplayName="My Service" Description="My Service Description" Start="auto" Account="LocalSystem" ErrorControl="normal" Arguments=" /start MyService" Interactive="no" />
+              <ServiceControl Id="StartService" Name="MyService" Stop="both" Start="install" Remove="uninstall" Wait="yes" />
+              -->
+              <ServiceInstall Id="ServiceInstaller" Account="LocalSystem" Description="!(loc.ServiceDescription)" DisplayName="oitcAgentSvc" ErrorControl="normal"
+                LoadOrderGroup="NetworkProvider" Name="oitcAgentSvc" Start="auto" Type="ownProcess" Vital="yes" />
+              <ServiceControl Id="ServiceControl" Name="oitcAgentSvc" Start="install" Stop="both" Remove="uninstall" Wait="yes" />
+
             </Component>
 
           </Directory>
@@ -118,25 +130,13 @@
         </RegistryKey>
       </Component>
     </Directory>
-
-    <!-- Only create oitcAgentSvc on installation NOT on UPDATE or UNINSTALL -->
-    <CustomAction Id="InstallAgentService" Return="check" Impersonate="yes" Execute="deferred" Directory="INSTALLDIR"
-      ExeCommand="&quot;[INSTALLDIR]nssm.exe&quot; install oitcAgentSvc &quot;[INSTALLDIR]openitcockpit-agent-python3.exe&quot;" />
-    <InstallExecuteSequence>
-      <Custom Action="InstallAgentService" After="InstallFiles">NOT Installed AND NOT REMOVE</Custom>
-    </InstallExecuteSequence>
-
-    <!-- Only execute on REMOVE -->
-    <CustomAction Id="UnInstallAgentService" Return="check" Impersonate="yes" Execute="deferred" Directory="INSTALLDIR"
-      ExeCommand="&quot;[INSTALLDIR]nssm.exe&quot; remove oitcAgentSvc confirm" />
-    <InstallExecuteSequence>
-      <Custom Action="UnInstallAgentService" After="InstallInitialize">Installed AND REMOVE</Custom>
-    </InstallExecuteSequence>
     
     <Feature Id='Complete' Level='1'>
       <ComponentRef Id="INSTALLDIR_comp" />
 
       <ComponentRef Id='MainExecutables' />
+
+      <ComponentRef Id='ServiceComp' />
 
       <ComponentRef Id="RegValInstallLocation_comp" />
     </Feature>

@@ -1,2 +1,5 @@
 *.wixobj
 *.msi
+OitcAgentSvc/.vs
+OitcAgentSvc/bin
+OitcAgentSvc/obj

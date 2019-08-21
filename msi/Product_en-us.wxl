@@ -20,7 +20,7 @@
     <String Id="FeatureMainProgramTitle">Main program</String>
 
     <String Id="ServiceDisplayName">uberAgent</String>
-    <String Id="ServiceDescription">Monitors the system's performance, applications and user experience.</String>
+    <String Id="ServiceDescription">openITCOCKPIT Monitoring Agent and remote plugin executor.</String>
 
     <String Id="ServerDlgTitle">{\WixUI_Font_Title}Receiver Configuration</String>
     <String Id="ServerDlgDescription">Target servers for uberAgent's data</String>
