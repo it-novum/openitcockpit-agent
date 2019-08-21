@@ -7,8 +7,6 @@
     - https://wiki.gnome.org/msitools/HowTo/CreateMSI
     - https://blogs.technet.microsoft.com/alexshev/2008/02/09/from-msi-to-wix-part-2-arp-support/
   -->
-
-  <?define VersionNumber="1.0.0" ?>
   
   <?define UpgradeCode="D9C60150-5F94-4CA2-8E40-58506D94A827" ?> <!-- DO NOT CHANGE ANYMORE -->
   <?define InfoURL="https://openitcockpit.io/" ?>
