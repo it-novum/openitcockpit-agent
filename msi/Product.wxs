@@ -13,7 +13,7 @@
   <?define UpgradeCode="D9C60150-5F94-4CA2-8E40-58506D94A827" ?> <!-- DO NOT CHANGE ANYMORE -->
   <?define InfoURL="https://openitcockpit.io/" ?>
 
-  <Product Id="*" Name="!(loc.ApplicationName)" Language="!(loc.Language)" Version="$(var.VersionNumber)"
+  <Product Id="*" Name="!(loc.ApplicationDisplayName)" Language="!(loc.Language)" Version="$(var.VersionNumber)"
     Manufacturer="!(loc.ManufacturerFullName)" UpgradeCode="$(var.UpgradeCode)" >
     
     <Package Id="*" InstallerVersion="400" Compressed="yes" InstallScope="perMachine"
@@ -93,23 +93,22 @@
           <Directory Id="INSTALLDIR" Name="!(loc.ApplicationName)">
 
             <!-- Installation directory as a component so it can be emptied during uninstall (by default files added by someone other than Windows Installer are not removed) -->
-            <Component Id="INSTALLDIR_comp" Guid="EBF690DB-93C8-41E4-A40B-A4CE0DFDA3AD">
+            <Component Id="INSTALLDIR_comp" Guid="EBF690DB-93C8-41E4-A40B-A4CE0DFDA3AD" KeyPath="yes">
               <CreateFolder />
               <RemoveFile Id="RemoveFilesFromAppDirectory" Name="*.*" On="uninstall" />
             </Component>
 
-            <Component Id="MainExecutables" Guid="EDD45F38-6647-4132-818F-D4D4C6F5535F" KeyPath="yes">
-              <File Id="oitcAgentExe"       Name="openitcockpit-agent-python3.exe" Source="..\executables\openitcockpit-agent-python3.exe" />
+            <Component Id="MainExecutable" Guid="EDD45F38-6647-4132-818F-D4D4C6F5535F" KeyPath="yes">
+              <File Id="oitcAgentExe"       Name="openitcockpit-agent-python3.exe" Source="..\executables\openitcockpit-agent-python3.exe"/>
+            </Component>
+
+            <Component Id="ExampleConfig" Guid="D2C72D55-FA35-4A53-9EC3-55EEE9FD5A5A" KeyPath="yes">
               <File Id="exampleAgentConfig" Name="config.cnf" Source="..\example_config.cnf" />
             </Component>
 
             <Component Id="ServiceComp" Guid="CA7377FB-31D3-40F7-9B74-68490D7285DA">
-              <File Id="OitcAgentSvcExe"    Name="OitcAgentSvc.exe" Source="..\executables\OitcAgentSvc.exe"  KeyPath="yes" />
+              <File Id="OitcAgentSvcExe"    Name="OitcAgentSvc.exe" Source="..\executables\OitcAgentSvc.exe" KeyPath="yes"  />
 
-              <!--
-              <ServiceInstall Id="ServiceInstaller" Name="MyService" Type="ownProcess" Vital="yes" DisplayName="My Service" Description="My Service Description" Start="auto" Account="LocalSystem" ErrorControl="normal" Arguments=" /start MyService" Interactive="no" />
-              <ServiceControl Id="StartService" Name="MyService" Stop="both" Start="install" Remove="uninstall" Wait="yes" />
-              -->
               <ServiceInstall Id="ServiceInstaller" Account="LocalSystem" Description="!(loc.ServiceDescription)" DisplayName="oitcAgentSvc" ErrorControl="normal"
                 LoadOrderGroup="NetworkProvider" Name="oitcAgentSvc" Start="auto" Type="ownProcess" Vital="yes" />
               <ServiceControl Id="ServiceControl" Name="oitcAgentSvc" Start="install" Stop="both" Remove="uninstall" Wait="yes" />
@@ -134,12 +133,22 @@
     <Feature Id='Complete' Level='1'>
       <ComponentRef Id="INSTALLDIR_comp" />
 
-      <ComponentRef Id='MainExecutables' />
+      <ComponentRef Id='MainExecutable' />
+
+      <ComponentRef Id='ExampleConfig' />
 
       <ComponentRef Id='ServiceComp' />
 
       <ComponentRef Id="RegValInstallLocation_comp" />
     </Feature>
-      
+    
+    <UI>
+      <!-- Define the installer UI -->
+      <UIRef Id="WixUi_Main" />
+    </UI>
+
+    <!-- Link UI input fields to variables in this XML -->
+    <Property Id="WIXUI_INSTALLDIR" Value="INSTALLDIR" />
+
   </Product>
 </Wix>

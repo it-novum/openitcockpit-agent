@@ -3,12 +3,13 @@
     <String Id="Language">1033</String>
 
     <String Id="ApplicationName">oitcAgent</String>
+    <String Id="ApplicationDisplayName">openITCOCKPIT Monitoring Agent</String>
     <String Id="ManufacturerName">it-novum</String>
     <String Id="ManufacturerFullName">it-novum GmbH Deutschland</String>
     <String Id="ProductDescription">openITCOCKPIT Monitoring Agent</String>
     <String Id="Comments">Installs openITCOCKPIT Monitoring Agent</String>
 
-    <String Id="LicenseRtf" Overridable="yes">msi\License-en.rtf</String>
+    <String Id="LicenseRtf" Overridable="yes">License-en.rtf</String>
 
 
     <String Id="OS2Old">This product requires at least Windows Vista / Windows Server 2008.</String>
