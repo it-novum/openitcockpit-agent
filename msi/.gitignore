@@ -1,5 +1,7 @@
 *.wixobj
 *.msi
 OitcAgentSvc/.vs
-OitcAgentSvc/bin
-OitcAgentSvc/obj
+OitcAgentSvc/OitcAgentSvc/bin
+OitcAgentSvc/OitcAgentSvc/obj
+OitcAgentSvc/OitcAgentSvc/bin/*
+OitcAgentSvc/OitcAgentSvc/obj/*
