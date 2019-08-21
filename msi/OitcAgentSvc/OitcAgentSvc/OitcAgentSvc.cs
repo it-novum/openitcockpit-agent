@@ -5,6 +5,7 @@ using System.Timers;
 using System.Runtime.InteropServices;
 using Microsoft.Win32;
 using System.Threading;
+using System.IO;
 
 // MIT License
 
@@ -88,6 +89,12 @@ namespace OitcAgentSvc
             string agentBin = agentPath + @"openitcockpit-agent-python3.exe";
 
             AgentProcess = new Process();
+
+            string configFile = agentPath + @"config.cnf";
+            if (File.Exists(configFile))
+            {
+                AgentProcess.StartInfo.Arguments = "--config \"" + configFile + "\"";
+            }
 
             AgentProcess.StartInfo.UseShellExecute = false;
             AgentProcess.StartInfo.FileName = agentBin;
