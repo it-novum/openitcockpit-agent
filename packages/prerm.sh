@@ -21,7 +21,7 @@ if [ -f /usr/bin/openitcockpit-agent-python3.macos.bin ]; then
     set +e
     /bin/launchctl list | grep com.it-novum.openitcockpit.agent
     RC=$?
-    if [ $RC -eq 0 ]; then
+    if [ "$RC" -eq 0 ]; then
         /bin/launchctl stop com.it-novum.openitcockpit.agent
         /bin/launchctl unload -F /Library/LaunchDaemons/com.it-novum.openitcockpit.agent.plist
     fi

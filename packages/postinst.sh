@@ -47,7 +47,7 @@ if [ -f /usr/bin/openitcockpit-agent-python3.macos.bin ]; then
     set +e
     /bin/launchctl list | grep com.it-novum.openitcockpit.agent
     RC=$?
-    if [ $RC -eq 1 ]; then
+    if [ "$RC" -eq 1 ]; then
         enableConfig="1"
     fi
     set -e
