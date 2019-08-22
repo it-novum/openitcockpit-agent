@@ -16,6 +16,8 @@ fi
 
 if [ -f /usr/bin/openitcockpit-agent-python3.macos.bin ]; then
 
+    touch /tmp/test123123123
+
     set +e
     /bin/launchctl list | grep com.it-novum.openitcockpit.agent
     RC=$?
