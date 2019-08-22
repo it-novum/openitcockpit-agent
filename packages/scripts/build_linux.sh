@@ -1,6 +1,6 @@
 #!/bin/bash
 
-if [ ! -d "openitcockpit-agent" ]; then
+if [ -d "$(pwd)/openitcockpit-agent" ]; then
     cd openitcockpit-agent/
     git pull
     cd ../

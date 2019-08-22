@@ -1,6 +1,10 @@
 #!/bin/bash
+#
+#
+# This script can ONLY be executed on a macOS system!
+#
 
-if [ ! -d "openitcockpit-agent" ]; then
+if [ -d "$(pwd)/openitcockpit-agent" ]; then
     cd openitcockpit-agent/
     git pull
     cd ../
@@ -19,5 +23,5 @@ cp openitcockpit-agent/example_customchecks.cnf package_osx/Library/openitcockpi
 cp openitcockpit-agent/packages/init/com.it-novum.openitcockpit.agent.plist package_osx/Library/LaunchDaemons/com.it-novum.openitcockpit.agent.plist
 
 # MacOS x64 (only runs on macOS)
-fpm -s dir -t rpm -C package --name oitc-agent --vendor "it-novum GmbH" --license "Apache License Version 2.0" --config-files Library/openitcockpit-agent --architecture native --maintainer "<daniel.ziegler@it-novum.com>" --description "openITCOCKPIT Monitoring Agent and remote plugin executor." --url "https://openitcockpit.io" --before-install openitcockpit-agent/packages/preinst.sh --after-install openitcockpit-agent/packages/postinst.sh --version "1.0.0"
+fpm -s dir -t osxpkg -C package_osx --name oitc-agent --vendor "it-novum GmbH" --license "Apache License Version 2.0" --config-files Library/openitcockpit-agent --architecture native --maintainer "<daniel.ziegler@it-novum.com>" --description "openITCOCKPIT Monitoring Agent and remote plugin executor." --url "https://openitcockpit.io" --before-install openitcockpit-agent/packages/preinst.sh --after-install openitcockpit-agent/packages/postinst.sh --version "1.0.0"
 
