@@ -19,6 +19,9 @@ fi
 
 if [ -f /usr/bin/openitcockpit-agent-python3.macos.bin ]; then
 
-    /bin/launchctl stop com.it-novum.openitcockpit.agent
-
+    if [ -f /Library/LaunchDaemons/com.it-novum.openitcockpit.agent.plist ]; then
+        /bin/launchctl stop com.it-novum.openitcockpit.agent
+        /bin/launchctl unload -F /Library/LaunchDaemons/com.it-novum.openitcockpit.agent.plist
+    fi
+    
 fi
