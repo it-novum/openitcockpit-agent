@@ -12,8 +12,8 @@ set -e
 set -u
 
 i=0
-DAEMON="$agentBinary"
-DAEMON_OPTS="--config $configFile"
+DAEMON="/usr/bin/openitcockpit-agent-python3.linux.bin"
+DAEMON_OPTS="--config /etc/openitcockpit-agent/customchecks.cnf"
 PIDFILE=/var/run/openitcockpit-agent.pid
 export PATH="/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
 

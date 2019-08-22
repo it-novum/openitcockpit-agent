@@ -7,6 +7,7 @@ set -e
 # Exit if variable is undefined
 set -u
 
+
 if [ -f /usr/bin/openitcockpit-agent-python3.linux.bin ]; then
 
     if [ -x "$(command -v systemctl)" ]; then
@@ -23,19 +24,6 @@ if [ -f /usr/bin/openitcockpit-agent-python3.linux.bin ]; then
         
         systemctl daemon-reload
         systemctl start openitcockpit-agent
-        
-    elif [ "$OS" == "Darwin" ]; then
-        
-        enableConfig="0"
-        if [ ! -f /Library/LaunchDaemons/com.it-novum.openitcockpit.agent.plist ]; then
-            enableConfig="1"
-        fi
-        
-        if [ "$enableConfig" == "1" ]; then
-            /bin/launchctl load /Library/LaunchDaemons/com.it-novum.openitcockpit.agent.plist
-        fi
-        
-        /bin/launchctl start com.it-novum.openitcockpit.agent
     else
         
         enableConfig="0"
@@ -53,3 +41,17 @@ if [ -f /usr/bin/openitcockpit-agent-python3.linux.bin ]; then
 
 fi
 
+if [ -f /usr/bin/openitcockpit-agent-python3.macos.bin ]; then
+
+    enableConfig="0"
+    if [ ! -f /Library/LaunchDaemons/com.it-novum.openitcockpit.agent.plist ]; then
+        enableConfig="1"
+    fi
+    
+    if [ "$enableConfig" == "1" ]; then
+        /bin/launchctl load /Library/LaunchDaemons/com.it-novum.openitcockpit.agent.plist
+    fi
+    
+    /bin/launchctl start com.it-novum.openitcockpit.agent
+
+fi
