@@ -24,6 +24,7 @@ if [ -f /usr/bin/openitcockpit-agent-python3.linux.bin ]; then
         
         systemctl daemon-reload
         systemctl start openitcockpit-agent
+        systemctl enable openitcockpit-agent
     else
         
         enableConfig="0"
