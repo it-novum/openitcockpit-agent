@@ -17,6 +17,9 @@ certfile =
 # Example: /etc/ssl/private/ssl-cert-snakeoil.key;
 keyfile =
 
+# Try to enable auto ssl mode for webserver
+try-autossl = true
+
 # Print most messages
 verbose = false
 

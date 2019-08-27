@@ -36,19 +36,24 @@
 import sys
 import os
 import io
-from os import access, R_OK, devnull
-from os.path import isfile
 import getopt
 import platform
+import datetime
 import time
 import json
 import socket
 import configparser
 import traceback
 import base64
+import signal
+import OpenSSL
+
+from os import access, R_OK, devnull
+from os.path import isfile
 from time import sleep
 from contextlib import contextmanager
-import signal
+from OpenSSL.SSL import FILETYPE_PEM
+from OpenSSL.crypto import (dump_certificate_request, dump_privatekey, load_certificate, PKey, TYPE_RSA, X509Req)
 
 isPython3 = False
 system = 'linux'
@@ -60,12 +65,13 @@ if (sys.version_info > (3, 0)):
     isPython3 = True
     import concurrent.futures as futures
     import urllib.request, urllib.parse
+    import subprocess
+    
     from _thread import start_new_thread as permanent_check_thread
     from _thread import start_new_thread as permanent_webserver_thread
     from _thread import start_new_thread as oitc_notification_thread
     from _thread import start_new_thread as permanent_customchecks_check_thread
     from http.server import BaseHTTPRequestHandler, HTTPServer
-    import subprocess
     from subprocess import Popen, PIPE
 else:
     print('#########################################################')
@@ -79,15 +85,17 @@ else:
     print('#########################################################')
     print('')
     
-    from concurrent import futures
     import urllib
     import urllib2
+    import subprocess32 as subprocess
+    
+    from concurrent import futures
     from thread import start_new_thread as permanent_check_thread
     from thread import start_new_thread as permanent_webserver_thread
     from thread import start_new_thread as oitc_notification_thread
     from thread import start_new_thread as permanent_customchecks_check_thread
     from BaseHTTPServer import BaseHTTPRequestHandler, HTTPServer
-    import subprocess32 as subprocess
+    
 try:
     import psutil
     if isPython3 and psutil.version_info < (5, 5, 0):
@@ -111,6 +119,7 @@ def signal_handler(sig, frame):
 
 agentVersion = "1.0.0"
 enableSSL = False
+autossl = True
 cached_check_data = {}
 cached_customchecks_check_data = {}
 cached_diskIO = {}
@@ -123,11 +132,19 @@ temperatureIsFahrenheit = False
 initialized = False
 
 thread_stop_requested = False
+webserver_stop_requested = False
 
 permanent_check_thread_running = False
 permanent_webserver_thread_running = False
 oitc_notification_thread_running = False
 permanent_customchecks_check_thread_running = False
+
+ssl_csr_file = '/tmp/etc_agent/agent.csr'
+ssl_cert_file = '/tmp/etc_agent/agent.crt'
+ssl_key_file = '/tmp/etc_agent/agent.key'
+agent_id = 'XXX089zugbhnjk'
+apiKey = 'X-OITC-flofirjheihiugi'
+apiURL = 'http://localhost/register_agent.php'
 
 sample_config = """
 [default]
@@ -136,6 +153,7 @@ sample_config = """
   address = 127.0.0.1
   certfile = 
   keyfile = 
+  try-autossl = true
   verbose = false
   stacktrace = false
   config-update-mode = false
@@ -769,6 +787,11 @@ def check_update_data(data):
                     newconfig['default']['certfile'] = str(jdata[key]['certfile'])
                 if 'keyfile' in jdata[key]:
                     newconfig['default']['keyfile'] = str(jdata[key]['keyfile'])
+                if 'try-autossl' in jdata[key]:
+                    if jdata[key]['try-autossl'] in (1, "1", "true", "True"):
+                        newconfig['default']['try-autossl'] = "true"
+                    else:
+                        newconfig['default']['try-autossl'] = "false"
                 if 'auth' in jdata[key]:
                     newconfig['default']['auth'] = str(jdata[key]['auth'])
                 if 'verbose' in jdata[key]:
@@ -1154,10 +1177,15 @@ def process_webserver(enableSSL=False):
         import ssl
         protocol = 'https'
         httpd.socket = ssl.wrap_socket(httpd.socket, keyfile=config['default']['keyfile'], certfile=config['default']['certfile'], server_side=True)
+    elif autossl and file_readable(ssl_key_file) and file_readable(ssl_cert_file):
+        import ssl
+        protocol = 'https'
+        httpd.socket = ssl.wrap_socket(httpd.socket, keyfile=ssl_key_file, certfile=ssl_cert_file, server_side=True)
+    
     if verbose:
         print("Server startet at %s://%s:%s with a check interval of %d seconds" % (protocol, config['default']['address'], str(config['default']['port']), int(config['default']['interval'])))
     
-    while not thread_stop_requested:
+    while not thread_stop_requested and not webserver_stop_requested:
         try:
             httpd.handle_request()
         except:
@@ -1169,6 +1197,112 @@ def process_webserver(enableSSL=False):
     if verbose:
         print('stopped permanent_webserver_thread')
 
+def create_csr(ssl_csr_file, ssl_cert_file, ssl_key_file, agent_id, apiKey, apiURL):
+    # pip install pycryptodome pyopenssl
+    global webserver_stop_requested
+    tmp_permanent_webserver_thread_running = permanent_webserver_thread_running
+    
+    try:
+        
+        # ECC (not working yet)
+        # 
+        # from Crypto.PublicKey import ECC
+        # 
+        # key = ECC.generate(curve='prime256v1')
+        # req = X509Req()
+        # req.get_subject().CN = agent_id+'.agent.oitc'
+        # publicKey = key.public_key().export_key(format='PEM', compress=False)
+        # privateKey = key.export_key(format='PEM', compress=False, use_pkcs8=True)
+        # 
+        # pubdict = {}
+        # pubdict['_only_public'] = publicKey
+        # req.sign(publicKey, 'sha384')
+        
+        
+        # create public/private key
+        key = PKey()
+        key.generate_key(TYPE_RSA, 4096)
+    
+        # Generate CSR
+        req = X509Req()
+        req.get_subject().CN = agent_id+'.agent.oitc'
+        #req.get_subject().O = 'XYZ Widgets Inc'
+        #req.get_subject().OU = 'IT Department'
+        #req.get_subject().L = 'Seattle'
+        #req.get_subject().ST = 'Washington'
+        #req.get_subject().C = 'US'
+        #req.get_subject().emailAddress = 'e@example.com'
+        req.set_pubkey(key)
+        req.sign(key, 'sha256')
+    
+        csr = dump_certificate_request(FILETYPE_PEM, req)
+        with open(ssl_csr_file, 'wb+') as f:
+            f.write(csr)
+        with open(ssl_key_file, 'wb+') as f:
+            f.write(dump_privatekey(FILETYPE_PEM, key))
+            
+        #print(csr)
+        
+        data = bytes(urllib.parse.urlencode({'csr': csr}).encode())
+        req = urllib.request.Request(apiURL)
+        req.add_header('Authorization', 'X-OITC-API '+apiKey.strip())
+        handler = urllib.request.urlopen(req, data)
+        
+        jdata = json.loads(handler.read().decode('utf-8'))
+        if 'signed' in jdata:
+            #print(jdata['signed'])
+            with open(ssl_cert_file, 'w+') as f:
+                f.write(jdata['signed'])
+        
+            if initialized:
+                webserver_stop_requested = True
+                
+                try:
+                    fake_webserver_request()
+                except:
+                    if stacktrace:
+                        traceback.print_exc()
+                
+                while webserver_stop_requested:
+                    if permanent_webserver_thread_running:
+                        sleep(1)
+                    else:
+                        webserver_stop_requested = False
+            
+            if tmp_permanent_webserver_thread_running:  # webserver was running before
+                # start webserver thread
+                permanent_webserver_thread(process_webserver, (enableSSL,))
+
+            if verbose:
+                print('signed cert updated')
+    except:
+        if verbose:
+            print('An error occured during autossl certificate renew process')
+        if stacktrace:
+            traceback.print_exc()
+
+def check_auto_certificate():
+    if not file_readable(ssl_cert_file):
+        create_csr(ssl_csr_file, ssl_cert_file, ssl_key_file, agent_id, apiKey, apiURL)
+    if file_readable(ssl_cert_file):    # repeat condition because create_csr could fail
+        with open(ssl_cert_file, 'r') as f:
+            cert = f.read()
+            x509 = load_certificate(FILETYPE_PEM, cert)
+            x509info = x509.get_notAfter()
+            exp_day = x509info[6:8].decode('utf-8')
+            exp_month = x509info[4:6].decode('utf-8')
+            exp_year = x509info[:4].decode('utf-8')
+            exp_date = str(exp_day) + "-" + str(exp_month) + "-" + str(exp_year)
+            
+            if verbose:
+                print("SSL Certificate will be expired on (DD-MM-YYYY)", exp_date)
+                print("Expire in days:", datetime.date(int(exp_year), int(exp_month), int(exp_day)) - datetime.datetime.now().date())
+            
+            if datetime.date(int(exp_year), int(exp_month), int(exp_day)) - datetime.datetime.now().date() <= datetime.timedelta(182):
+                if verbose:
+                    print('SSL Certificate will expire soon. Try to create a new one automatically')
+                create_csr(ssl_csr_file, ssl_cert_file, ssl_key_file, agent_id, apiKey, apiURL)
+                check_auto_certificate()
 
 def print_help():
     print('usage: ./oitc_agent.py -v -i <check interval seconds> -p <port number> -a <ip address> -c <config path> --certfile <certfile path> --keyfile <keyfile path> --auth <user>:<password> --oitc-url <url> --oitc-apikey <api key> --oitc-interval <seconds>')
@@ -1192,6 +1326,7 @@ def print_help():
     print('\nAdd there parameters to enable ssl encrypted http(s) server:')
     print('--certfile <certfile path>   : /path/to/cert.pem')
     print('--keyfile <keyfile path>     : /path/to/key.pem')
+    print('--try-autossl                : try to enable auto webserver ssl mode')
     print('\nSample config file:')
     print(sample_config)
     print('\nSample config file for custom check commands:')
@@ -1207,7 +1342,7 @@ def load_configuration():
     global temperatureIsFahrenheit
     
     try:
-        opts, args = getopt.getopt(sys.argv[1:],"h:i:p:a:c:vs",["interval=","port=","address=","config=","customchecks=","certfile=","keyfile=","auth=","oitc-hostuuid=","oitc-url=","oitc-apikey=","oitc-interval=","config-update-mode","temperature-fahrenheit","verbose","stacktrace","help"])
+        opts, args = getopt.getopt(sys.argv[1:],"h:i:p:a:c:vs",["interval=","port=","address=","config=","customchecks=","certfile=","keyfile=","auth=","oitc-hostuuid=","oitc-url=","oitc-apikey=","oitc-interval=","config-update-mode","temperature-fahrenheit","try-autossl","verbose","stacktrace","help"])
     except getopt.GetoptError:
         print_help()
         sys.exit(2)
@@ -1252,6 +1387,8 @@ def load_configuration():
             config['default']['certfile'] = str(arg)
         elif opt == "--keyfile":
             config['default']['keyfile'] = str(arg)
+        elif opt in ("--try-autossl"):
+            config['default']['try-autossl'] = "true"
         elif opt == "--auth":
             config['default']['auth'] = str(base64.b64encode(arg.encode())).encode("utf-8")
         elif opt in ("-v", "--verbose"):
@@ -1281,13 +1418,18 @@ def load_configuration():
         verbose = True
     else:
         verbose = False
-        
+    
     if config['default']['stacktrace'] in (1, "1", "true", "True", True):
         stacktrace = True
     else:
         stacktrace = False
-
-        
+    
+    if config['default']['try-autossl'] in (1, "1", "true", "True", True):
+        autossl = True
+    else:
+        autossl = False
+    
+    
     if config['default']['temperature-fahrenheit'] in (1, "1", "true", "True", True):
         temperatureIsFahrenheit = True
     else:
@@ -1349,6 +1491,10 @@ def load_main_processing():
     
     while not reload_all():
         sleep(1)
+    
+    if autossl:
+        check_auto_certificate()    #need to be called before initialized = True to prevent webserver thread restart
+    
     initialized = True
     
     if 'oitc' in config and (config['oitc']['enabled'] in (1, "1", "true", "True", True) or added_oitc_parameter == 4):

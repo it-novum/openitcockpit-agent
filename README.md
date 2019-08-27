@@ -110,6 +110,7 @@ Add there parameters to enable ssl encrypted http(s) server:
 | ------ | ------ | ----------- | 
 |--certfile       |certfile path       |/path/to/cert.pem (absolute path recommended)    | 
 |--keyfile       |keyfile path       |/path/to/key.pem (absolute path recommended)    | 
+|--try-autossl       |       |try to enable auto webserver ssl mode    | 
 
 URL change from http://address:port to https://address:port
 
@@ -161,6 +162,7 @@ Sample config file (with default script values):
   address = 127.0.0.1
   certfile = 
   keyfile = 
+  try-autossl = true
   verbose = false
   stacktrace = false
   config-update-mode = false
@@ -202,6 +204,7 @@ JSON Example (file: new_config.json) for update mode and http://address:port/con
         "address": "127.0.0.1",
         "certfile": "/path",
         "keyfile": "",
+        "try-autossl": "true",
         "verbose": "true",
         "stacktrace": "false",
         "config-update-mode": "false",
