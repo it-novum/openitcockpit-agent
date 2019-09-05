@@ -9,13 +9,13 @@
 #
 # Windows:
 #   Download & install current python version from https://www.python.org/downloads/windows/
-#   open cmd and execute:   python.exe -m pip install psutil configparser --user
+#   open cmd and execute:   python.exe -m pip install psutil configparser pycryptodome pyopenssl --user
 #
 # Debian:       
 #       python3:
 #               apt-get install python3 python3-psutil
 #               pip3 uninstall psutil
-#               pip3 install configparser
+#               pip3 install configparser pycryptodome pyopenssl
 #       or
 #       python2:
 #               apt-get install python python-psutil
@@ -24,11 +24,11 @@
 # Ubuntu:
 #       Python 3:
 #               apt-get install python3 python3-pip
-#               pip3 install configparser psutil
+#               pip3 install configparser psutil pycryptodome pyopenssl
 #
 # Darwin:
 #               brew install python3
-#               pip3 install psutil configparser
+#               pip3 install psutil configparser pycryptodome pyopenssl
 #
 
 
@@ -47,6 +47,7 @@ import traceback
 import base64
 import signal
 import OpenSSL
+import ssl
 
 from os import access, R_OK, devnull
 from os.path import isfile
@@ -139,12 +140,14 @@ permanent_webserver_thread_running = False
 oitc_notification_thread_running = False
 permanent_customchecks_check_thread_running = False
 
+ssl_csr = None
 ssl_csr_file = '/tmp/etc_agent/agent.csr'
 ssl_cert_file = '/tmp/etc_agent/agent.crt'
 ssl_key_file = '/tmp/etc_agent/agent.key'
+ssl_ca_file = '/tmp/etc_agent/ca.crt'
 agent_id = 'XXX089zugbhnjk'
 apiKey = 'X-OITC-flofirjheihiugi'
-apiURL = 'http://localhost/register_agent.php'
+apiURL = 'http://localhost/agent_cert_generator.php'
 
 sample_config = """
 [default]
@@ -497,6 +500,7 @@ class Collect:
                 open_files = ""
                 children = []
                 
+                
                 if pid not in (1, 2):
                     try:
                         if callable(p.parent):
@@ -519,162 +523,211 @@ class Collect:
                             traceback.print_exc()
                         if verbose:
                             print ("'%s' Process is not allowing us to get the child process ids!" % (str(pid)))
-                        
-                try:
-                    if callable(p.status):
-                        status = p.status()
-                    else:
-                        status = p.status
-                except (psutil.NoSuchProcess, ProcessLookupError):
-                        continue;
-                except:
-                    if stacktrace:
-                        traceback.print_exc()
-                    if verbose:
-                        print ("'%s' Process is not allowing us to get the status option!" % (name if name != "" else str(pid)))
                 
-                try:
-                    if callable(p.username):
-                        username = p.username()
-                    else:
-                        username = p.username
-                except (psutil.NoSuchProcess, ProcessLookupError):
-                        continue;
-                except:
-                    if stacktrace:
-                        traceback.print_exc()
-                    if verbose:
-                        print ("'%s' Process is not allowing us to get the username option!" % (name if name != "" else str(pid)))
-                    
-                try:
-                    if callable(p.nice):
+                
+                if isPython3:
+                    try:
                         nice = p.nice()
-                    else:
-                        nice = p.nice
-                except (psutil.NoSuchProcess, ProcessLookupError):
+                    except (psutil.NoSuchProcess, ProcessLookupError):
                         continue;
-                except:
-                    if stacktrace:
-                        traceback.print_exc()
-                    if verbose:
-                        print ("'%s' Process is not allowing us to get the nice option!" % (name if name != "" else str(pid)))
-                    
-                try:
-                    if callable(p.name):
+                    except:
+                        if stacktrace:
+                            traceback.print_exc()
+                        if verbose:
+                            print ("'%s' Process is not allowing us to get the nice option!" % (name if name != "" else str(pid)))
+                
+                    try:
                         name = p.name()
-                    else:
-                        name = p.name
-                except (psutil.NoSuchProcess, ProcessLookupError):
+                    except (psutil.NoSuchProcess, ProcessLookupError):
                         continue;
-                except:
-                    if stacktrace:
-                        traceback.print_exc()
-                    if verbose:
-                        print ("'%s' Process is not allowing us to get the name option!" % (name if name != "" else str(pid)))
-                    
-                try:
-                    if callable(p.exe):
+                    except:
+                        if stacktrace:
+                            traceback.print_exc()
+                        if verbose:
+                            print ("'%s' Process is not allowing us to get the name option!" % (name if name != "" else str(pid)))
+                
+                    try:
                         exe = p.exe()
-                    else:
-                        exe = p.exe
-                except (psutil.NoSuchProcess, ProcessLookupError):
+                    except (psutil.NoSuchProcess, ProcessLookupError):
                         continue;
-                except:
-                    if stacktrace:
-                        traceback.print_exc()
-                    if verbose:
-                        print ("'%s' Process is not allowing us to get the exec option!" % (name if name != "" else str(pid)))
-                        
-                try:
-                    if callable(p.cmdline):
+                    except:
+                        if stacktrace:
+                            traceback.print_exc()
+                        if verbose:
+                            print ("'%s' Process is not allowing us to get the exec option!" % (name if name != "" else str(pid)))
+                    
+                    try:
                         cmdline = p.cmdline()
-                    else:
-                        cmdline = p.cmdline
-                except (psutil.NoSuchProcess, ProcessLookupError):
+                    except (psutil.NoSuchProcess, ProcessLookupError):
                         continue;
-                except:
-                    if stacktrace:
-                        traceback.print_exc()
-                    if verbose:
-                        print ("'%s' Process is not allowing us to get the cmdline option!" % (name if name != "" else str(pid)))
+                    except:
+                        if stacktrace:
+                            traceback.print_exc()
+                        if verbose:
+                            print ("'%s' Process is not allowing us to get the cmdline option!" % (name if name != "" else str(pid)))
                     
-                try:
-                    if hasattr(p, "cpu_percent") and callable(p.cpu_percent):
+                    try:
                         cpu_percent = p.cpu_percent(interval=None)
-                    else:
-                        cpu_percent = p.get_cpu_percent(interval=None)
-                except (psutil.NoSuchProcess, ProcessLookupError):
+                    except (psutil.NoSuchProcess, ProcessLookupError):
                         continue;
-                except:
-                    if stacktrace:
-                        traceback.print_exc()
-                    if verbose:
-                        print ("'%s' Process is not allowing us to get the CPU usage!" % (name if name != "" else str(pid)))
-                        
-                try:
-                    if hasattr(p, "memory_info") and callable(p.memory_info):
-                        memory_info = p.memory_info()._asdict()
-                    else:
-                        memory_info = p.get_memory_info()._asdict()
-                except (psutil.NoSuchProcess, ProcessLookupError):
-                        continue;
-                except:
-                    if stacktrace:
-                        traceback.print_exc()
-                    if verbose:
-                        print ("'%s' Process is not allowing us to get memory usage information!" % (name if name != "" else str(pid)))
+                    except:
+                        if stacktrace:
+                            traceback.print_exc()
+                        if verbose:
+                            print ("'%s' Process is not allowing us to get the CPU usage!" % (name if name != "" else str(pid)))
                     
-                try:
-                    if hasattr(p, "memory_percent") and callable(p.memory_percent):
+                    try:
+                        memory_info = p.memory_info()._asdict()
+                    except (psutil.NoSuchProcess, ProcessLookupError):
+                        continue;
+                    except:
+                        if stacktrace:
+                            traceback.print_exc()
+                        if verbose:
+                            print ("'%s' Process is not allowing us to get memory usage information!" % (name if name != "" else str(pid)))
+                    
+                    try:
                         memory_percent = p.memory_percent()
-                    else:
-                        memory_percent = p.get_memory_percent()
-                except (psutil.NoSuchProcess, ProcessLookupError):
+                    except (psutil.NoSuchProcess, ProcessLookupError):
                         continue;
-                except:
-                    if stacktrace:
-                        traceback.print_exc()
-                    if verbose:
-                        print ("'%s' Process is not allowing us to get the percent of memory usage!" % (name if name != "" else str(pid)))
-
-                try:
-                    if hasattr(p, "num_fds") and callable(p.num_fds):
+                    except:
+                        if stacktrace:
+                            traceback.print_exc()
+                        if verbose:
+                            print ("'%s' Process is not allowing us to get the percent of memory usage!" % (name if name != "" else str(pid)))
+                    
+                    try:
                         num_fds = p.num_fds()
-                    elif hasattr(p, "get_num_fds") and callable(p.get_num_fds):
-                        num_fds = p.get_num_fds()
-                except (psutil.NoSuchProcess, ProcessLookupError):
+                    except (psutil.NoSuchProcess, ProcessLookupError):
                         continue;
-                except:
-                    if stacktrace:
-                        traceback.print_exc()
-                    if verbose:
-                        print ("'%s' Process is not allowing us to get the num_fds option!" % (name if name != "" else str(pid)))
-                
-                try:
-                    if hasattr(p, "io_counters") and callable(p.io_counters):
+                    except:
+                        if stacktrace:
+                            traceback.print_exc()
+                        if verbose:
+                            print ("'%s' Process is not allowing us to get the num_fds option!" % (name if name != "" else str(pid)))
+                    
+                    try:
                         io_counters = p.io_counters.__dict__
-                    elif hasattr(p, "get_io_counters") and callable(p.get_io_counters):
-                        io_counters = p.get_io_counters().__dict__
-                except (psutil.NoSuchProcess, ProcessLookupError):
+                    except (psutil.NoSuchProcess, ProcessLookupError):
                         continue;
-                except:
-                    if stacktrace:
-                        traceback.print_exc()
-                    if verbose:
-                        print ("'%s' Process is not allowing us to get the IO counters!" % (name if name != "" else str(pid)))
-                
-                try:
-                    if hasattr(p, "open_files") and callable(p.open_files):
+                    except:
+                        if stacktrace:
+                            traceback.print_exc()
+                        if verbose:
+                            print ("'%s' Process is not allowing us to get the IO counters!" % (name if name != "" else str(pid)))
+                    
+                    try:
                         open_files = p.open_files()
-                    else:
-                        open_files = p.get_open_files()
-                except (psutil.NoSuchProcess, ProcessLookupError):
+                    except (psutil.NoSuchProcess, ProcessLookupError):
                         continue;
-                except psutil.AccessDenied:
-                    if stacktrace:
-                        traceback.print_exc()
-                    if verbose:
-                        print ("'%s' Process is not allowing us to get the open_files option!" % (name if name != "" else str(pid)))
+                    except psutil.AccessDenied:
+                        if stacktrace:
+                            traceback.print_exc()
+                        if verbose:
+                            print ("'%s' Process is not allowing us to get the open_files option!" % (name if name != "" else str(pid)))
+                
+                
+                if not isPython3:
+                    try:
+                        nice = p.nice
+                    except (psutil.NoSuchProcess, ProcessLookupError):
+                        continue;
+                    except:
+                        if stacktrace:
+                            traceback.print_exc()
+                        if verbose:
+                            print ("'%s' Process is not allowing us to get the nice option!" % (name if name != "" else str(pid)))
+                    
+                    try:
+                        name = p.name
+                    except (psutil.NoSuchProcess, ProcessLookupError):
+                        continue;
+                    except:
+                        if stacktrace:
+                            traceback.print_exc()
+                        if verbose:
+                            print ("'%s' Process is not allowing us to get the name option!" % (name if name != "" else str(pid)))
+                    
+                    try:
+                        exe = p.exe
+                    except (psutil.NoSuchProcess, ProcessLookupError):
+                        continue;
+                    except:
+                        if stacktrace:
+                            traceback.print_exc()
+                        if verbose:
+                            print ("'%s' Process is not allowing us to get the exec option!" % (name if name != "" else str(pid)))
+                        
+                    try:
+                        cmdline = p.cmdline
+                    except (psutil.NoSuchProcess, ProcessLookupError):
+                        continue;
+                    except:
+                        if stacktrace:
+                            traceback.print_exc()
+                        if verbose:
+                            print ("'%s' Process is not allowing us to get the cmdline option!" % (name if name != "" else str(pid)))
+                    
+                    try:
+                        cpu_percent = p.get_cpu_percent(interval=None)
+                    except (psutil.NoSuchProcess, ProcessLookupError):
+                        continue;
+                    except:
+                        if stacktrace:
+                            traceback.print_exc()
+                        if verbose:
+                            print ("'%s' Process is not allowing us to get the CPU usage!" % (name if name != "" else str(pid)))
+                        
+                    try:
+                        memory_info = p.get_memory_info()._asdict()
+                    except (psutil.NoSuchProcess, ProcessLookupError):
+                        continue;
+                    except:
+                        if stacktrace:
+                            traceback.print_exc()
+                        if verbose:
+                            print ("'%s' Process is not allowing us to get memory usage information!" % (name if name != "" else str(pid)))
+                    
+                    try:
+                        memory_percent = p.get_memory_percent()
+                    except (psutil.NoSuchProcess, ProcessLookupError):
+                        continue;
+                    except:
+                        if stacktrace:
+                            traceback.print_exc()
+                        if verbose:
+                            print ("'%s' Process is not allowing us to get the percent of memory usage!" % (name if name != "" else str(pid)))
+
+                    try:
+                        num_fds = p.get_num_fds()
+                    except (psutil.NoSuchProcess, ProcessLookupError):
+                        continue;
+                    except:
+                        if stacktrace:
+                            traceback.print_exc()
+                        if verbose:
+                            print ("'%s' Process is not allowing us to get the num_fds option!" % (name if name != "" else str(pid)))
+                
+                    try:
+                        io_counters = p.get_io_counters().__dict__
+                    except (psutil.NoSuchProcess, ProcessLookupError):
+                        continue;
+                    except:
+                        if stacktrace:
+                            traceback.print_exc()
+                        if verbose:
+                            print ("'%s' Process is not allowing us to get the IO counters!" % (name if name != "" else str(pid)))
+                
+                    try:
+                        open_files = p.get_open_files()
+                    except (psutil.NoSuchProcess, ProcessLookupError):
+                        continue;
+                    except psutil.AccessDenied:
+                        if stacktrace:
+                            traceback.print_exc()
+                        if verbose:
+                            print ("'%s' Process is not allowing us to get the open_files option!" % (name if name != "" else str(pid)))
+                    
                     
                 process = {
                     'name': name,
@@ -764,7 +817,25 @@ def isBase64(s):
         return base64.b64encode(base64.b64decode(s)) == s
     except Exception:
         return False
-    
+
+def check_update_crt(data):
+    try:
+        jdata = json.loads(data.decode('utf-8'))
+        if 'signed' in jdata and 'ca' in jdata:
+            with open(ssl_cert_file, 'w+') as f:
+                f.write(jdata['signed'])
+            with open(ssl_ca_file, 'w+') as f:
+                f.write(jdata['ca'])
+            
+            return True
+        
+    except Exception as e:
+        if stacktrace:
+            traceback.print_exc
+            print(e)
+        elif verbose:
+            print('an error occured during new crt processing')
+        
 def check_update_data(data):
     try:
         jdata = json.loads(data.decode('utf-8'))
@@ -902,6 +973,9 @@ class MyServer(BaseHTTPRequestHandler):
         self.send_header('WWW-Authenticate', 'Basic realm=')
         self.send_header('Content-type', 'text/html')
         self.end_headers()
+        
+    def get_csr(self):
+        return create_new_csr(ssl_csr_file, ssl_key_file, agent_id)
     
     def build_json_config(self):
         data = {}
@@ -936,6 +1010,10 @@ class MyServer(BaseHTTPRequestHandler):
             self.wfile.write(json.dumps(cached_check_data).encode())
         elif self.path == "/config" and config['default']['config-update-mode'] in (1, "1", "true", "True", True):
             self.wfile.write(json.dumps(self.build_json_config()).encode())
+        elif self.path == "/getCsr":
+            data = {}
+            data['csr'] = self.get_csr().decode("utf-8")
+            self.wfile.write(json.dumps(data).encode())
     
     def do_GET(self):
         try:
@@ -957,27 +1035,37 @@ class MyServer(BaseHTTPRequestHandler):
                 
     def _process_post_data(self, data):
         executor = futures.ThreadPoolExecutor(max_workers=1)
-        executor.submit(check_update_data, data)
-                
+        success = {}
+        success['success'] = True
+        successFalse = {}
+        successFalse['success'] = False
+        
+        if self.path == "/config" and config['default']['config-update-mode'] in (1, "1", "true", "True", True):
+            executor.submit(check_update_data, data)
+            return success
+        elif self.path == "/updateCrt":
+            if check_update_crt(data) == True:
+                executor.submit(restart_webserver)
+                return success
+        
+        return successFalse
+    
     def do_POST(self):
         try:
-            if config['default']['config-update-mode'] in (1, "1", "true", "True", True):
-                if 'auth' in config['default']:
-                    if str(config['default']['auth']).strip() and self.headers.get('Authorization') == None:
-                        self.do_AUTHHEAD()
-                        self.wfile.write('no auth header received'.encode())
-                    elif self.headers.get('Authorization') == 'Basic ' + config['default']['auth'] or config['default']['auth'] == "":
-                        self._process_post_data(data=self.rfile.read(int(self.headers['Content-Length'])))
-                        self.wfile.write(json.dumps({'success': True}).encode())
-                    elif str(config['default']['auth']).strip():
-                        self.do_AUTHHEAD()
-                        self.wfile.write(self.headers.get('Authorization').encode())
-                        self.wfile.write('not authenticated'.encode())
-                else:
-                    self._process_post_data(data=self.rfile.read(int(self.headers['Content-Length'])))
-                    self.wfile.write(json.dumps({'success': True}).encode())
+            if 'auth' in config['default']:
+                if str(config['default']['auth']).strip() and self.headers.get('Authorization') == None:
+                    self.do_AUTHHEAD()
+                    self.wfile.write('no auth header received'.encode())
+                elif self.headers.get('Authorization') == 'Basic ' + config['default']['auth'] or config['default']['auth'] == "":
+                    self.wfile.write(json.dumps(self._process_post_data(data=self.rfile.read(int(self.headers['Content-Length'])))).encode())
+                elif str(config['default']['auth']).strip():
+                    self.do_AUTHHEAD()
+                    self.wfile.write(self.headers.get('Authorization').encode())
+                    self.wfile.write('not authenticated'.encode())
             else:
-                self.wfile.write(json.dumps({'success': False}).encode())
+                retrn = self._process_post_data(data=self.rfile.read(int(self.headers['Content-Length'])))
+                print(retrn)
+                self.wfile.write(json.dumps(retrn).encode())
         except:
             traceback.print_exc
             print('caught something in do_POST')
@@ -1180,10 +1268,10 @@ def process_webserver(enableSSL=False):
     elif autossl and file_readable(ssl_key_file) and file_readable(ssl_cert_file):
         import ssl
         protocol = 'https'
-        httpd.socket = ssl.wrap_socket(httpd.socket, keyfile=ssl_key_file, certfile=ssl_cert_file, server_side=True)
+        httpd.socket = ssl.wrap_socket(httpd.socket, keyfile=ssl_key_file, certfile=ssl_cert_file, server_side=True, cert_reqs = ssl.CERT_REQUIRED, ca_certs = ssl_ca_file)
     
     if verbose:
-        print("Server startet at %s://%s:%s with a check interval of %d seconds" % (protocol, config['default']['address'], str(config['default']['port']), int(config['default']['interval'])))
+        print("Server started at %s://%s:%s with a check interval of %d seconds" % (protocol, config['default']['address'], str(config['default']['port']), int(config['default']['interval'])))
     
     while not thread_stop_requested and not webserver_stop_requested:
         try:
@@ -1197,10 +1285,33 @@ def process_webserver(enableSSL=False):
     if verbose:
         print('stopped permanent_webserver_thread')
 
-def create_csr(ssl_csr_file, ssl_cert_file, ssl_key_file, agent_id, apiKey, apiURL):
-    # pip install pycryptodome pyopenssl
+def restart_webserver():
     global webserver_stop_requested
+    
     tmp_permanent_webserver_thread_running = permanent_webserver_thread_running
+    time.sleep(2)
+    
+    if initialized:
+        webserver_stop_requested = True
+        
+        try:
+            fake_webserver_request()
+        except:
+            if stacktrace:
+                traceback.print_exc()
+        
+        while webserver_stop_requested:
+            if permanent_webserver_thread_running:
+                sleep(1)
+            else:
+                webserver_stop_requested = False
+    
+    if tmp_permanent_webserver_thread_running:  # webserver was running before
+        # start webserver thread
+        permanent_webserver_thread(process_webserver, (enableSSL,))
+
+def create_new_csr(ssl_csr_file, ssl_key_file, agent_id):
+    global ssl_csr
     
     try:
         
@@ -1226,6 +1337,15 @@ def create_csr(ssl_csr_file, ssl_cert_file, ssl_key_file, agent_id, apiKey, apiU
         # Generate CSR
         req = X509Req()
         req.get_subject().CN = agent_id+'.agent.oitc'
+        
+        
+        # Experimental; not supported by php agent csr sign method yet
+        san_list = ["DNS:localhost", "DNS:127.0.0.1"]
+        req.add_extensions([
+            OpenSSL.crypto.X509Extension(b"subjectAltName", True, (", ".join(san_list)).encode('ascii'))
+        ])
+        
+        
         #req.get_subject().O = 'XYZ Widgets Inc'
         #req.get_subject().OU = 'IT Department'
         #req.get_subject().L = 'Seattle'
@@ -1233,16 +1353,31 @@ def create_csr(ssl_csr_file, ssl_cert_file, ssl_key_file, agent_id, apiKey, apiU
         #req.get_subject().C = 'US'
         #req.get_subject().emailAddress = 'e@example.com'
         req.set_pubkey(key)
-        req.sign(key, 'sha256')
+        req.sign(key, 'sha512')
     
         csr = dump_certificate_request(FILETYPE_PEM, req)
         with open(ssl_csr_file, 'wb+') as f:
             f.write(csr)
         with open(ssl_key_file, 'wb+') as f:
             f.write(dump_privatekey(FILETYPE_PEM, key))
+        ssl_csr = csr
             
-        #print(csr)
+    except:
+        if verbose:
+            print('An error occured while creating a new csr')
+        if stacktrace:
+            traceback.print_exc()
+    
+    return csr
+
+def create_csr(ssl_csr_file, ssl_cert_file, ssl_key_file, agent_id, apiKey, apiURL):
+    # pip install pycryptodome pyopenssl
+    
+    try:
         
+        csr = create_new_csr(ssl_csr_file, ssl_key_file, agent_id)
+        
+        # try to use requests!
         data = bytes(urllib.parse.urlencode({'csr': csr}).encode())
         req = urllib.request.Request(apiURL)
         req.add_header('Authorization', 'X-OITC-API '+apiKey.strip())
@@ -1253,25 +1388,10 @@ def create_csr(ssl_csr_file, ssl_cert_file, ssl_key_file, agent_id, apiKey, apiU
             #print(jdata['signed'])
             with open(ssl_cert_file, 'w+') as f:
                 f.write(jdata['signed'])
+            with open(ssl_ca_file, 'w+') as f:
+                f.write(jdata['ca'])
         
-            if initialized:
-                webserver_stop_requested = True
-                
-                try:
-                    fake_webserver_request()
-                except:
-                    if stacktrace:
-                        traceback.print_exc()
-                
-                while webserver_stop_requested:
-                    if permanent_webserver_thread_running:
-                        sleep(1)
-                    else:
-                        webserver_stop_requested = False
-            
-            if tmp_permanent_webserver_thread_running:  # webserver was running before
-                # start webserver thread
-                permanent_webserver_thread(process_webserver, (enableSSL,))
+            restart_webserver()
 
             if verbose:
                 print('signed cert updated')
