@@ -3,7 +3,7 @@
 class registerAgent {
 
     public $ECC_CA = false;
-    public $days_CA = 36500
+    public $days_CA = 36500;
 
     public $oitcID = 'ghueiXerg9858zu39Mhgi873hu';
     public $caCertPath = '/var/www/html/testcrts/test_ecc_ca2.pem';
@@ -41,6 +41,8 @@ class registerAgent {
 
         if(isset($_POST['csr'])){
             echo json_encode($this->signAgentCsr($_POST['csr']));
+            //should return this if agent is unknown and needs to be confirmed by an user
+            #echo json_encode(['unknown' => true]);
         }
     }
     
@@ -89,7 +91,7 @@ function connectToAgent($port, $register){
     
     try{
         $result = json_decode($result, true);
-        if(isset($result['csr'])){
+        if(isset($result['csr']) && $result['csr'] != "disabled"){
             $data_string = json_encode($register->signAgentCsr($result['csr']));
 
             $curl = curl_init();
@@ -134,7 +136,7 @@ function connectToAgent($port, $register){
 $register = new registerAgent();
 
 //comment out to run in agent -> push to -> oitc mode
-#connectToAgent(3333, $register);
+//connectToAgent(3333, $register);
 
 
 

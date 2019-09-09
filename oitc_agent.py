@@ -115,8 +115,16 @@ except ImportError:
     sys.exit(1)
 
 def signal_handler(sig, frame):
-    print("... see you ...\n")
-    exit(0)
+    global thread_stop_requested
+    global webserver_stop_requested
+    global wait_and_check_auto_certificate_thread_stop_requested
+    
+    thread_stop_requested = True
+    webserver_stop_requested = True
+    wait_and_check_auto_certificate_thread_stop_requested = True
+    if verbose:
+        print("... see you ...\n")
+    sys.exit(0)
 
 agentVersion = "1.0.0"
 enableSSL = False
@@ -134,20 +142,25 @@ initialized = False
 
 thread_stop_requested = False
 webserver_stop_requested = False
+wait_and_check_auto_certificate_thread_stop_requested = False
 
 permanent_check_thread_running = False
 permanent_webserver_thread_running = False
 oitc_notification_thread_running = False
 permanent_customchecks_check_thread_running = False
 
+etc_agent_path = '/etc/openitcockpit-agent/'
+if system is 'windows':
+    etc_agent_path = 'C:'+os.path.sep+'Program Files'+os.path.sep+'openitcockpit-agent'+os.path.sep
+
+default_ssl_csr_file = etc_agent_path + 'agent.csr'
+default_ssl_cert_file = etc_agent_path + 'agent.crt'
+default_ssl_key_file = etc_agent_path + 'agent.key'
+default_ssl_ca_file = etc_agent_path + 'server_ca.crt'
+
 ssl_csr = None
-ssl_csr_file = '/tmp/etc_agent/agent.csr'
-ssl_cert_file = '/tmp/etc_agent/agent.crt'
-ssl_key_file = '/tmp/etc_agent/agent.key'
-ssl_ca_file = '/tmp/etc_agent/ca.crt'
 agent_id = 'XXX089zugbhnjk'
-apiKey = 'X-OITC-flofirjheihiugi'
-apiURL = 'http://localhost/agent_cert_generator.php'
+
 
 sample_config = """
 [default]
@@ -157,6 +170,10 @@ sample_config = """
   certfile = 
   keyfile = 
   try-autossl = true
+  autossl-csr-file = 
+  autossl-cert-file = 
+  autossl-key-file = 
+  autossl-ca-file = 
   verbose = false
   stacktrace = false
   config-update-mode = false
@@ -822,9 +839,9 @@ def check_update_crt(data):
     try:
         jdata = json.loads(data.decode('utf-8'))
         if 'signed' in jdata and 'ca' in jdata:
-            with open(ssl_cert_file, 'w+') as f:
+            with open(config['default']['autossl-crt-file'], 'w+') as f:
                 f.write(jdata['signed'])
-            with open(ssl_ca_file, 'w+') as f:
+            with open(config['default']['autossl-ca-file'], 'w+') as f:
                 f.write(jdata['ca'])
             
             return True
@@ -975,7 +992,7 @@ class MyServer(BaseHTTPRequestHandler):
         self.end_headers()
         
     def get_csr(self):
-        return create_new_csr(ssl_csr_file, ssl_key_file, agent_id)
+        return create_new_csr(agent_id)
     
     def build_json_config(self):
         data = {}
@@ -1012,8 +1029,12 @@ class MyServer(BaseHTTPRequestHandler):
             self.wfile.write(json.dumps(self.build_json_config()).encode())
         elif self.path == "/getCsr":
             data = {}
-            data['csr'] = self.get_csr().decode("utf-8")
+            if autossl:
+                data['csr'] = self.get_csr().decode("utf-8")
+            else:
+                data['csr'] = "disabled"
             self.wfile.write(json.dumps(data).encode())
+        
     
     def do_GET(self):
         try:
@@ -1265,10 +1286,10 @@ def process_webserver(enableSSL=False):
         import ssl
         protocol = 'https'
         httpd.socket = ssl.wrap_socket(httpd.socket, keyfile=config['default']['keyfile'], certfile=config['default']['certfile'], server_side=True)
-    elif autossl and file_readable(ssl_key_file) and file_readable(ssl_cert_file):
+    elif autossl and file_readable(config['default']['autossl-key-file']) and file_readable(config['default']['autossl-crt-file']) and file_readable(config['default']['autossl-ca-file']):
         import ssl
         protocol = 'https'
-        httpd.socket = ssl.wrap_socket(httpd.socket, keyfile=ssl_key_file, certfile=ssl_cert_file, server_side=True, cert_reqs = ssl.CERT_REQUIRED, ca_certs = ssl_ca_file)
+        httpd.socket = ssl.wrap_socket(httpd.socket, keyfile=config['default']['autossl-key-file'], certfile=config['default']['autossl-crt-file'], server_side=True, cert_reqs = ssl.CERT_REQUIRED, ca_certs = config['default']['autossl-ca-file'])
     
     if verbose:
         print("Server started at %s://%s:%s with a check interval of %d seconds" % (protocol, config['default']['address'], str(config['default']['port']), int(config['default']['interval'])))
@@ -1287,12 +1308,14 @@ def process_webserver(enableSSL=False):
 
 def restart_webserver():
     global webserver_stop_requested
+    global wait_and_check_auto_certificate_thread_stop_requested
     
     tmp_permanent_webserver_thread_running = permanent_webserver_thread_running
     time.sleep(2)
     
     if initialized:
         webserver_stop_requested = True
+        wait_and_check_auto_certificate_thread_stop_requested = True
         
         try:
             fake_webserver_request()
@@ -1310,7 +1333,7 @@ def restart_webserver():
         # start webserver thread
         permanent_webserver_thread(process_webserver, (enableSSL,))
 
-def create_new_csr(ssl_csr_file, ssl_key_file, agent_id):
+def create_new_csr(agent_id):
     global ssl_csr
     
     try:
@@ -1354,11 +1377,25 @@ def create_new_csr(ssl_csr_file, ssl_key_file, agent_id):
         #req.get_subject().emailAddress = 'e@example.com'
         req.set_pubkey(key)
         req.sign(key, 'sha512')
+        
+        ssl_paths = [config['default']['autossl-csr-file'], config['default']['autossl-key-file'], config['default']['autossl-crt-file'], config['default']['autossl-ca-file']]
+        
+        for filename in ssl_paths:
+            if not os.path.exists(os.path.dirname(filename)):
+                try:
+                    os.makedirs(os.path.dirname(filename))
+                except OSError as exc: # Guard against race condition
+                    if exc.errno != errno.EEXIST:
+                        if verbose:
+                            print('An error occured while creating the ssl files containing folders')
+                        if stacktrace:
+                            raise
+
     
         csr = dump_certificate_request(FILETYPE_PEM, req)
-        with open(ssl_csr_file, 'wb+') as f:
+        with open(config['default']['autossl-csr-file'], 'wb+') as f:
             f.write(csr)
-        with open(ssl_key_file, 'wb+') as f:
+        with open(config['default']['autossl-key-file'], 'wb+') as f:
             f.write(dump_privatekey(FILETYPE_PEM, key))
         ssl_csr = csr
             
@@ -1370,42 +1407,70 @@ def create_new_csr(ssl_csr_file, ssl_key_file, agent_id):
     
     return csr
 
-def create_csr(ssl_csr_file, ssl_cert_file, ssl_key_file, agent_id, apiKey, apiURL):
+def pull_crt_from_server(agent_id):
     # pip install pycryptodome pyopenssl
     
-    try:
-        
-        csr = create_new_csr(ssl_csr_file, ssl_key_file, agent_id)
-        
-        # try to use requests!
-        data = bytes(urllib.parse.urlencode({'csr': csr}).encode())
-        req = urllib.request.Request(apiURL)
-        req.add_header('Authorization', 'X-OITC-API '+apiKey.strip())
-        handler = urllib.request.urlopen(req, data)
-        
-        jdata = json.loads(handler.read().decode('utf-8'))
-        if 'signed' in jdata:
-            #print(jdata['signed'])
-            with open(ssl_cert_file, 'w+') as f:
-                f.write(jdata['signed'])
-            with open(ssl_ca_file, 'w+') as f:
-                f.write(jdata['ca'])
-        
-            restart_webserver()
+    if config['oitc']['url'] is not "" and config['oitc']['apikey'] is not "":
+        try:
+            csr = create_new_csr(agent_id)
+            
+            # try to use requests!
+            data = bytes(urllib.parse.urlencode({'csr': csr}).encode())
+            req = urllib.request.Request(config['oitc']['url'])
+            req.add_header('Authorization', 'X-OITC-API '+config['oitc']['apikey'].strip())
+            handler = urllib.request.urlopen(req, data)
+            
+            jdata = json.loads(handler.read().decode('utf-8'))
+            if 'unknown' in jdata:  # server dont know agent, manual confirmation in openITCOCKPIT frontend needed
+                if verbose:
+                    print('Untrusted agent. Try again in 10 minutes to get a certificate from the server.')
+                executor = futures.ThreadPoolExecutor(max_workers=1)
+                executor.submit(wait_and_check_auto_certificate, 600)
+                
+            if 'signed' in jdata and 'ca' in jdata:
+                with open(config['default']['autossl-crt-file'], 'w+') as f:
+                    f.write(jdata['signed'])
+                with open(config['default']['autossl-ca-file'], 'w+') as f:
+                    f.write(jdata['ca'])
+            
+                restart_webserver()
 
+                if verbose:
+                    print('signed cert updated')
+                return True
+        except:
             if verbose:
-                print('signed cert updated')
-    except:
-        if verbose:
-            print('An error occured during autossl certificate renew process')
-        if stacktrace:
-            traceback.print_exc()
+                print('An error occured during autossl certificate renew process')
+            if stacktrace:
+                traceback.print_exc()
+    
+    return False
+
+def wait_and_check_auto_certificate(seconds):
+    global wait_and_check_auto_certificate_thread_stop_requested
+    
+    if verbose:
+        print('started wait_and_check_auto_certificate')
+
+    if autossl:
+        i = 0
+        while i < seconds and not wait_and_check_auto_certificate_thread_stop_requested:
+            time.sleep(1)
+            i = i + 1
+        
+        if not wait_and_check_auto_certificate_thread_stop_requested:
+            doNotWaitForReturnExecutor = futures.ThreadPoolExecutor(max_workers=1)
+            doNotWaitForReturnExecutor.submit(check_auto_certificate)
+            #check_auto_certificate()
+    wait_and_check_auto_certificate_thread_stop_requested = False
+    if verbose:
+        print('finished wait_and_check_auto_certificate')
 
 def check_auto_certificate():
-    if not file_readable(ssl_cert_file):
-        create_csr(ssl_csr_file, ssl_cert_file, ssl_key_file, agent_id, apiKey, apiURL)
-    if file_readable(ssl_cert_file):    # repeat condition because create_csr could fail
-        with open(ssl_cert_file, 'r') as f:
+    if not file_readable(config['default']['autossl-crt-file']):
+        pull_crt_from_server(agent_id)
+    if file_readable(config['default']['autossl-crt-file']):    # repeat condition because pull_crt_from_server could fail
+        with open(config['default']['autossl-crt-file'], 'r') as f:
             cert = f.read()
             x509 = load_certificate(FILETYPE_PEM, cert)
             x509info = x509.get_notAfter()
@@ -1421,8 +1486,8 @@ def check_auto_certificate():
             if datetime.date(int(exp_year), int(exp_month), int(exp_day)) - datetime.datetime.now().date() <= datetime.timedelta(182):
                 if verbose:
                     print('SSL Certificate will expire soon. Try to create a new one automatically')
-                create_csr(ssl_csr_file, ssl_cert_file, ssl_key_file, agent_id, apiKey, apiURL)
-                check_auto_certificate()
+                if pull_crt_from_server(agent_id) is not False:
+                    check_auto_certificate()
 
 def print_help():
     print('usage: ./oitc_agent.py -v -i <check interval seconds> -p <port number> -a <ip address> -c <config path> --certfile <certfile path> --keyfile <keyfile path> --auth <user>:<password> --oitc-url <url> --oitc-apikey <api key> --oitc-interval <seconds>')
@@ -1447,6 +1512,12 @@ def print_help():
     print('--certfile <certfile path>   : /path/to/cert.pem')
     print('--keyfile <keyfile path>     : /path/to/key.pem')
     print('--try-autossl                : try to enable auto webserver ssl mode')
+    print('--disable-autossl            : disable auto webserver ssl mode (overwrite default)')
+    print('\nFile paths used for autossl (default: /etc/openitcockpit-agent/... or C:\Program Files\openitcockpit-agent\...):')
+    print('--autossl-csr-file <path>    : /path/to/agent.csr')
+    print('--autossl-crt-file <path>   : /path/to/agent.crt')
+    print('--autossl-key-file <path>    : /path/to/agent.key')
+    print('--autossl-ca-file <path>     : /path/to/server_ca.crt')
     print('\nSample config file:')
     print(sample_config)
     print('\nSample config file for custom check commands:')
@@ -1459,10 +1530,11 @@ def load_configuration():
     global added_oitc_parameter
     global configpath
     global enableSSL
+    global autossl
     global temperatureIsFahrenheit
     
     try:
-        opts, args = getopt.getopt(sys.argv[1:],"h:i:p:a:c:vs",["interval=","port=","address=","config=","customchecks=","certfile=","keyfile=","auth=","oitc-hostuuid=","oitc-url=","oitc-apikey=","oitc-interval=","config-update-mode","temperature-fahrenheit","try-autossl","verbose","stacktrace","help"])
+        opts, args = getopt.getopt(sys.argv[1:],"h:i:p:a:c:vs",["interval=","port=","address=","config=","customchecks=","certfile=","keyfile=","auth=","oitc-hostuuid=","oitc-url=","oitc-apikey=","oitc-interval=","config-update-mode","temperature-fahrenheit","try-autossl","disable-autossl","autossl-csr-file","autossl-crt-file","autossl-key-file","autossl-ca-file","verbose","stacktrace","help"])
     except getopt.GetoptError:
         print_help()
         sys.exit(2)
@@ -1492,6 +1564,11 @@ def load_configuration():
                     print('create new default agent config file "%s"' % (configpath))
                 config.write(configfile)
     
+    config['default']['autossl-csr-file'] = default_ssl_csr_file
+    config['default']['autossl-crt-file'] = default_ssl_cert_file
+    config['default']['autossl-key-file'] = default_ssl_key_file
+    config['default']['autossl-ca-file'] = default_ssl_ca_file
+    
     added_oitc_parameter = 0
     for opt, arg in opts:
         if opt in ("-h", "--help"):
@@ -1509,6 +1586,14 @@ def load_configuration():
             config['default']['keyfile'] = str(arg)
         elif opt in ("--try-autossl"):
             config['default']['try-autossl'] = "true"
+        elif opt == "--autossl-csr-file":
+            config['default']['autossl-csr-file'] = str(arg)
+        elif opt == "--autossl-crt-file":
+            config['default']['autossl-crt-file'] = str(arg)
+        elif opt == "--autossl-key-file":
+            config['default']['autossl-key-file'] = str(arg)
+        elif opt == "--autossl-ca-file":
+            config['default']['autossl-ca-file'] = str(arg)
         elif opt == "--auth":
             config['default']['auth'] = str(base64.b64encode(arg.encode())).encode("utf-8")
         elif opt in ("-v", "--verbose"):
@@ -1533,6 +1618,12 @@ def load_configuration():
             added_oitc_parameter += 1
         elif opt == "--customchecks":
             config['default']['customchecks'] = str(arg)
+    
+    # loop again to for default overwrite options
+    for opt, arg in opts:
+        if opt in ("--disable-autossl"):
+            config['default']['try-autossl'] = "false"
+            break;
     
     if config['default']['verbose'] in (1, "1", "true", "True", True):
         verbose = True
