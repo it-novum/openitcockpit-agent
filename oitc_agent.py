@@ -269,6 +269,17 @@ class Collect:
         
         cpuPercentageDetailed = [dict(cpu._asdict()) for cpu in psutil.cpu_times_percent(interval=0, percpu=True)]
         
+        uptime = 0
+        try:
+            if hasattr(psutil, "boot_time") and callable(psutil.boot_time):
+                uptime = int(time.time() - psutil.boot_time())
+            else:
+                uptime = int(time.time() - psutil.BOOT_TIME)
+        except:
+            if stacktrace:
+                traceback.print_exc()
+            if verbose:
+                print ("Could not get system uptime!")
 
         #totalCpus = psutil.cpu_count()
         #physicalCpus = psutil.cpu_count(logical=False)
@@ -781,6 +792,7 @@ class Collect:
                 'last_updated': time.ctime(),
                 'last_updated_timestamp': round(time.time()),
                 'system': platform.system(),
+                'system_uptime': uptime,
                 'kernel_version': platform.release(),
                 'mac_version': platform.mac_ver()[0],
                 'agent_version': agentVersion,
@@ -790,6 +802,7 @@ class Collect:
             agent = {
                 'last_updated': time.ctime(),
                 'last_updated_timestamp': round(time.time()),
+                'system_uptime': uptime,
                 'agent_version': agentVersion,
                 'temperature_unit': 'F' if temperatureIsFahrenheit else 'C'
             }
