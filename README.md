@@ -42,20 +42,24 @@ curl -sS https://git.binsky.org/uploads/-/system/personal_snippet/9/673752b9aaa1
 ##### python3
 - psutil >= 5.5.0
 - configparser
+- pycryptodome
+- pyopenssl
 
 ##### python2
 - psutil
 - configparser
 - futures
 - subprocess32
+- pycryptodome
+- pyopenssl
 
 ### Windows
 - Download & install latest python version (3.x) from https://www.python.org/downloads/windows/
-- Open cmd and install dependencies: ```python.exe -m pip install psutil configparser```
+- Open cmd and install dependencies: ```python.exe -m pip install psutil configparser pycryptodome pyopenssl```
 
 ### macOS (Darwin)
 - Open console and install latest python version (3.x): ```brew install python3```
-- Install dependencies: ```pip3 install psutil configparser```
+- Install dependencies: ```pip3 install psutil configparser pycryptodome pyopenssl```
 
 ### Linux (Debian / Ubuntu)
 - glibc >= 2.28
@@ -63,12 +67,12 @@ curl -sS https://git.binsky.org/uploads/-/system/personal_snippet/9/673752b9aaa1
 #### python3
 - Install latest python version (3.x) and psutil >= 5.5.0: ```apt-get install python3 python3-psutil```
 - Uninstall psutil pip package if version < 5.5.0: ```pip3 uninstall psutil```
-- Install configparser dependency: ```pip3 install configparser```
+- Install configparser dependency: ```pip3 install configparser pycryptodome pyopenssl```
 
 #### python2
 - Install python version (2.x) and psutil: ```apt-get install python python-psutil```
 - Uninstall psutil pip package to use the newer apt package version: ```pip uninstall psutil```
-- Install dependencies: ```pip install configparser futures subprocess32```
+- Install dependencies: ```pip install configparser futures subprocess32 pycryptodome pyopenssl```
 
 
 ---
@@ -345,7 +349,7 @@ Run powershell as Administrator and execute the following commands
 cd /
 python.exe -m venv ./python3-windows-env
 .\python3-windows-env\Scripts\activate.bat
-.\python3-windows-env\Scripts\pip.exe install configparser psutil>=5.5.0 servicemanager pywinservicemanager pyinstaller
+.\python3-windows-env\Scripts\pip.exe install configparser psutil>=5.5.0 servicemanager pywinservicemanager pyinstaller pycryptodome pyopenssl
 .\python3-windows-env\Scripts\pyinstaller.exe oitc_agent.py --onefile
 .\python3-windows-env\Scripts\deactivate.bat
 
@@ -375,7 +379,7 @@ wine msiexec /i python-3.4.4.amd64.msi /L*v log.txt
 wine ~/.wine/drive_c/Python34/python.exe -m venv ./python3-wine-env
 wine cmd
 ./python3-wine-env/Scripts/activate.bat
-./python3-wine-env/Scripts/pip.exe install configparser psutil==3.4.2 pyinstaller
+./python3-wine-env/Scripts/pip.exe install configparser psutil==3.4.2 pyinstaller pycryptodome pyopenssl
 ./python3-wine-env/Scripts/deactivate.bat
 exit
 
