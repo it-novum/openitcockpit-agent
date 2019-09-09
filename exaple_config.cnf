@@ -14,11 +14,21 @@ address = 127.0.0.1
 certfile =
 
 # Private key file of the given TLS certificate
-# Example: /etc/ssl/private/ssl-cert-snakeoil.key;
+# Example: /etc/ssl/private/ssl-cert-snakeoil.key
 keyfile =
 
 # Try to enable auto ssl mode for webserver
 try-autossl = true
+
+# File paths used for autossl (default: /etc/openitcockpit-agent/... or C:\Program Files\openitcockpit-agent\...):
+# Example: /etc/openitcockpit/agent.csr
+autossl-csr-file = 
+# Example: /etc/openitcockpit/agent.crt
+autossl-crt-file = 
+# Example: /etc/openitcockpit/agent.key
+autossl-key-file = 
+# Example: /etc/openitcockpit/server_ca.crt
+autossl-ca-file = 
 
 # Print most messages
 verbose = false
