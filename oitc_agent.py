@@ -151,14 +151,6 @@ permanent_webserver_thread_running = False
 oitc_notification_thread_running = False
 permanent_customchecks_check_thread_running = False
 
-etc_agent_path = '/etc/openitcockpit-agent/'
-if system is 'windows':
-    etc_agent_path = 'C:'+os.path.sep+'Program Files'+os.path.sep+'openitcockpit-agent'+os.path.sep
-
-default_ssl_csr_file = etc_agent_path + 'agent.csr'
-default_ssl_crt_file = etc_agent_path + 'agent.crt'
-default_ssl_key_file = etc_agent_path + 'agent.key'
-default_ssl_ca_file = etc_agent_path + 'server_ca.crt'
 
 ssl_csr = None
 agent_id = 'XXX089zugbhnjk'
@@ -172,6 +164,7 @@ sample_config = """
   certfile = 
   keyfile = 
   try-autossl = true
+  autossl-folder = 
   autossl-csr-file = 
   autossl-crt-file = 
   autossl-key-file = 
@@ -256,6 +249,19 @@ def wrapdiff(last, curr):
     if boundary is None:
         raise ArithmeticError("Couldn't determine boundary")
     return float(2**boundary - last + curr)
+
+def build_autossl_defaults():
+    etc_agent_path = '/etc/openitcockpit-agent/'
+    if system is 'windows':
+        etc_agent_path = 'C:'+os.path.sep+'Program Files'+os.path.sep+'it-novum'+os.path.sep+'openitcockpit-agent'+os.path.sep
+    
+    if config['default']['autossl-folder'] != "":
+        etc_agent_path = config['default']['autossl-folder']
+    
+    config['default']['autossl-csr-file'] = etc_agent_path + 'agent.csr'
+    config['default']['autossl-crt-file'] = etc_agent_path + 'agent.crt'
+    config['default']['autossl-key-file'] = etc_agent_path + 'agent.key'
+    config['default']['autossl-ca-file'] = etc_agent_path + 'server_ca.crt'
 
 class Collect:
     def getData(self):
@@ -1529,6 +1535,7 @@ def print_help():
     print('--try-autossl                : try to enable auto webserver ssl mode')
     print('--disable-autossl            : disable auto webserver ssl mode (overwrite default)')
     print('\nFile paths used for autossl (default: /etc/openitcockpit-agent/... or C:\Program Files\openitcockpit-agent\...):')
+    print('--autossl-folder <path>      : /default/folder/for/ssl/files (use instead of the following four arguments)')
     print('--autossl-csr-file <path>    : /path/to/agent.csr')
     print('--autossl-crt-file <path>    : /path/to/agent.crt')
     print('--autossl-key-file <path>    : /path/to/agent.key')
@@ -1549,7 +1556,7 @@ def load_configuration():
     global temperatureIsFahrenheit
     
     try:
-        opts, args = getopt.getopt(sys.argv[1:],"h:i:p:a:c:vs",["interval=","port=","address=","config=","customchecks=","certfile=","keyfile=","auth=","oitc-hostuuid=","oitc-url=","oitc-apikey=","oitc-interval=","config-update-mode","temperature-fahrenheit","try-autossl","disable-autossl","autossl-csr-file","autossl-crt-file","autossl-key-file","autossl-ca-file","verbose","stacktrace","help"])
+        opts, args = getopt.getopt(sys.argv[1:],"h:i:p:a:c:vs",["interval=","port=","address=","config=","customchecks=","certfile=","keyfile=","auth=","oitc-hostuuid=","oitc-url=","oitc-apikey=","oitc-interval=","config-update-mode","temperature-fahrenheit","try-autossl","disable-autossl","autossl-folder","autossl-csr-file","autossl-crt-file","autossl-key-file","autossl-ca-file","verbose","stacktrace","help"])
     except getopt.GetoptError:
         print_help()
         sys.exit(2)
@@ -1579,10 +1586,7 @@ def load_configuration():
                     print('create new default agent config file "%s"' % (configpath))
                 config.write(configfile)
     
-    config['default']['autossl-csr-file'] = default_ssl_csr_file
-    config['default']['autossl-crt-file'] = default_ssl_crt_file
-    config['default']['autossl-key-file'] = default_ssl_key_file
-    config['default']['autossl-ca-file'] = default_ssl_ca_file
+    build_autossl_defaults()
     
     added_oitc_parameter = 0
     for opt, arg in opts:
@@ -1601,6 +1605,8 @@ def load_configuration():
             config['default']['keyfile'] = str(arg)
         elif opt in ("--try-autossl"):
             config['default']['try-autossl'] = "true"
+        elif opt == "--autossl-folder":
+            config['default']['autossl-folder'] = str(arg)
         elif opt == "--autossl-csr-file":
             config['default']['autossl-csr-file'] = str(arg)
         elif opt == "--autossl-crt-file":
@@ -1655,6 +1661,8 @@ def load_configuration():
     else:
         autossl = False
     
+    if config['default']['autossl-folder'] != "":
+        build_autossl_defaults()
     
     if config['default']['temperature-fahrenheit'] in (1, "1", "true", "True", True):
         temperatureIsFahrenheit = True
