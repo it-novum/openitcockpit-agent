@@ -154,7 +154,7 @@ if system is 'windows':
     etc_agent_path = 'C:'+os.path.sep+'Program Files'+os.path.sep+'openitcockpit-agent'+os.path.sep
 
 default_ssl_csr_file = etc_agent_path + 'agent.csr'
-default_ssl_cert_file = etc_agent_path + 'agent.crt'
+default_ssl_crt_file = etc_agent_path + 'agent.crt'
 default_ssl_key_file = etc_agent_path + 'agent.key'
 default_ssl_ca_file = etc_agent_path + 'server_ca.crt'
 
@@ -171,7 +171,7 @@ sample_config = """
   keyfile = 
   try-autossl = true
   autossl-csr-file = 
-  autossl-cert-file = 
+  autossl-crt-file = 
   autossl-key-file = 
   autossl-ca-file = 
   verbose = false
@@ -1515,7 +1515,7 @@ def print_help():
     print('--disable-autossl            : disable auto webserver ssl mode (overwrite default)')
     print('\nFile paths used for autossl (default: /etc/openitcockpit-agent/... or C:\Program Files\openitcockpit-agent\...):')
     print('--autossl-csr-file <path>    : /path/to/agent.csr')
-    print('--autossl-crt-file <path>   : /path/to/agent.crt')
+    print('--autossl-crt-file <path>    : /path/to/agent.crt')
     print('--autossl-key-file <path>    : /path/to/agent.key')
     print('--autossl-ca-file <path>     : /path/to/server_ca.crt')
     print('\nSample config file:')
@@ -1565,7 +1565,7 @@ def load_configuration():
                 config.write(configfile)
     
     config['default']['autossl-csr-file'] = default_ssl_csr_file
-    config['default']['autossl-crt-file'] = default_ssl_cert_file
+    config['default']['autossl-crt-file'] = default_ssl_crt_file
     config['default']['autossl-key-file'] = default_ssl_key_file
     config['default']['autossl-ca-file'] = default_ssl_ca_file
     
