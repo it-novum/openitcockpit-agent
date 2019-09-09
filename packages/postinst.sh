@@ -14,11 +14,11 @@ if [ -f /usr/bin/openitcockpit-agent-python3.linux.bin ]; then
         if [ ! -f /lib/systemd/system/openitcockpit-agent.service ]; then
             if [ -d /lib/systemd/system/ ]; then
                 # Debian
-                ln -s /etc/openitcockpit-agent/init/openitcockpit-agent.service /lib/systemd/system/openitcockpit-agent.service
+                ln /etc/openitcockpit-agent/init/openitcockpit-agent.service /lib/systemd/system/openitcockpit-agent.service
             fi
             if [ -d /usr/lib/systemd/system/ ]; then
                 # ReadHat / Suse
-                ln -s /etc/openitcockpit-agent/init/openitcockpit-agent.service /usr/lib/systemd/system/openitcockpit-agent.service
+                ln /etc/openitcockpit-agent/init/openitcockpit-agent.service /usr/lib/systemd/system/openitcockpit-agent.service
             fi
         fi
         
@@ -30,7 +30,7 @@ if [ -f /usr/bin/openitcockpit-agent-python3.linux.bin ]; then
         enableConfig="0"
         if [ ! -f /etc/init.d/openitcockpit-agent ]; then
             enableConfig="1"
-            ln -s /etc/openitcockpit-agent/init/openitcockpit-agent.init /etc/init.d/openitcockpit-agent
+            ln /etc/openitcockpit-agent/init/openitcockpit-agent.init /etc/init.d/openitcockpit-agent
         fi
         
         if [ "$enableConfig" == "1" ]; then

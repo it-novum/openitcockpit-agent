@@ -10,7 +10,33 @@ set -u
 
 if [ -f /usr/bin/openitcockpit-agent-python3.linux.bin ]; then
 
-    echo "Running post rm actions for linux systems..."
+    set +e
+    if [ -x "$(command -v systemctl)" ]; then
+        /bin/systemctl -a | grep openitcockpit-agent
+        RC=$?
+        if [ "$RC" -eq 0 ]; then
+            /bin/systemctl stop openitcockpit-agent
+            /bin/systemctl disable openitcockpit-agent
+        fi
+        
+        if [ -f /lib/systemd/system/openitcockpit-agent.service ]; then
+            # Debian
+            rm /lib/systemd/system/openitcockpit-agent.service
+        fi
+        if [ -f /usr/lib/systemd/system/openitcockpit-agent.service ]; then
+            # ReadHat / Suse
+            rm /usr/lib/systemd/system/openitcockpit-agent.service
+        fi
+
+    else
+        invoke-rc.d openitcockpit-agent stop
+        update-rc.d -f openitcockpit-agent remove
+        
+        if [ -f /etc/init.d/openitcockpit-agent ]; then
+            rm /etc/init.d/openitcockpit-agent
+        fi
+    fi
+    set -e
 
 fi
 

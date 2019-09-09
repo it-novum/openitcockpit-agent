@@ -11,8 +11,10 @@ if [ -f /usr/bin/openitcockpit-agent-python3.linux.bin ]; then
 
     if [ -x "$(command -v systemctl)" ]; then
         systemctl stop openitcockpit-agent
+        systemctl disable openitcockpit-agent
     else
         invoke-rc.d openitcockpit-agent stop
+        update-rc.d -f openitcockpit-agent remove
     fi
 
 fi
