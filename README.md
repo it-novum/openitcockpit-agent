@@ -116,7 +116,16 @@ Add there parameters to enable ssl encrypted http(s) server:
 |--keyfile       |keyfile path       |/path/to/key.pem (absolute path recommended)    | 
 |--try-autossl       |       |try to enable auto webserver ssl mode    | 
 
-URL change from http://address:port to https://address:port
+File paths used for autossl (default: /etc/openitcockpit-agent/... or C:\Program Files\openitcockpit-agent\\...):
+
+|option| value | description | 
+| ------ | ------ | ----------- | 
+|--autossl-csr-file       |file path       |/path/to/agent.csr (absolute path recommended)    | 
+|--autossl-crt-file       |file path       |/path/to/agent.crt (absolute path recommended)    | 
+|--autossl-key-file       |file path       |/path/to/agent.key (absolute path recommended)    | 
+|--autossl-ca-file       |file path       |/path/to/server_ca.crt (absolute path recommended)    | 
+
+Using ssl or autossl the URL change from http://address:port to https://address:port
 
 
 Example:
@@ -167,6 +176,10 @@ Sample config file (with default script values):
   certfile = 
   keyfile = 
   try-autossl = true
+  autossl-csr-file = 
+  autossl-crt-file = 
+  autossl-key-file = 
+  autossl-ca-file = 
   verbose = false
   stacktrace = false
   config-update-mode = false
@@ -209,6 +222,10 @@ JSON Example (file: new_config.json) for update mode and http://address:port/con
         "certfile": "/path",
         "keyfile": "",
         "try-autossl": "true",
+        "autossl-csr-file": "/etc/openitcockpit-agent/agent.csr",
+        "autossl-crt-file": "/etc/openitcockpit-agent/agent.crt",
+        "autossl-key-file": "/etc/openitcockpit-agent/agent.key",
+        "autossl-ca-file": "/etc/openitcockpit-agent/server_ca.crt",
         "verbose": "true",
         "stacktrace": "false",
         "config-update-mode": "false",
