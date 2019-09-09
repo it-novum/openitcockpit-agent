@@ -58,7 +58,9 @@ from OpenSSL.crypto import (dump_certificate_request, dump_privatekey, load_cert
 
 isPython3 = False
 system = 'linux'
-    
+
+if sys.platform == 'win32' or sys.platform == 'win64':
+    system = 'windows'
 if sys.platform == 'darwin' or (system == 'linux' and 'linux' not in sys.platform):
     system = 'darwin'
 
