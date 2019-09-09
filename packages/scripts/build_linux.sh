@@ -5,7 +5,7 @@ if [ -d "$(pwd)/openitcockpit-agent" ]; then
     git pull
     cd ../
 else
-    git clone https://github.com/it-novum/openitcockpit-agent.git
+    git clone --depth=1 https://github.com/it-novum/openitcockpit-agent.git
 fi
 
 
