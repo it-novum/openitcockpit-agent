@@ -23,10 +23,10 @@ cp openitcockpit-agent/example_customchecks.cnf package_osx/Library/openitcockpi
 cp openitcockpit-agent/packages/init/com.it-novum.openitcockpit.agent.plist package_osx/Library/LaunchDaemons/com.it-novum.openitcockpit.agent.plist
 
 # MacOS x64 Installer (only runs on macOS)
-fpm -s dir -t osxpkg -C package_osx --name oitc-agent --vendor "it-novum GmbH" --license "Apache License Version 2.0" --config-files Library/openitcockpit-agent --architecture native --maintainer "<daniel.ziegler@it-novum.com>" --description "openITCOCKPIT Monitoring Agent and remote plugin executor." --url "https://openitcockpit.io" --before-install openitcockpit-agent/packages/preinst.sh --after-install openitcockpit-agent/packages/postinst.sh --version "1.0.0"
+fpm -s dir -t osxpkg -C package_osx --name openitcockpit-agent --vendor "it-novum GmbH" --license "Apache License Version 2.0" --config-files Library/openitcockpit-agent --architecture native --maintainer "<daniel.ziegler@it-novum.com>" --description "openITCOCKPIT Monitoring Agent and remote plugin executor." --url "https://openitcockpit.io" --before-install openitcockpit-agent/packages/preinst.sh --after-install openitcockpit-agent/packages/postinst.sh --version "1.0.0"
 
 mkdir -p package_osx_uninstaller
 
 # MacOS x64 Uninstaller (only runs on macOS)
-fpm -s dir -t osxpkg -C package_osx_uninstaller --name oitc-agent-uninstaller --vendor "it-novum GmbH" --license "Apache License Version 2.0" --config-files Library/openitcockpit-agent --architecture native --maintainer "<daniel.ziegler@it-novum.com>" --description "openITCOCKPIT Monitoring Agent and remote plugin executor." --url "https://openitcockpit.io" --before-install openitcockpit-agent/packages/prerm.sh --version "1.0.0" --osxpkg-payload-free
+fpm -s dir -t osxpkg -C package_osx_uninstaller --name openitcockpit-agent-uninstaller --vendor "it-novum GmbH" --license "Apache License Version 2.0" --config-files Library/openitcockpit-agent --architecture native --maintainer "<daniel.ziegler@it-novum.com>" --description "openITCOCKPIT Monitoring Agent and remote plugin executor." --url "https://openitcockpit.io" --before-install openitcockpit-agent/packages/prerm.sh --version "1.0.0" --osxpkg-payload-free
 
