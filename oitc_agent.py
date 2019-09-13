@@ -151,9 +151,7 @@ permanent_webserver_thread_running = False
 oitc_notification_thread_running = False
 permanent_customchecks_check_thread_running = False
 
-
 ssl_csr = None
-agent_id = 'XXX089zugbhnjk'
 
 
 sample_config = """
@@ -901,6 +899,16 @@ def check_update_data(data):
                         newconfig['default']['try-autossl'] = "true"
                     else:
                         newconfig['default']['try-autossl'] = "false"
+                if 'autossl-folder' in jdata[key]:
+                    newconfig['default']['autossl-folder'] = str(jdata[key]['autossl-folder'])
+                if 'autossl-csr-file' in jdata[key]:
+                    newconfig['default']['autossl-csr-file'] = str(jdata[key]['autossl-csr-file'])
+                if 'autossl-crt-file' in jdata[key]:
+                    newconfig['default']['autossl-crt-file'] = str(jdata[key]['autossl-crt-file'])
+                if 'autossl-key-file' in jdata[key]:
+                    newconfig['default']['autossl-key-file'] = str(jdata[key]['autossl-key-file'])
+                if 'autossl-ca-file' in jdata[key]:
+                    newconfig['default']['autossl-ca-file'] = str(jdata[key]['autossl-ca-file'])
                 if 'auth' in jdata[key]:
                     newconfig['default']['auth'] = str(jdata[key]['auth'])
                 if 'verbose' in jdata[key]:
@@ -1013,7 +1021,7 @@ class MyServer(BaseHTTPRequestHandler):
         self.end_headers()
         
     def get_csr(self):
-        return create_new_csr(agent_id)
+        return create_new_csr()
     
     def build_json_config(self):
         data = {}
@@ -1304,11 +1312,9 @@ def process_webserver(enableSSL=False):
     httpd = HTTPServer(server_address, MyServer)
     
     if enableSSL:
-        import ssl
         protocol = 'https'
         httpd.socket = ssl.wrap_socket(httpd.socket, keyfile=config['default']['keyfile'], certfile=config['default']['certfile'], server_side=True)
     elif autossl and file_readable(config['default']['autossl-key-file']) and file_readable(config['default']['autossl-crt-file']) and file_readable(config['default']['autossl-ca-file']):
-        import ssl
         protocol = 'https'
         httpd.socket = ssl.wrap_socket(httpd.socket, keyfile=config['default']['autossl-key-file'], certfile=config['default']['autossl-crt-file'], server_side=True, cert_reqs = ssl.CERT_REQUIRED, ca_certs = config['default']['autossl-ca-file'])
     
@@ -1354,7 +1360,7 @@ def restart_webserver():
         # start webserver thread
         permanent_webserver_thread(process_webserver, (enableSSL,))
 
-def create_new_csr(agent_id):
+def create_new_csr():
     global ssl_csr
     
     try:
@@ -1365,7 +1371,7 @@ def create_new_csr(agent_id):
         # 
         # key = ECC.generate(curve='prime256v1')
         # req = X509Req()
-        # req.get_subject().CN = agent_id+'.agent.oitc'
+        # req.get_subject().CN = config['oitc']['hostuuid']+'.agent.oitc'
         # publicKey = key.public_key().export_key(format='PEM', compress=False)
         # privateKey = key.export_key(format='PEM', compress=False, use_pkcs8=True)
         # 
@@ -1380,7 +1386,7 @@ def create_new_csr(agent_id):
     
         # Generate CSR
         req = X509Req()
-        req.get_subject().CN = agent_id+'.agent.oitc'
+        req.get_subject().CN = config['oitc']['hostuuid']+'.agent.oitc'
         
         
         # Experimental; not supported by php agent csr sign method yet
@@ -1428,12 +1434,12 @@ def create_new_csr(agent_id):
     
     return csr
 
-def pull_crt_from_server(agent_id):
+def pull_crt_from_server():
     # pip install pycryptodome pyopenssl
     
-    if config['oitc']['url'] is not "" and config['oitc']['apikey'] is not "":
+    if config['oitc']['url'] is not "" and config['oitc']['apikey'] is not "" and config['oitc']['hostuuid'] is not "":
         try:
-            csr = create_new_csr(agent_id)
+            csr = create_new_csr()
             
             # try to use requests!
             data = bytes(urllib.parse.urlencode({'csr': csr}).encode())
@@ -1475,7 +1481,7 @@ def wait_and_check_auto_certificate(seconds):
 
     if autossl:
         i = 0
-        while i < seconds and not wait_and_check_auto_certificate_thread_stop_requested:
+        while i < seconds and not wait_and_check_auto_certificate_thread_stop_requested and not thread_stop_requested:
             time.sleep(1)
             i = i + 1
         
@@ -1489,7 +1495,7 @@ def wait_and_check_auto_certificate(seconds):
 
 def check_auto_certificate():
     if not file_readable(config['default']['autossl-crt-file']):
-        pull_crt_from_server(agent_id)
+        pull_crt_from_server()
     if file_readable(config['default']['autossl-crt-file']):    # repeat condition because pull_crt_from_server could fail
         with open(config['default']['autossl-crt-file'], 'r') as f:
             cert = f.read()
@@ -1507,7 +1513,7 @@ def check_auto_certificate():
             if datetime.date(int(exp_year), int(exp_month), int(exp_day)) - datetime.datetime.now().date() <= datetime.timedelta(182):
                 if verbose:
                     print('SSL Certificate will expire soon. Try to create a new one automatically')
-                if pull_crt_from_server(agent_id) is not False:
+                if pull_crt_from_server() is not False:
                     check_auto_certificate()
 
 def print_help():
