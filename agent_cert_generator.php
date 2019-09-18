@@ -57,20 +57,20 @@ class registerAgent {
     }
 }
 
-function connectToAgent($port, $register){
+function connectToAgent($ip, $port, $register){
     $useSSL = false;
     
     $curl_get = curl_init();
     curl_setopt_array($curl_get, [
         CURLOPT_RETURNTRANSFER => 1,
-        CURLOPT_URL => 'http://127.0.0.1:'.$port.'/getCsr'
+        CURLOPT_URL => 'http://'.$ip.':'.$port.'/getCsr'
     ]);
     $result = curl_exec($curl_get);
     
     if(!$result){
         curl_setopt_array($curl_get, [
             CURLOPT_RETURNTRANSFER => 1,
-            CURLOPT_URL => 'https://127.0.0.1:'.$port.'/getCsr',
+            CURLOPT_URL => 'https://'.$ip.':'.$port.'/getCsr',
             CURLOPT_CAINFO => $register->caCertPath,
             CURLOPT_SSLCERT => $register->caCertPath,
             CURLOPT_SSLKEY => $register->caKeyPath,
@@ -98,7 +98,7 @@ function connectToAgent($port, $register){
             if($useSSL){
                 curl_setopt_array($curl, [
                     CURLOPT_RETURNTRANSFER => 1,
-                    CURLOPT_URL => 'https://127.0.0.1:'.$port.'/updateCrt',
+                    CURLOPT_URL => 'https://'.$ip.':'.$port.'/updateCrt',
                     CURLOPT_POST => 1,
                     CURLOPT_POSTFIELDS => $data_string,
                     CURLOPT_HTTPHEADER => [
@@ -113,7 +113,7 @@ function connectToAgent($port, $register){
             } else {
                 curl_setopt_array($curl, [
                     CURLOPT_RETURNTRANSFER => 1,
-                    CURLOPT_URL => 'http://127.0.0.1:'.$port.'/updateCrt',
+                    CURLOPT_URL => 'http://'.$ip.':'.$port.'/updateCrt',
                     CURLOPT_POST => 1,
                     CURLOPT_POSTFIELDS => $data_string,
                     CURLOPT_HTTPHEADER => [
@@ -136,7 +136,7 @@ function connectToAgent($port, $register){
 $register = new registerAgent();
 
 //comment out to run in agent -> push to -> oitc mode
-//connectToAgent(3333, $register);
+//connectToAgent('172.16.166.109', 3333, $register);
 
 
 

@@ -754,7 +754,7 @@ def isBase64(s):
     except Exception:
         return False
 
-def check_update_crt(data):
+def update_crt_files(data):
     try:
         jdata = json.loads(data.decode('utf-8'))
         if 'signed' in jdata and 'ca' in jdata:
@@ -767,10 +767,10 @@ def check_update_crt(data):
         
     except Exception as e:
         if stacktrace:
-            traceback.print_exc
+            traceback.print_exc()
             print(e)
         elif verbose:
-            print('an error occured during new crt processing')
+            print('an error occured during new certificate processing')
         
 def check_update_data(data):
     try:
@@ -903,7 +903,7 @@ def check_update_data(data):
         
     except Exception as e:
         if stacktrace:
-            traceback.print_exc
+            traceback.print_exc()
             print(e)
         elif verbose:
             print('an error occured during new config processing')
@@ -981,24 +981,23 @@ class MyServer(BaseHTTPRequestHandler):
                 self._process_get_data()
         except:
             if stacktrace:
-                traceback.print_exc
+                traceback.print_exc()
                 
     def _process_post_data(self, data):
         executor = futures.ThreadPoolExecutor(max_workers=1)
-        success = {}
-        success['success'] = True
-        successFalse = {}
-        successFalse['success'] = False
+        returnMessage = {}
+        returnMessage['success'] = False
         
         if self.path == "/config" and config['default']['config-update-mode'] in (1, "1", "true", "True", True):
             executor.submit(check_update_data, data)
-            return success
-        elif self.path == "/updateCrt":
-            if check_update_crt(data) == True:
-                executor.submit(restart_webserver)
-                return success
+            returnMessage['success'] = True
         
-        return successFalse
+        elif self.path == "/updateCrt":
+            if update_crt_files(data) == True:
+                executor.submit(restart_webserver)
+                returnMessage['success'] = True
+        
+        return returnMessage
     
     def do_POST(self):
         try:
@@ -1017,7 +1016,7 @@ class MyServer(BaseHTTPRequestHandler):
                 print(retrn)
                 self.wfile.write(json.dumps(retrn).encode())
         except:
-            traceback.print_exc
+            traceback.print_exc()
             print('caught something in do_POST')
 
     def log_message(self, format, *args):
