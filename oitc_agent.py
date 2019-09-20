@@ -70,6 +70,7 @@ if (sys.version_info > (3, 0)):
     import concurrent.futures as futures
     import subprocess
     
+    from threading import Thread
     from _thread import start_new_thread as permanent_check_thread
     from _thread import start_new_thread as permanent_webserver_thread
     from _thread import start_new_thread as oitc_notification_thread
@@ -132,6 +133,7 @@ enableSSL = False
 autossl = True
 cached_check_data = {}
 cached_customchecks_check_data = {}
+docker_stats_data = {}
 cached_diskIO = {}
 cached_netIO = {}
 configpath = ""
@@ -172,6 +174,7 @@ sample_config = """
   auth = 
   customchecks = 
   temperature-fahrenheit = false
+  dockerstats = false
 [oitc]
   hostuuid = 
   url = 
@@ -204,6 +207,7 @@ def reset_global_options():
     globals()['enableSSL'] = False
     globals()['cached_check_data'] = {}
     globals()['cached_customchecks_check_data'] = {}
+    globals()['docker_stats_data'] = {}
     globals()['configpath'] = ""
     globals()['verbose'] = False
     globals()['stacktrace'] = False
@@ -738,10 +742,13 @@ class Collect:
         }
         
         if system is 'windows':
-            out['windows_services'] = windows_services;
+            out['windows_services'] = windows_services
             
         if len(cached_customchecks_check_data) > 0:
-            out['customchecks'] = cached_customchecks_check_data;
+            out['customchecks'] = cached_customchecks_check_data
+            
+        if len(docker_stats_data) > 0:
+            out['dockerstats'] = docker_stats_data
         
         return out
 
@@ -1024,7 +1031,74 @@ class MyServer(BaseHTTPRequestHandler):
             print("%s - - [%s] %s" % (self.address_string(),self.log_date_time_string(),format%args))
         return
     
+def check_docker_stats(timeout):
+    global docker_stats_data
     
+    if verbose:
+        print('start docker stats check with timeout of %ss at %s' % (str(timeout), str(round(time.time()))))
+    
+    tmp_docker_stats_result = None
+    docker_stats_data['running'] = "true";
+    
+    docker_command = 'docker stats --no-stream --format "{{.ID}};{{.Name}};{{.CPUPerc}};{{.MemUsage}};{{.MemPerc}};{{.NetIO}};{{.BlockIO}};{{.PIDs}}"'
+    if system is 'windows':
+        docker_command = 'docker stats --no-stream --format "{{.ID}};{{.Name}};{{.CPUPerc}};{{.MemUsage}};;{{.NetIO}};{{.BlockIO}};"'   #fill not existing 'MemPerc' and 'PIDs' with empty ; separated value
+    
+    try:
+        p = subprocess.Popen(docker_command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+        
+        try:
+            stdout, stderr = p.communicate(timeout=int(timeout))
+            p.poll()
+            if stdout:
+                stdout = stdout.decode()
+            if stderr:
+                stderr = stderr.decode()
+            tmp_docker_stats_result = str(stdout)
+            docker_stats_data['error'] = None if str(stderr) == 'None' else str(stderr)
+            docker_stats_data['returncode'] = p.returncode
+        except subprocess.TimeoutExpired:
+            if verbose:
+                print('docker stats check timed out')
+            p.kill()    #not needed; just to be sure
+            docker_stats_data['result'] = None
+            docker_stats_data['error'] = 'Docker stats check timeout after ' + str(timeout) + ' seconds'
+            docker_stats_data['returncode'] = 124
+    
+    except:
+        if stacktrace:
+            traceback.print_exc()
+        if verbose:
+            print ('An error occured while running the docker stats check! Enable --stacktrace to get more information.')
+    
+    if tmp_docker_stats_result is not None and docker_stats_data['returncode'] is 0:
+        results = tmp_docker_stats_result.split('\n')
+        sorted_data = []
+        for result in results:
+            if result.strip() is not "":
+                result_array = result.strip().split(';')
+                tmp_dict = {}
+                tmp_dict['id'] = result_array[0]
+                tmp_dict['name'] = result_array[1]
+                tmp_dict['cpu_percent'] = result_array[2]
+                tmp_dict['memory_usage'] = result_array[3]
+                tmp_dict['memory_percent'] = result_array[4]
+                tmp_dict['net_io'] = result_array[5]
+                tmp_dict['block_io'] = result_array[6]
+                tmp_dict['pids'] = result_array[7]
+                sorted_data.append(tmp_dict)
+    
+        docker_stats_data['result'] = sorted_data
+        docker_stats_data['last_updated_timestamp'] = round(time.time())
+        docker_stats_data['last_updated'] = time.ctime()
+    elif docker_stats_data['error'] is None and tmp_docker_stats_result != "":
+        docker_stats_data['error'] = tmp_docker_stats_result
+    
+    if len(docker_stats_data) > 0:
+        cached_check_data['dockerstats'] = docker_stats_data
+    if verbose:
+        print('docker stats check finished')
+    del docker_stats_data['running']
 
 def collect_data_for_cache(check_interval):
     global permanent_check_thread_running
@@ -1036,8 +1110,13 @@ def collect_data_for_cache(check_interval):
     if check_interval <= 0:
         check_interval = 5
     i = check_interval
+    
     while not thread_stop_requested:
         if i >= check_interval:
+            if config['default']['dockerstats'] in (1, "1", "true", "True") and 'running' not in docker_stats_data:
+                thread = Thread(target = check_docker_stats, args = (check_interval-1, ))
+                thread.start()
+                #thread.join()
             cached_check_data = Collect().getData()
             i = 0
         time.sleep(1)
@@ -1423,6 +1502,7 @@ def print_help():
     print('-c --config <config path>    : config file path')
     print('--config-update-mode         : enable config update mode threw post request and /config to get current configuration')
     print('--temperature-fahrenheit     : set temperature to fahrenheit if enabled (else use celsius)')
+    print('--dockerstats                : enable docker stats check')
     print('--customchecks <file path>   : custom check config file path')
     print('--auth <user>:<password>     : enable http basic auth')
     print('-v --verbose                 : enable verbose mode')
@@ -1460,7 +1540,7 @@ def load_configuration():
     global temperatureIsFahrenheit
     
     try:
-        opts, args = getopt.getopt(sys.argv[1:],"h:i:p:a:c:vs",["interval=","port=","address=","config=","customchecks=","certfile=","keyfile=","auth=","oitc-hostuuid=","oitc-url=","oitc-apikey=","oitc-interval=","config-update-mode","temperature-fahrenheit","try-autossl","disable-autossl","autossl-folder","autossl-csr-file","autossl-crt-file","autossl-key-file","autossl-ca-file","verbose","stacktrace","help"])
+        opts, args = getopt.getopt(sys.argv[1:],"h:i:p:a:c:vs",["interval=","port=","address=","config=","customchecks=","certfile=","keyfile=","auth=","oitc-hostuuid=","oitc-url=","oitc-apikey=","oitc-interval=","config-update-mode","temperature-fahrenheit","try-autossl","disable-autossl","autossl-folder","autossl-csr-file","autossl-crt-file","autossl-key-file","autossl-ca-file","dockerstats","verbose","stacktrace","help"])
     except getopt.GetoptError:
         print_help()
         sys.exit(2)
@@ -1529,6 +1609,8 @@ def load_configuration():
             config['default']['config-update-mode'] = "true"
         elif opt == "--temperature-fahrenheit":
             config['default']['temperature-fahrenheit'] = "true"
+        elif opt == "--dockerstats":
+            config['default']['dockerstats'] = "true"
         elif opt == "--oitc-hostuuid":
             config['oitc']['hostuuid'] = str(arg)
             added_oitc_parameter += 1
