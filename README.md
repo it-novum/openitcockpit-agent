@@ -106,6 +106,8 @@ Options (script start parameters overwrite options in config file):
 |-s --stacktrace       |       |print stackstrace for possible exceptions     | 
 |--config-update-mode       |       |enable configuration update mode threw post request and /config to get current configuration     | 
 |--temperature-fahrenheit       |       |set temperature to fahrenheit if enabled (else use celsius)     | 
+|--dockerstats       |       |enable docker stats check     | 
+|--qemustats       |       |enable qemu stats check (linux only)     | 
 |-h --help       |       |print a help message and exit     | 
 
 Add there parameters to enable ssl encrypted http(s) server:
@@ -186,6 +188,8 @@ Sample config file (with default script values):
   auth = 
   customchecks = 
   temperature-fahrenheit = false
+  dockerstats = false
+  qemustats = false
 [oitc]
   hostuuid = 
   url = 
@@ -222,6 +226,7 @@ JSON Example (file: new_config.json) for update mode and http://address:port/con
         "certfile": "/path",
         "keyfile": "",
         "try-autossl": "true",
+        "autossl-folder": "",
         "autossl-csr-file": "/etc/openitcockpit-agent/agent.csr",
         "autossl-crt-file": "/etc/openitcockpit-agent/agent.crt",
         "autossl-key-file": "/etc/openitcockpit-agent/agent.key",
@@ -232,6 +237,8 @@ JSON Example (file: new_config.json) for update mode and http://address:port/con
         "auth": "user:pass",
         "customchecks": "/path",
         "temperature-fahrenheit": "false",
+        "dockerstats": "false",
+        "qemustats": "false",
         "oitc-hostuuid": "hostid_123456",
         "oitc-url": "https://demo.openitcockpit.io",
         "oitc-apikey": "",
