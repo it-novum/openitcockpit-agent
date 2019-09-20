@@ -134,6 +134,7 @@ autossl = True
 cached_check_data = {}
 cached_customchecks_check_data = {}
 docker_stats_data = {}
+qemu_stats_data = {}
 cached_diskIO = {}
 cached_netIO = {}
 configpath = ""
@@ -175,6 +176,7 @@ sample_config = """
   customchecks = 
   temperature-fahrenheit = false
   dockerstats = false
+  qemustats = false
 [oitc]
   hostuuid = 
   url = 
@@ -208,6 +210,7 @@ def reset_global_options():
     globals()['cached_check_data'] = {}
     globals()['cached_customchecks_check_data'] = {}
     globals()['docker_stats_data'] = {}
+    globals()['qemu_stats_data'] = {}
     globals()['configpath'] = ""
     globals()['verbose'] = False
     globals()['stacktrace'] = False
@@ -749,6 +752,9 @@ class Collect:
             
         if len(docker_stats_data) > 0:
             out['dockerstats'] = docker_stats_data
+            
+        if len(qemu_stats_data) > 0:
+            out['qemustats'] = qemu_stats_data
         
         return out
 
@@ -833,6 +839,16 @@ def check_update_data(data):
                         newconfig['default']['config-update-mode'] = "true"
                     else:
                         newconfig['default']['config-update-mode'] = "false"
+                if 'dockerstats' in jdata[key]:
+                    if jdata[key]['dockerstats'] in (1, "1", "true", "True"):
+                        newconfig['default']['dockerstats'] = "true"
+                    else:
+                        newconfig['default']['dockerstats'] = "false"
+                if 'qemustats' in jdata[key]:
+                    if jdata[key]['qemustats'] in (1, "1", "true", "True"):
+                        newconfig['default']['qemustats'] = "true"
+                    else:
+                        newconfig['default']['qemustats'] = "false"
                 if 'customchecks' in jdata[key]:
                     newconfig['default']['customchecks'] = str(jdata[key]['customchecks'])
                 if 'temperature-fahrenheit' in jdata[key]:
@@ -1030,7 +1046,86 @@ class MyServer(BaseHTTPRequestHandler):
         if verbose:
             print("%s - - [%s] %s" % (self.address_string(),self.log_date_time_string(),format%args))
         return
+
+def check_qemu_stats(timeout):
+    global qemu_stats_data
     
+    if verbose:
+        print('start qemu stats check with timeout of %ss at %s' % (str(timeout), str(round(time.time()))))
+    
+    tmp_qemu_stats_result = None
+    qemu_stats_data['running'] = "true";
+    
+    # regex source: https://gist.github.com/kitschysynq/867caebec581cee4c44c764b4dd2bde7
+    qemu_command = "ps -ef | awk -e '/qemu/ && !/awk/' | sed -e 's/[^/]*/\n/' -e 's/ -/\n\t-/g'" # customized
+    
+    try:
+        p = subprocess.Popen(qemu_command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+        
+        try:
+            stdout, stderr = p.communicate(timeout=int(timeout))
+            p.poll()
+            if stdout:
+                stdout = stdout.decode()
+            if stderr:
+                stderr = stderr.decode()
+            tmp_qemu_stats_result = str(stdout)
+            qemu_stats_data['error'] = None if str(stderr) == 'None' else str(stderr)
+            qemu_stats_data['returncode'] = p.returncode
+        except subprocess.TimeoutExpired:
+            if verbose:
+                print('docker stats check timed out')
+            p.kill()    #not needed; just to be sure
+            qemu_stats_data['result'] = None
+            qemu_stats_data['error'] = 'Docker stats check timeout after ' + str(timeout) + ' seconds'
+            qemu_stats_data['returncode'] = 124
+    
+    except:
+        if stacktrace:
+            traceback.print_exc()
+        if verbose:
+            print ('An error occured while running the docker stats check! Enable --stacktrace to get more information.')
+    
+    if tmp_qemu_stats_result is not None and qemu_stats_data['returncode'] is 0:
+        ordered_results = []
+        qemuresults = tmp_qemu_stats_result.split('\n\n')
+        for machine in qemuresults:
+            machine_data = {}
+            for line in machine.split('\n'):
+                line = line.strip()
+                
+                if line.split(' ')[0].strip().startswith('-'):
+                    option = line.split(' ')[0].strip()
+                    arrayoption = option[1:]
+                    if arrayoption not in machine_data:
+                        machine_data[arrayoption] = line.split(option)[1].strip()
+                    else:
+                        if isinstance(machine_data[arrayoption], list):
+                            machine_data[arrayoption].append(line.split(option)[1].strip())
+                        else:
+                            current_content = machine_data[arrayoption]
+                            machine_data[arrayoption] = []
+                            machine_data[arrayoption].append(current_content)
+                            machine_data[arrayoption].append(line.split(option)[1].strip())
+                
+            ordered_results.append(machine_data)
+        
+        qemu_stats_data['result'] = ordered_results
+        qemu_stats_data['last_updated_timestamp'] = round(time.time())
+        qemu_stats_data['last_updated'] = time.ctime()
+        
+    elif qemu_stats_data['error'] is None and tmp_qemu_stats_result != "":
+        if qemu_stats_data['returncode'] == 1 and tmp_qemu_stats_result.startswith('sed:'):
+            qemu_stats_data['error'] = "No qemu machines running"
+        else:
+            qemu_stats_data['error'] = tmp_qemu_stats_result
+    
+    if len(qemu_stats_data) > 0:
+        cached_check_data['qemustats'] = qemu_stats_data
+    if verbose:
+        print('qemu stats check finished')
+    del qemu_stats_data['running']
+
 def check_docker_stats(timeout):
     global docker_stats_data
     
@@ -1117,6 +1212,10 @@ def collect_data_for_cache(check_interval):
                 thread = Thread(target = check_docker_stats, args = (check_interval-1, ))
                 thread.start()
                 #thread.join()
+            if system is 'linux' and config['default']['qemustats'] in (1, "1", "true", "True") and 'running' not in qemu_stats_data:
+                thread = Thread(target = check_qemu_stats, args = (check_interval-1, ))
+                thread.start()
+            
             cached_check_data = Collect().getData()
             i = 0
         time.sleep(1)
@@ -1503,6 +1602,7 @@ def print_help():
     print('--config-update-mode         : enable config update mode threw post request and /config to get current configuration')
     print('--temperature-fahrenheit     : set temperature to fahrenheit if enabled (else use celsius)')
     print('--dockerstats                : enable docker stats check')
+    print('--qemustats                  : enable qemu stats check (linux only)')
     print('--customchecks <file path>   : custom check config file path')
     print('--auth <user>:<password>     : enable http basic auth')
     print('-v --verbose                 : enable verbose mode')
@@ -1540,7 +1640,7 @@ def load_configuration():
     global temperatureIsFahrenheit
     
     try:
-        opts, args = getopt.getopt(sys.argv[1:],"h:i:p:a:c:vs",["interval=","port=","address=","config=","customchecks=","certfile=","keyfile=","auth=","oitc-hostuuid=","oitc-url=","oitc-apikey=","oitc-interval=","config-update-mode","temperature-fahrenheit","try-autossl","disable-autossl","autossl-folder","autossl-csr-file","autossl-crt-file","autossl-key-file","autossl-ca-file","dockerstats","verbose","stacktrace","help"])
+        opts, args = getopt.getopt(sys.argv[1:],"h:i:p:a:c:vs",["interval=","port=","address=","config=","customchecks=","certfile=","keyfile=","auth=","oitc-hostuuid=","oitc-url=","oitc-apikey=","oitc-interval=","config-update-mode","temperature-fahrenheit","try-autossl","disable-autossl","autossl-folder","autossl-csr-file","autossl-crt-file","autossl-key-file","autossl-ca-file","dockerstats","qemustats","verbose","stacktrace","help"])
     except getopt.GetoptError:
         print_help()
         sys.exit(2)
@@ -1611,6 +1711,8 @@ def load_configuration():
             config['default']['temperature-fahrenheit'] = "true"
         elif opt == "--dockerstats":
             config['default']['dockerstats'] = "true"
+        elif opt == "--qemustats":
+            config['default']['qemustats'] = "true"
         elif opt == "--oitc-hostuuid":
             config['oitc']['hostuuid'] = str(arg)
             added_oitc_parameter += 1
