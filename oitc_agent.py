@@ -267,496 +267,495 @@ def build_autossl_defaults():
     config['default']['autossl-key-file'] = etc_agent_path + 'agent.key'
     config['default']['autossl-ca-file'] = etc_agent_path + 'server_ca.crt'
 
-class Collect:
-    def getData(self):
-        global cached_diskIO
-        global cached_netIO
+def runDefaultChecks():
+    global cached_diskIO
+    global cached_netIO
+    
+    # CPU #
+    cpuTotalPercentage = psutil.cpu_percent()
+    cpuPercentage = psutil.cpu_percent(interval=0, percpu=True)
+
+    cpu = psutil.cpu_times_percent(interval=0, percpu=False)
+    cpuTotalPercentageDetailed = cpu._asdict()
+    
+    cpuPercentageDetailed = [dict(cpu._asdict()) for cpu in psutil.cpu_times_percent(interval=0, percpu=True)]
+    
+    uptime = 0
+    try:
+        if hasattr(psutil, "boot_time") and callable(psutil.boot_time):
+            uptime = int(time.time() - psutil.boot_time())
+        else:
+            uptime = int(time.time() - psutil.BOOT_TIME)
+    except:
+        if stacktrace:
+            traceback.print_exc()
+        if verbose:
+            print ("Could not get system uptime!")
+
+    #totalCpus = psutil.cpu_count()
+    #physicalCpus = psutil.cpu_count(logical=False)
+
+    #cpuFrequency = psutil.cpu_freq()
+
+    # MEMORY #
+
+    memory = psutil.virtual_memory()
+    swap = psutil.swap_memory()
+
+    # DISKS #        
+    disks = [dict(
+        disk = disk._asdict(),
+        usage = psutil.disk_usage(disk.mountpoint)._asdict()
+        ) for disk in psutil.disk_partitions() ]
+    
+
+    #diskIOTotal = psutil.disk_io_counters(perdisk=False)._asdict()
+    
+    diskIO = None
+    if hasattr(psutil, "disk_io_counters"):
+        #diskIO = psutil.disk_io_counters(perdisk=True)
+        diskIO = { disk: iops._asdict() for disk,iops in psutil.disk_io_counters(perdisk=True).items() }
+        diskIO['timestamp'] = time.time()
         
-        # CPU #
-        cpuTotalPercentage = psutil.cpu_percent()
-        cpuPercentage = psutil.cpu_percent(interval=0, percpu=True)
-
-        cpu = psutil.cpu_times_percent(interval=0, percpu=False)
-        cpuTotalPercentageDetailed = cpu._asdict()
-        
-        cpuPercentageDetailed = [dict(cpu._asdict()) for cpu in psutil.cpu_times_percent(interval=0, percpu=True)]
-        
-        uptime = 0
-        try:
-            if hasattr(psutil, "boot_time") and callable(psutil.boot_time):
-                uptime = int(time.time() - psutil.boot_time())
-            else:
-                uptime = int(time.time() - psutil.BOOT_TIME)
-        except:
-            if stacktrace:
-                traceback.print_exc()
-            if verbose:
-                print ("Could not get system uptime!")
-
-        #totalCpus = psutil.cpu_count()
-        #physicalCpus = psutil.cpu_count(logical=False)
-
-        #cpuFrequency = psutil.cpu_freq()
-
-        # MEMORY #
-
-        memory = psutil.virtual_memory()
-        swap = psutil.swap_memory()
-
-        # DISKS #        
-        disks = [dict(
-            disk = disk._asdict(),
-            usage = psutil.disk_usage(disk.mountpoint)._asdict()
-            ) for disk in psutil.disk_partitions() ]
-       
-
-        #diskIOTotal = psutil.disk_io_counters(perdisk=False)._asdict()
-        
-        diskIO = None
-        if hasattr(psutil, "disk_io_counters"):
-            #diskIO = psutil.disk_io_counters(perdisk=True)
-            diskIO = { disk: iops._asdict() for disk,iops in psutil.disk_io_counters(perdisk=True).items() }
-            diskIO['timestamp'] = time.time()
-            
-            for disk in diskIO:
-                if disk != "timestamp" and disk in cached_diskIO:
-                    
-                    diskIODiff = {}
-                    diskIODiff['timestamp'] = wrapdiff(float(cached_diskIO['timestamp']), float(diskIO['timestamp']))
-                    
-                    for attr in diskIO[disk]:
-                        diff = wrapdiff(float(cached_diskIO[disk][attr]), float(diskIO[disk][attr]))
-                        diskIODiff[attr] = diff;
-                    
-                    diskIO[disk]['read_iops'] = diskIODiff['read_count'] / diskIODiff['timestamp']
-                    diskIO[disk]['write_iops'] = diskIODiff['write_count'] / diskIODiff['timestamp']
-                    
-                    tot_ios = diskIODiff['read_count'] + diskIODiff['write_count']
-                    diskIO[disk]['total_iops'] = tot_ios / diskIODiff['timestamp']
-                    #diskIO[disk]['tot_ticks'] = diskIODiff['busy_time']
-                    #diskIO[disk]['interval'] = diskIODiff['timestamp']
-                    if 'busy_time' in diskIODiff:
-                        diskIO[disk]['load_percent'] = diskIODiff['busy_time'] / (diskIODiff['timestamp'] * 1000.) * 100.
-                    
-                    if diskIODiff['read_count']:
-                        diskIO[disk]['read_avg_wait'] = float(diskIODiff['read_time'] / diskIODiff['read_count'])
-                        diskIO[disk]['read_avg_size'] = float(diskIODiff['read_bytes'] / diskIODiff['read_count'])
-                    else:
-                        diskIO[disk]['read_avg_wait'] = 0
-                        diskIO[disk]['read_avg_size'] = 0
-                        
-                    if diskIODiff['write_count']:
-                        diskIO[disk]['write_avg_wait'] = float(diskIODiff['write_time'] / diskIODiff['write_count'])
-                        diskIO[disk]['write_avg_size'] = float(diskIODiff['write_bytes'] / diskIODiff['write_count'])
-                    else:
-                        diskIO[disk]['write_avg_wait'] = 0
-                        diskIO[disk]['write_avg_size'] = 0
-                    
-                    if tot_ios:
-                        diskIO[disk]['total_avg_wait'] = float((diskIODiff['read_time'] + diskIODiff['write_time']) / tot_ios)
-                    else:
-                        diskIO[disk]['total_avg_wait'] = 0
-            
-            cached_diskIO = diskIO
-        
-        netIO = None
-        if hasattr(psutil, "net_io_counters"):
-            netIO = { device: data._asdict() for device,data in psutil.net_io_counters(pernic=True).items() }
-            netIO['timestamp'] = time.time()
-            
-            for device in netIO:
-                if device != "timestamp" and device in cached_netIO:
-                    
-                    netIODiff = {}
-                    netIODiff['timestamp'] = wrapdiff(float(cached_netIO['timestamp']), float(netIO['timestamp']))
-                    
-                    for attr in netIO[device]:
-                        diff = wrapdiff(float(cached_netIO[device][attr]), float(netIO[device][attr]))
-                        netIODiff[attr] = diff;
-                        
-                    if netIODiff['bytes_sent']:
-                        netIO[device]['avg_bytes_sent_ps'] = float(netIODiff['bytes_sent'] / netIODiff['timestamp'])
-                    else:
-                        netIO[device]['avg_bytes_sent_ps'] = 0
-                    
-                    if netIODiff['bytes_recv']:
-                        netIO[device]['avg_bytes_recv_ps'] = float(netIODiff['bytes_recv'] / netIODiff['timestamp'])
-                    else:
-                        netIO[device]['avg_bytes_recv_ps'] = 0
-                        
-                    if netIODiff['packets_sent']:
-                        netIO[device]['avg_packets_sent_ps'] = float(netIODiff['packets_sent'] / netIODiff['timestamp'])
-                    else:
-                        netIO[device]['avg_packets_sent_ps'] = 0
-                    
-                    if netIODiff['packets_recv']:
-                        netIO[device]['avg_packets_recv_ps'] = float(netIODiff['packets_recv'] / netIODiff['timestamp'])
-                    else:
-                        netIO[device]['avg_packets_recv_ps'] = 0
-                        
-                    if netIODiff['errin']:
-                        netIO[device]['avg_errin'] = float(netIODiff['errin'] / netIODiff['timestamp'])
-                    else:
-                        netIO[device]['avg_errin'] = 0
-                        
-                    if netIODiff['errout']:
-                        netIO[device]['avg_errout'] = float(netIODiff['errout'] / netIODiff['timestamp'])
-                    else:
-                        netIO[device]['avg_errout'] = 0
-                        
-                    if netIODiff['dropin']:
-                        netIO[device]['avg_dropin'] = float(netIODiff['dropin'] / netIODiff['timestamp'])
-                    else:
-                        netIO[device]['avg_dropin'] = 0
-                        
-                    if netIODiff['dropout']:
-                        netIO[device]['avg_dropout'] = float(netIODiff['dropout'] / netIODiff['timestamp'])
-                    else:
-                        netIO[device]['avg_dropout'] = 0
-                    
+        for disk in diskIO:
+            if disk != "timestamp" and disk in cached_diskIO:
                 
-            cached_netIO = netIO
-        
-        net_stats = None
-        if hasattr(psutil, "net_if_stats"):
-            net_stats = { device: data._asdict() for device,data in psutil.net_if_stats().items() }
-
-        sensors = {}
-        try:
-            if hasattr(psutil, "sensors_temperatures"):
-                sensors['temperatures'] = {}
-                for device,data in psutil.sensors_temperatures(fahrenheit=temperatureIsFahrenheit).items():
-                    sensors['temperatures'][device] = []
-                    for value in data:
-                        sensors['temperatures'][device].append(value._asdict())
-            else:
-                sensors['temperatures'] = {}
-        except:
-            if stacktrace:
-                traceback.print_exc()
-            if verbose:
-                print ("Could not get temperature sensor data!")
-        
-        try:
-            if hasattr(psutil, "sensors_fans"):
-                sensors['fans'] = {}
-                for device,data in psutil.sensors_fans().items():
-                    sensors['fans'][device] = []
-                    for value in data:
-                        sensors['fans'][device].append(value._asdict())
-            else:
-                sensors['fans'] = {}
-        except:
-            if stacktrace:
-                traceback.print_exc()
-            if verbose:
-                print ("Could not get fans sensor data!")
-        
-        try:
-            if hasattr(psutil, "sensors_battery"):
-                sensors_battery = psutil.sensors_battery()
-                if sensors_battery is not None:
-                    sensors['battery'] = sensors_battery._asdict()
+                diskIODiff = {}
+                diskIODiff['timestamp'] = wrapdiff(float(cached_diskIO['timestamp']), float(diskIO['timestamp']))
+                
+                for attr in diskIO[disk]:
+                    diff = wrapdiff(float(cached_diskIO[disk][attr]), float(diskIO[disk][attr]))
+                    diskIODiff[attr] = diff;
+                
+                diskIO[disk]['read_iops'] = diskIODiff['read_count'] / diskIODiff['timestamp']
+                diskIO[disk]['write_iops'] = diskIODiff['write_count'] / diskIODiff['timestamp']
+                
+                tot_ios = diskIODiff['read_count'] + diskIODiff['write_count']
+                diskIO[disk]['total_iops'] = tot_ios / diskIODiff['timestamp']
+                #diskIO[disk]['tot_ticks'] = diskIODiff['busy_time']
+                #diskIO[disk]['interval'] = diskIODiff['timestamp']
+                if 'busy_time' in diskIODiff:
+                    diskIO[disk]['load_percent'] = diskIODiff['busy_time'] / (diskIODiff['timestamp'] * 1000.) * 100.
+                
+                if diskIODiff['read_count']:
+                    diskIO[disk]['read_avg_wait'] = float(diskIODiff['read_time'] / diskIODiff['read_count'])
+                    diskIO[disk]['read_avg_size'] = float(diskIODiff['read_bytes'] / diskIODiff['read_count'])
                 else:
-                    sensors['battery'] = {}
+                    diskIO[disk]['read_avg_wait'] = 0
+                    diskIO[disk]['read_avg_size'] = 0
+                    
+                if diskIODiff['write_count']:
+                    diskIO[disk]['write_avg_wait'] = float(diskIODiff['write_time'] / diskIODiff['write_count'])
+                    diskIO[disk]['write_avg_size'] = float(diskIODiff['write_bytes'] / diskIODiff['write_count'])
+                else:
+                    diskIO[disk]['write_avg_wait'] = 0
+                    diskIO[disk]['write_avg_size'] = 0
+                
+                if tot_ios:
+                    diskIO[disk]['total_avg_wait'] = float((diskIODiff['read_time'] + diskIODiff['write_time']) / tot_ios)
+                else:
+                    diskIO[disk]['total_avg_wait'] = 0
+        
+        cached_diskIO = diskIO
+    
+    netIO = None
+    if hasattr(psutil, "net_io_counters"):
+        netIO = { device: data._asdict() for device,data in psutil.net_io_counters(pernic=True).items() }
+        netIO['timestamp'] = time.time()
+        
+        for device in netIO:
+            if device != "timestamp" and device in cached_netIO:
+                
+                netIODiff = {}
+                netIODiff['timestamp'] = wrapdiff(float(cached_netIO['timestamp']), float(netIO['timestamp']))
+                
+                for attr in netIO[device]:
+                    diff = wrapdiff(float(cached_netIO[device][attr]), float(netIO[device][attr]))
+                    netIODiff[attr] = diff;
+                    
+                if netIODiff['bytes_sent']:
+                    netIO[device]['avg_bytes_sent_ps'] = float(netIODiff['bytes_sent'] / netIODiff['timestamp'])
+                else:
+                    netIO[device]['avg_bytes_sent_ps'] = 0
+                
+                if netIODiff['bytes_recv']:
+                    netIO[device]['avg_bytes_recv_ps'] = float(netIODiff['bytes_recv'] / netIODiff['timestamp'])
+                else:
+                    netIO[device]['avg_bytes_recv_ps'] = 0
+                    
+                if netIODiff['packets_sent']:
+                    netIO[device]['avg_packets_sent_ps'] = float(netIODiff['packets_sent'] / netIODiff['timestamp'])
+                else:
+                    netIO[device]['avg_packets_sent_ps'] = 0
+                
+                if netIODiff['packets_recv']:
+                    netIO[device]['avg_packets_recv_ps'] = float(netIODiff['packets_recv'] / netIODiff['timestamp'])
+                else:
+                    netIO[device]['avg_packets_recv_ps'] = 0
+                    
+                if netIODiff['errin']:
+                    netIO[device]['avg_errin'] = float(netIODiff['errin'] / netIODiff['timestamp'])
+                else:
+                    netIO[device]['avg_errin'] = 0
+                    
+                if netIODiff['errout']:
+                    netIO[device]['avg_errout'] = float(netIODiff['errout'] / netIODiff['timestamp'])
+                else:
+                    netIO[device]['avg_errout'] = 0
+                    
+                if netIODiff['dropin']:
+                    netIO[device]['avg_dropin'] = float(netIODiff['dropin'] / netIODiff['timestamp'])
+                else:
+                    netIO[device]['avg_dropin'] = 0
+                    
+                if netIODiff['dropout']:
+                    netIO[device]['avg_dropout'] = float(netIODiff['dropout'] / netIODiff['timestamp'])
+                else:
+                    netIO[device]['avg_dropout'] = 0
+                
+            
+        cached_netIO = netIO
+    
+    net_stats = None
+    if hasattr(psutil, "net_if_stats"):
+        net_stats = { device: data._asdict() for device,data in psutil.net_if_stats().items() }
+
+    sensors = {}
+    try:
+        if hasattr(psutil, "sensors_temperatures"):
+            sensors['temperatures'] = {}
+            for device,data in psutil.sensors_temperatures(fahrenheit=temperatureIsFahrenheit).items():
+                sensors['temperatures'][device] = []
+                for value in data:
+                    sensors['temperatures'][device].append(value._asdict())
+        else:
+            sensors['temperatures'] = {}
+    except:
+        if stacktrace:
+            traceback.print_exc()
+        if verbose:
+            print ("Could not get temperature sensor data!")
+    
+    try:
+        if hasattr(psutil, "sensors_fans"):
+            sensors['fans'] = {}
+            for device,data in psutil.sensors_fans().items():
+                sensors['fans'][device] = []
+                for value in data:
+                    sensors['fans'][device].append(value._asdict())
+        else:
+            sensors['fans'] = {}
+    except:
+        if stacktrace:
+            traceback.print_exc()
+        if verbose:
+            print ("Could not get fans sensor data!")
+    
+    try:
+        if hasattr(psutil, "sensors_battery"):
+            sensors_battery = psutil.sensors_battery()
+            if sensors_battery is not None:
+                sensors['battery'] = sensors_battery._asdict()
             else:
                 sensors['battery'] = {}
-        except:
-            if stacktrace:
-                traceback.print_exc()
-            if verbose:
-                print ("Could not get battery sensor data!")
-        
-        if hasattr(psutil, "pids"):
-            pids = psutil.pids()
         else:
-            pids = psutil.get_pid_list()
-        
-        system_load_avg = []
-        try:
-            if hasattr(psutil, "getloadavg"):
-                system_load_avg = psutil.getloadavg()
-        except:
-            if stacktrace:
-                traceback.print_exc()
-            if verbose:
-                print ("Could not get average system load!")
-                
-        users = []
-        try:
-            if hasattr(psutil, "users"):
-                users = [ user._asdict() for user in psutil.users() ]
-        except:
-            if stacktrace:
-                traceback.print_exc()
-            if verbose:
-                print ("Could not get users, connected to the system!")
+            sensors['battery'] = {}
+    except:
+        if stacktrace:
+            traceback.print_exc()
+        if verbose:
+            print ("Could not get battery sensor data!")
+    
+    if hasattr(psutil, "pids"):
+        pids = psutil.pids()
+    else:
+        pids = psutil.get_pid_list()
+    
+    system_load_avg = []
+    try:
+        if hasattr(psutil, "getloadavg"):
+            system_load_avg = psutil.getloadavg()
+    except:
+        if stacktrace:
+            traceback.print_exc()
+        if verbose:
+            print ("Could not get average system load!")
+            
+    users = []
+    try:
+        if hasattr(psutil, "users"):
+            users = [ user._asdict() for user in psutil.users() ]
+    except:
+        if stacktrace:
+            traceback.print_exc()
+        if verbose:
+            print ("Could not get users, connected to the system!")
 
-        #processes = [ psutil.Process(pid).as_dict() for pid in pids ]
-        windows_services = []
-        processes = []
-        customchecks = {}
-        
-        tmpProcessList = []
-        
-        
-        for pid in pids:
+    #processes = [ psutil.Process(pid).as_dict() for pid in pids ]
+    windows_services = []
+    processes = []
+    customchecks = {}
+    
+    tmpProcessList = []
+    
+    
+    for pid in pids:
+        try:
+            p = psutil.Process(pid)
+            
             try:
-                p = psutil.Process(pid)
-                
-                try:
-                    if hasattr(p, "cpu_percent") and callable(p.cpu_percent):
-                        cpu_percent = p.cpu_percent(interval=None)
-                    else:
-                        cpu_percent = p.get_cpu_percent(interval=None)
-                        
-                    tmpProcessList.append(p)
-                except:
-                    if stacktrace:
-                        traceback.print_exc()
-                    if verbose:
-                        print ("'%s' Process is not allowing us to get the CPU usage!" % (name if name != "" else str(pid)))
-            
-            except psutil.NoSuchProcess:
-                continue;
-            except:
-                if stacktrace:
-                    traceback.print_exc()
-                if verbose:
-                    print ("An error occured during process check! Enable --stacktrace to get more information.")
-        
-        for p in tmpProcessList:
-            try:
-                
-                pid = p.pid
-                ppid = None
-                status = ""
-                username = ""
-                nice = None
-                name = ""
-                exe = ""
-                cmdline = ""
-                cpu_percent = None
-                memory_info = {}
-                memory_percent = None
-                num_fds = {}
-                io_counters = {}
-                open_files = ""
-                children = []
-                
-                
-                if pid not in (1, 2):
-                    try:
-                        if callable(p.parent):
-                            ppid = p.parent().pid
-                    except (psutil.NoSuchProcess, ProcessLookupError):
-                        continue;
-                    except AttributeError:
-                        if stacktrace:
-                            traceback.print_exc()
-                        if verbose:
-                            print ("'%s' Process is not allowing us to get the parent process id!" % (str(pid)))
-                    
-                    try:
-                        if callable(p.children):
-                            with suppress_stdout_stderr():
-                                for child in p.children(recursive=True):
-                                    children.append(child.pid)
-                    except:
-                        if stacktrace:
-                            traceback.print_exc()
-                        if verbose:
-                            print ("'%s' Process is not allowing us to get the child process ids!" % (str(pid)))
-                
-                
-                try:
-                    nice = p.nice()
-                except (psutil.NoSuchProcess, ProcessLookupError):
-                    continue;
-                except:
-                    if stacktrace:
-                        traceback.print_exc()
-                    if verbose:
-                        print ("'%s' Process is not allowing us to get the nice option!" % (name if name != "" else str(pid)))
-            
-                try:
-                    name = p.name()
-                except (psutil.NoSuchProcess, ProcessLookupError):
-                    continue;
-                except:
-                    if stacktrace:
-                        traceback.print_exc()
-                    if verbose:
-                        print ("'%s' Process is not allowing us to get the name option!" % (name if name != "" else str(pid)))
-            
-                try:
-                    exe = p.exe()
-                except (psutil.NoSuchProcess, ProcessLookupError):
-                    continue;
-                except:
-                    if stacktrace:
-                        traceback.print_exc()
-                    if verbose:
-                        print ("'%s' Process is not allowing us to get the exec option!" % (name if name != "" else str(pid)))
-                
-                try:
-                    cmdline = p.cmdline()
-                except (psutil.NoSuchProcess, ProcessLookupError):
-                    continue;
-                except:
-                    if stacktrace:
-                        traceback.print_exc()
-                    if verbose:
-                        print ("'%s' Process is not allowing us to get the cmdline option!" % (name if name != "" else str(pid)))
-                    
-                try:
+                if hasattr(p, "cpu_percent") and callable(p.cpu_percent):
                     cpu_percent = p.cpu_percent(interval=None)
-                except (psutil.NoSuchProcess, ProcessLookupError):
-                    continue;
-                except:
-                    if stacktrace:
-                        traceback.print_exc()
-                    if verbose:
-                        print ("'%s' Process is not allowing us to get the CPU usage!" % (name if name != "" else str(pid)))
+                else:
+                    cpu_percent = p.get_cpu_percent(interval=None)
                     
+                tmpProcessList.append(p)
+            except:
+                if stacktrace:
+                    traceback.print_exc()
+                if verbose:
+                    print ("'%s' Process is not allowing us to get the CPU usage!" % (name if name != "" else str(pid)))
+        
+        except psutil.NoSuchProcess:
+            continue;
+        except:
+            if stacktrace:
+                traceback.print_exc()
+            if verbose:
+                print ("An error occured during process check! Enable --stacktrace to get more information.")
+    
+    for p in tmpProcessList:
+        try:
+            
+            pid = p.pid
+            ppid = None
+            status = ""
+            username = ""
+            nice = None
+            name = ""
+            exe = ""
+            cmdline = ""
+            cpu_percent = None
+            memory_info = {}
+            memory_percent = None
+            num_fds = {}
+            io_counters = {}
+            open_files = ""
+            children = []
+            
+            
+            if pid not in (1, 2):
                 try:
-                    memory_info = p.memory_info()._asdict()
+                    if callable(p.parent):
+                        ppid = p.parent().pid
                 except (psutil.NoSuchProcess, ProcessLookupError):
                     continue;
-                except:
+                except AttributeError:
                     if stacktrace:
                         traceback.print_exc()
                     if verbose:
-                        print ("'%s' Process is not allowing us to get memory usage information!" % (name if name != "" else str(pid)))
-                    
-                try:
-                    memory_percent = p.memory_percent()
-                except (psutil.NoSuchProcess, ProcessLookupError):
-                    continue;
-                except:
-                    if stacktrace:
-                        traceback.print_exc()
-                    if verbose:
-                        print ("'%s' Process is not allowing us to get the percent of memory usage!" % (name if name != "" else str(pid)))
-                    
-                try:
-                    num_fds = p.num_fds()
-                except (psutil.NoSuchProcess, ProcessLookupError):
-                    continue;
-                except:
-                    if stacktrace:
-                        traceback.print_exc()
-                    if verbose:
-                        print ("'%s' Process is not allowing us to get the num_fds option!" % (name if name != "" else str(pid)))
+                        print ("'%s' Process is not allowing us to get the parent process id!" % (str(pid)))
                 
                 try:
-                    io_counters = p.io_counters.__dict__
-                except (psutil.NoSuchProcess, ProcessLookupError):
-                    continue;
+                    if callable(p.children):
+                        with suppress_stdout_stderr():
+                            for child in p.children(recursive=True):
+                                children.append(child.pid)
                 except:
                     if stacktrace:
                         traceback.print_exc()
                     if verbose:
-                        print ("'%s' Process is not allowing us to get the IO counters!" % (name if name != "" else str(pid)))
-                
-                try:
-                    open_files = p.open_files()
-                except (psutil.NoSuchProcess, ProcessLookupError):
-                    continue;
-                except psutil.AccessDenied:
-                    if stacktrace:
-                        traceback.print_exc()
-                    if verbose:
-                        print ("'%s' Process is not allowing us to get the open_files option!" % (name if name != "" else str(pid)))
-
-                    
-                process = {
-                    'name': name,
-                    'exec': exe,
-                    'cmdline': cmdline,
-                    'pid': pid,
-                    'ppid': ppid,
-                    'children': children,
-                    'status': status,
-                    'username': username,
-                    'cpu_percent': cpu_percent,
-                    'memory': memory_info,
-                    'memory_percent': memory_percent,
-                    'num_fds': num_fds,
-                    'open_files': open_files,
-                    'io_counters': io_counters,
-                    'nice_level': nice
-                }
-                processes.append(process)
-            except psutil.NoSuchProcess:
+                        print ("'%s' Process is not allowing us to get the child process ids!" % (str(pid)))
+            
+            
+            try:
+                nice = p.nice()
+            except (psutil.NoSuchProcess, ProcessLookupError):
                 continue;
             except:
                 if stacktrace:
                     traceback.print_exc()
                 if verbose:
-                    print ("An error occured during process check! Enable --stacktrace to get more information.")
+                    print ("'%s' Process is not allowing us to get the nice option!" % (name if name != "" else str(pid)))
         
-        if system is 'windows':
-            for win_process in psutil.win_service_iter():
-                windows_services.append(win_process.as_dict())
+            try:
+                name = p.name()
+            except (psutil.NoSuchProcess, ProcessLookupError):
+                continue;
+            except:
+                if stacktrace:
+                    traceback.print_exc()
+                if verbose:
+                    print ("'%s' Process is not allowing us to get the name option!" % (name if name != "" else str(pid)))
+        
+            try:
+                exe = p.exe()
+            except (psutil.NoSuchProcess, ProcessLookupError):
+                continue;
+            except:
+                if stacktrace:
+                    traceback.print_exc()
+                if verbose:
+                    print ("'%s' Process is not allowing us to get the exec option!" % (name if name != "" else str(pid)))
+            
+            try:
+                cmdline = p.cmdline()
+            except (psutil.NoSuchProcess, ProcessLookupError):
+                continue;
+            except:
+                if stacktrace:
+                    traceback.print_exc()
+                if verbose:
+                    print ("'%s' Process is not allowing us to get the cmdline option!" % (name if name != "" else str(pid)))
                 
-        try:
-            agent = {
-                'last_updated': time.ctime(),
-                'last_updated_timestamp': round(time.time()),
-                'system': platform.system(),
-                'system_uptime': uptime,
-                'kernel_version': platform.release(),
-                'mac_version': platform.mac_ver()[0],
-                'agent_version': agentVersion,
-                'temperature_unit': 'F' if temperatureIsFahrenheit else 'C'
-            }
-        except:
-            agent = {
-                'last_updated': time.ctime(),
-                'last_updated_timestamp': round(time.time()),
-                'system_uptime': uptime,
-                'agent_version': agentVersion,
-                'temperature_unit': 'F' if temperatureIsFahrenheit else 'C'
-            }
+            try:
+                cpu_percent = p.cpu_percent(interval=None)
+            except (psutil.NoSuchProcess, ProcessLookupError):
+                continue;
+            except:
+                if stacktrace:
+                    traceback.print_exc()
+                if verbose:
+                    print ("'%s' Process is not allowing us to get the CPU usage!" % (name if name != "" else str(pid)))
+                
+            try:
+                memory_info = p.memory_info()._asdict()
+            except (psutil.NoSuchProcess, ProcessLookupError):
+                continue;
+            except:
+                if stacktrace:
+                    traceback.print_exc()
+                if verbose:
+                    print ("'%s' Process is not allowing us to get memory usage information!" % (name if name != "" else str(pid)))
+                
+            try:
+                memory_percent = p.memory_percent()
+            except (psutil.NoSuchProcess, ProcessLookupError):
+                continue;
+            except:
+                if stacktrace:
+                    traceback.print_exc()
+                if verbose:
+                    print ("'%s' Process is not allowing us to get the percent of memory usage!" % (name if name != "" else str(pid)))
+                
+            try:
+                num_fds = p.num_fds()
+            except (psutil.NoSuchProcess, ProcessLookupError):
+                continue;
+            except:
+                if stacktrace:
+                    traceback.print_exc()
+                if verbose:
+                    print ("'%s' Process is not allowing us to get the num_fds option!" % (name if name != "" else str(pid)))
+            
+            try:
+                io_counters = p.io_counters.__dict__
+            except (psutil.NoSuchProcess, ProcessLookupError):
+                continue;
+            except:
+                if stacktrace:
+                    traceback.print_exc()
+                if verbose:
+                    print ("'%s' Process is not allowing us to get the IO counters!" % (name if name != "" else str(pid)))
+            
+            try:
+                open_files = p.open_files()
+            except (psutil.NoSuchProcess, ProcessLookupError):
+                continue;
+            except psutil.AccessDenied:
+                if stacktrace:
+                    traceback.print_exc()
+                if verbose:
+                    print ("'%s' Process is not allowing us to get the open_files option!" % (name if name != "" else str(pid)))
 
-        out = {
-            'disks': disks,
-            'disk_io': diskIO,
-            #'disk_io_total': diskIOTotal,
-            'net_io': netIO,
-            'net_stats': net_stats,
-            
-            'sensors': sensors,
+                
+            process = {
+                'name': name,
+                'exec': exe,
+                'cmdline': cmdline,
+                'pid': pid,
+                'ppid': ppid,
+                'children': children,
+                'status': status,
+                'username': username,
+                'cpu_percent': cpu_percent,
+                'memory': memory_info,
+                'memory_percent': memory_percent,
+                'num_fds': num_fds,
+                'open_files': open_files,
+                'io_counters': io_counters,
+                'nice_level': nice
+            }
+            processes.append(process)
+        except psutil.NoSuchProcess:
+            continue;
+        except:
+            if stacktrace:
+                traceback.print_exc()
+            if verbose:
+                print ("An error occured during process check! Enable --stacktrace to get more information.")
     
-            'cpu_total_percentage': cpuTotalPercentage,
-            'cpu_percentage': cpuPercentage,
-            'cpu_total_percentage_detailed': cpuTotalPercentageDetailed,
-            'cpu_percentage_detailed': cpuPercentageDetailed,
+    if system is 'windows':
+        for win_process in psutil.win_service_iter():
+            windows_services.append(win_process.as_dict())
             
-            'system_load': system_load_avg,
-            'users': users,
-            
-            'memory': memory._asdict(),
-            'swap': swap._asdict(),
-    
-            'processes': processes,
-            'agent': agent
+    try:
+        agent = {
+            'last_updated': time.ctime(),
+            'last_updated_timestamp': round(time.time()),
+            'system': platform.system(),
+            'system_uptime': uptime,
+            'kernel_version': platform.release(),
+            'mac_version': platform.mac_ver()[0],
+            'agent_version': agentVersion,
+            'temperature_unit': 'F' if temperatureIsFahrenheit else 'C'
         }
+    except:
+        agent = {
+            'last_updated': time.ctime(),
+            'last_updated_timestamp': round(time.time()),
+            'system_uptime': uptime,
+            'agent_version': agentVersion,
+            'temperature_unit': 'F' if temperatureIsFahrenheit else 'C'
+        }
+
+    out = {
+        'disks': disks,
+        'disk_io': diskIO,
+        #'disk_io_total': diskIOTotal,
+        'net_io': netIO,
+        'net_stats': net_stats,
         
-        if system is 'windows':
-            out['windows_services'] = windows_services
-            
-        if len(cached_customchecks_check_data) > 0:
-            out['customchecks'] = cached_customchecks_check_data
-            
-        if len(docker_stats_data) > 0:
-            out['dockerstats'] = docker_stats_data
-            
-        if len(qemu_stats_data) > 0:
-            out['qemustats'] = qemu_stats_data
+        'sensors': sensors,
+
+        'cpu_total_percentage': cpuTotalPercentage,
+        'cpu_percentage': cpuPercentage,
+        'cpu_total_percentage_detailed': cpuTotalPercentageDetailed,
+        'cpu_percentage_detailed': cpuPercentageDetailed,
         
-        return out
+        'system_load': system_load_avg,
+        'users': users,
+        
+        'memory': memory._asdict(),
+        'swap': swap._asdict(),
+
+        'processes': processes,
+        'agent': agent
+    }
+    
+    if system is 'windows':
+        out['windows_services'] = windows_services
+        
+    if len(cached_customchecks_check_data) > 0:
+        out['customchecks'] = cached_customchecks_check_data
+        
+    if len(docker_stats_data) > 0:
+        out['dockerstats'] = docker_stats_data
+        
+    if len(qemu_stats_data) > 0:
+        out['qemustats'] = qemu_stats_data
+    
+    return out
 
 def file_readable(path):
     return (isfile(path) and access(path, R_OK))
@@ -1216,7 +1215,7 @@ def collect_data_for_cache(check_interval):
                 thread = Thread(target = check_qemu_stats, args = (check_interval-1, ))
                 thread.start()
             
-            cached_check_data = Collect().getData()
+            cached_check_data = runDefaultChecks()
             i = 0
         time.sleep(1)
         i += 1
