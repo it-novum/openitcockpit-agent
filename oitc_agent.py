@@ -70,7 +70,7 @@ if (sys.version_info > (3, 0)):
     import concurrent.futures as futures
     import subprocess
     
-    from threading import Thread
+    from threading import Thread, Lock
     from _thread import start_new_thread as permanent_check_thread
     from _thread import start_new_thread as permanent_webserver_thread
     from _thread import start_new_thread as oitc_notification_thread
@@ -212,11 +212,13 @@ def reset_global_options():
     globals()['config'] = configparser.ConfigParser(allow_no_value=True)
     globals()['customchecks'] = configparser.ConfigParser(allow_no_value=True)
 
+print_lock = Lock()
 def print_verbose(msg, more_on_stacktrace):
-    if verbose:
-        print(msg)
-    if not stacktrace and more_on_stacktrace:
-        print("Enable --stacktrace to get more information.")
+    with print_lock:
+        if verbose:
+            print(msg)
+        if not stacktrace and more_on_stacktrace:
+            print("Enable --stacktrace to get more information.")
 
 def signal_handler(sig, frame):
     global thread_stop_requested
@@ -274,6 +276,8 @@ def build_autossl_defaults():
 def runDefaultChecks():
     global cached_diskIO
     global cached_netIO
+    
+    print_lock.acquire()
     
     # CPU #
     cpuTotalPercentage = psutil.cpu_percent()
@@ -738,6 +742,7 @@ def runDefaultChecks():
     if len(qemu_stats_data) > 0:
         out['qemustats'] = qemu_stats_data
     
+    print_lock.release()
     return out
 
 def file_readable(path):
@@ -1139,17 +1144,22 @@ def check_docker_stats(timeout):
         sorted_data = []
         for result in results:
             if result.strip() is not "":
-                result_array = result.strip().split(';')
-                tmp_dict = {}
-                tmp_dict['id'] = result_array[0]
-                tmp_dict['name'] = result_array[1]
-                tmp_dict['cpu_percent'] = result_array[2]
-                tmp_dict['memory_usage'] = result_array[3]
-                tmp_dict['memory_percent'] = result_array[4]
-                tmp_dict['net_io'] = result_array[5]
-                tmp_dict['block_io'] = result_array[6]
-                tmp_dict['pids'] = result_array[7]
-                sorted_data.append(tmp_dict)
+                try:
+                    result_array = result.strip().split(';')
+                    tmp_dict = {}
+                    tmp_dict['id'] = result_array[0]
+                    tmp_dict['name'] = result_array[1]
+                    tmp_dict['cpu_percent'] = result_array[2]
+                    tmp_dict['memory_usage'] = result_array[3]
+                    tmp_dict['memory_percent'] = result_array[4]
+                    tmp_dict['net_io'] = result_array[5]
+                    tmp_dict['block_io'] = result_array[6]
+                    tmp_dict['pids'] = result_array[7]
+                    sorted_data.append(tmp_dict)
+                except:
+                    print_verbose("An error occured while processing the docker check output! Seems like there are no running docker containers.", True)
+                    if stacktrace:
+                        traceback.print_exc()
     
         docker_stats_data['result'] = sorted_data
         docker_stats_data['last_updated_timestamp'] = round(time.time())
