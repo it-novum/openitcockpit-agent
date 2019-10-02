@@ -107,26 +107,14 @@ try:
         
 except ImportError:
     if system is 'windows':
-        print('Install Python psutil: python.exe -m pip install psutil')
+        print('Install Python psutil: python.exe -m pip install psutil==5.5.0')
     elif system is 'linux' and isPython3:
-        print('Install Python psutil: pip3 uninstall psutil && apt-get install python3-psutil')
+        print('Install Python psutil: pip3 install psutil==5.5.0 or apt-get install python3-psutil')
     elif system is 'linux' and not isPython3:
-        print('Install Python psutil: pip uninstall psutil && apt-get install python-psutil')
+        print('Install Python psutil: pip install psutil==5.5.0 or apt-get install python-psutil')
     else:
-        print('Install Python psutil: pip install psutil')
+        print('Install Python psutil: pip install psutil==5.5.0')
     sys.exit(1)
-
-def signal_handler(sig, frame):
-    global thread_stop_requested
-    global webserver_stop_requested
-    global wait_and_check_auto_certificate_thread_stop_requested
-    
-    thread_stop_requested = True
-    webserver_stop_requested = True
-    wait_and_check_auto_certificate_thread_stop_requested = True
-    if verbose:
-        print("... see you ...\n")
-    sys.exit(0)
 
 agentVersion = "1.0.0"
 enableSSL = False
@@ -224,6 +212,22 @@ def reset_global_options():
     globals()['config'] = configparser.ConfigParser(allow_no_value=True)
     globals()['customchecks'] = configparser.ConfigParser(allow_no_value=True)
 
+def print_verbose(msg, more_on_stacktrace):
+    if verbose:
+        print(msg)
+    if not stacktrace and more_on_stacktrace:
+        print("Enable --stacktrace to get more information.")
+
+def signal_handler(sig, frame):
+    global thread_stop_requested
+    global webserver_stop_requested
+    global wait_and_check_auto_certificate_thread_stop_requested
+    
+    thread_stop_requested = True
+    webserver_stop_requested = True
+    wait_and_check_auto_certificate_thread_stop_requested = True
+    print_verbose("... see you ...\n", False)
+    sys.exit(0)
 
 @contextmanager
 def suppress_stdout_stderr():
@@ -287,10 +291,9 @@ def runDefaultChecks():
         else:
             uptime = int(time.time() - psutil.BOOT_TIME)
     except:
+        print_verbose("Could not get system uptime!", True)
         if stacktrace:
             traceback.print_exc()
-        if verbose:
-            print ("Could not get system uptime!")
 
     #totalCpus = psutil.cpu_count()
     #physicalCpus = psutil.cpu_count(logical=False)
@@ -431,10 +434,9 @@ def runDefaultChecks():
         else:
             sensors['temperatures'] = {}
     except:
+        print_verbose("Could not get temperature sensor data!", True)
         if stacktrace:
             traceback.print_exc()
-        if verbose:
-            print ("Could not get temperature sensor data!")
     
     try:
         if hasattr(psutil, "sensors_fans"):
@@ -446,10 +448,9 @@ def runDefaultChecks():
         else:
             sensors['fans'] = {}
     except:
+        print_verbose("Could not get fans sensor data!", True)
         if stacktrace:
             traceback.print_exc()
-        if verbose:
-            print ("Could not get fans sensor data!")
     
     try:
         if hasattr(psutil, "sensors_battery"):
@@ -461,10 +462,9 @@ def runDefaultChecks():
         else:
             sensors['battery'] = {}
     except:
+        print_verbose("Could not get battery sensor data!", True)
         if stacktrace:
             traceback.print_exc()
-        if verbose:
-            print ("Could not get battery sensor data!")
     
     if hasattr(psutil, "pids"):
         pids = psutil.pids()
@@ -476,20 +476,18 @@ def runDefaultChecks():
         if hasattr(psutil, "getloadavg"):
             system_load_avg = psutil.getloadavg()
     except:
+        print_verbose("Could not get average system load!", True)
         if stacktrace:
             traceback.print_exc()
-        if verbose:
-            print ("Could not get average system load!")
             
     users = []
     try:
         if hasattr(psutil, "users"):
             users = [ user._asdict() for user in psutil.users() ]
     except:
+        print_verbose("Could not get users, connected to the system!", True)
         if stacktrace:
             traceback.print_exc()
-        if verbose:
-            print ("Could not get users, connected to the system!")
 
     #processes = [ psutil.Process(pid).as_dict() for pid in pids ]
     windows_services = []
@@ -511,18 +509,16 @@ def runDefaultChecks():
                     
                 tmpProcessList.append(p)
             except:
+                print_verbose("'%s' Process is not allowing us to get the CPU usage!" % (name if name != "" else str(pid)), True)
                 if stacktrace:
                     traceback.print_exc()
-                if verbose:
-                    print ("'%s' Process is not allowing us to get the CPU usage!" % (name if name != "" else str(pid)))
         
         except psutil.NoSuchProcess:
             continue;
         except:
+            print_verbose("An error occured during process check!", True)
             if stacktrace:
                 traceback.print_exc()
-            if verbose:
-                print ("An error occured during process check! Enable --stacktrace to get more information.")
     
     for p in tmpProcessList:
         try:
@@ -551,10 +547,9 @@ def runDefaultChecks():
                 except (psutil.NoSuchProcess, ProcessLookupError):
                     continue;
                 except AttributeError:
+                    print_verbose("'%s' Process is not allowing us to get the parent process id!" % (str(pid)), True)
                     if stacktrace:
                         traceback.print_exc()
-                    if verbose:
-                        print ("'%s' Process is not allowing us to get the parent process id!" % (str(pid)))
                 
                 try:
                     if callable(p.children):
@@ -562,10 +557,9 @@ def runDefaultChecks():
                             for child in p.children(recursive=True):
                                 children.append(child.pid)
                 except:
+                    print_verbose("'%s' Process is not allowing us to get the child process ids!" % (str(pid)), True)
                     if stacktrace:
                         traceback.print_exc()
-                    if verbose:
-                        print ("'%s' Process is not allowing us to get the child process ids!" % (str(pid)))
             
             
             try:
@@ -573,100 +567,90 @@ def runDefaultChecks():
             except (psutil.NoSuchProcess, ProcessLookupError):
                 continue;
             except:
+                print_verbose("'%s' Process is not allowing us to get the nice option!" % (name if name != "" else str(pid)), True)
                 if stacktrace:
                     traceback.print_exc()
-                if verbose:
-                    print ("'%s' Process is not allowing us to get the nice option!" % (name if name != "" else str(pid)))
         
             try:
                 name = p.name()
             except (psutil.NoSuchProcess, ProcessLookupError):
                 continue;
             except:
+                print_verbose("'%s' Process is not allowing us to get the name option!" % (name if name != "" else str(pid)), True)
                 if stacktrace:
                     traceback.print_exc()
-                if verbose:
-                    print ("'%s' Process is not allowing us to get the name option!" % (name if name != "" else str(pid)))
         
             try:
                 exe = p.exe()
             except (psutil.NoSuchProcess, ProcessLookupError):
                 continue;
             except:
+                print_verbose("'%s' Process is not allowing us to get the exec option!" % (name if name != "" else str(pid)), True)
                 if stacktrace:
                     traceback.print_exc()
-                if verbose:
-                    print ("'%s' Process is not allowing us to get the exec option!" % (name if name != "" else str(pid)))
             
             try:
                 cmdline = p.cmdline()
             except (psutil.NoSuchProcess, ProcessLookupError):
                 continue;
             except:
+                print_verbose("'%s' Process is not allowing us to get the cmdline option!" % (name if name != "" else str(pid)), True)
                 if stacktrace:
                     traceback.print_exc()
-                if verbose:
-                    print ("'%s' Process is not allowing us to get the cmdline option!" % (name if name != "" else str(pid)))
                 
             try:
                 cpu_percent = p.cpu_percent(interval=None)
             except (psutil.NoSuchProcess, ProcessLookupError):
                 continue;
             except:
+                print_verbose("'%s' Process is not allowing us to get the CPU usage!" % (name if name != "" else str(pid)), True)
                 if stacktrace:
                     traceback.print_exc()
-                if verbose:
-                    print ("'%s' Process is not allowing us to get the CPU usage!" % (name if name != "" else str(pid)))
                 
             try:
                 memory_info = p.memory_info()._asdict()
             except (psutil.NoSuchProcess, ProcessLookupError):
                 continue;
             except:
+                print_verbose("'%s' Process is not allowing us to get memory usage information!" % (name if name != "" else str(pid)), True)
                 if stacktrace:
                     traceback.print_exc()
-                if verbose:
-                    print ("'%s' Process is not allowing us to get memory usage information!" % (name if name != "" else str(pid)))
                 
             try:
                 memory_percent = p.memory_percent()
             except (psutil.NoSuchProcess, ProcessLookupError):
                 continue;
             except:
+                print_verbose("'%s' Process is not allowing us to get the percent of memory usage!" % (name if name != "" else str(pid)), True)
                 if stacktrace:
                     traceback.print_exc()
-                if verbose:
-                    print ("'%s' Process is not allowing us to get the percent of memory usage!" % (name if name != "" else str(pid)))
                 
             try:
                 num_fds = p.num_fds()
             except (psutil.NoSuchProcess, ProcessLookupError):
                 continue;
             except:
+                print_verbose("'%s' Process is not allowing us to get the num_fds option!" % (name if name != "" else str(pid)), True)
                 if stacktrace:
                     traceback.print_exc()
-                if verbose:
-                    print ("'%s' Process is not allowing us to get the num_fds option!" % (name if name != "" else str(pid)))
             
             try:
                 io_counters = p.io_counters.__dict__
             except (psutil.NoSuchProcess, ProcessLookupError):
                 continue;
             except:
+                print_verbose("'%s' Process is not allowing us to get the IO counters!" % (name if name != "" else str(pid)), True)
                 if stacktrace:
                     traceback.print_exc()
-                if verbose:
-                    print ("'%s' Process is not allowing us to get the IO counters!" % (name if name != "" else str(pid)))
             
             try:
                 open_files = p.open_files()
             except (psutil.NoSuchProcess, ProcessLookupError):
                 continue;
             except psutil.AccessDenied:
+                print_verbose("'%s' Process is not allowing us to get the open_files option!" % (name if name != "" else str(pid)), True)
                 if stacktrace:
                     traceback.print_exc()
-                if verbose:
-                    print ("'%s' Process is not allowing us to get the open_files option!" % (name if name != "" else str(pid)))
 
                 
             process = {
@@ -690,10 +674,9 @@ def runDefaultChecks():
         except psutil.NoSuchProcess:
             continue;
         except:
+            print_verbose("An error occured during process check!", True)
             if stacktrace:
                 traceback.print_exc()
-            if verbose:
-                print ("An error occured during process check! Enable --stacktrace to get more information.")
     
     if system is 'windows':
         for win_process in psutil.win_service_iter():
@@ -778,11 +761,10 @@ def update_crt_files(data):
             return True
         
     except Exception as e:
+        print_verbose("An error occured during new certificate processing", True)
         if stacktrace:
             traceback.print_exc()
             print(e)
-        elif verbose:
-            print('an error occured during new certificate processing')
         
 def check_update_data(data):
     try:
@@ -871,15 +853,13 @@ def check_update_data(data):
                         
                 if configpath != "":
                     with open(configpath, 'w') as configfile:
-                        if verbose:
-                            print('update agent configuration')
+                        print_verbose("Update agent configuration ...", False)
                         newconfig.write(configfile)
                 else:
-                    if verbose:
-                        print('no valid configpath')
+                    print_verbose("No valid configuration path found", False)
+            
             elif key == 'config' and not file_readable(configpath):
-                if verbose:
-                    print('agent configuration file not readable')
+                print_verbose("Agent configuration file not readable", False)
             
             if key == 'customchecks' and file_readable(config['default']['customchecks']):
                 newcustomchecks = configparser.ConfigParser(allow_no_value=True)
@@ -911,24 +891,21 @@ def check_update_data(data):
                             
                 if config['default']['customchecks'] != "":
                     with open(config['default']['customchecks'], 'w') as configfile:
-                        if verbose:
-                            print('update customchecks configuration')
+                        print_verbose("Update customchecks configuration ...", False)
                         newcustomchecks.write(configfile)
                 else:
-                    if verbose:
-                        print('no valid customchecks configpath')
+                    print_verbose("No valid customchecks configuration path found", False)
+            
             elif key == 'customchecks' and not file_readable(config['default']['customchecks']):
-                if verbose:
-                    print('customchecks configuration file not readable')
+                print_verbose("Customchecks configuration file not readable", False)
             
         load_main_processing()
         
     except Exception as e:
+        print_verbose("An error occurred while processing the new configuration", True)
         if stacktrace:
             traceback.print_exc()
             print(e)
-        elif verbose:
-            print('an error occured during new config processing')
     
 class MyServer(BaseHTTPRequestHandler):
     def _set_headers(self):
@@ -1035,22 +1012,20 @@ class MyServer(BaseHTTPRequestHandler):
                     self.wfile.write('not authenticated'.encode())
             else:
                 retrn = self._process_post_data(data=self.rfile.read(int(self.headers['Content-Length'])))
-                print(retrn)
                 self.wfile.write(json.dumps(retrn).encode())
         except:
-            traceback.print_exc()
-            print('caught something in do_POST')
+            print_verbose('Caught something in do_POST', True)
+            if stacktrace:
+                traceback.print_exc()
 
     def log_message(self, format, *args):
-        if verbose:
-            print("%s - - [%s] %s" % (self.address_string(),self.log_date_time_string(),format%args))
+        print_verbose("%s - - [%s] %s" % (self.address_string(),self.log_date_time_string(),format%args), False)
         return
 
 def check_qemu_stats(timeout):
     global qemu_stats_data
     
-    if verbose:
-        print('start qemu stats check with timeout of %ss at %s' % (str(timeout), str(round(time.time()))))
+    print_verbose('Start qemu stats check with timeout of %ss at %s' % (str(timeout), str(round(time.time()))), False)
     
     tmp_qemu_stats_result = None
     qemu_stats_data['running'] = "true";
@@ -1072,18 +1047,16 @@ def check_qemu_stats(timeout):
             qemu_stats_data['error'] = None if str(stderr) == 'None' else str(stderr)
             qemu_stats_data['returncode'] = p.returncode
         except subprocess.TimeoutExpired:
-            if verbose:
-                print('docker stats check timed out')
+            print_verbose('Qemu stats check timed out', False)
             p.kill()    #not needed; just to be sure
             qemu_stats_data['result'] = None
-            qemu_stats_data['error'] = 'Docker stats check timeout after ' + str(timeout) + ' seconds'
+            qemu_stats_data['error'] = 'Qemu stats check timeout after ' + str(timeout) + ' seconds'
             qemu_stats_data['returncode'] = 124
     
     except:
+        print_verbose('An error occured while running the qemu stats check!', True)
         if stacktrace:
             traceback.print_exc()
-        if verbose:
-            print ('An error occured while running the docker stats check! Enable --stacktrace to get more information.')
     
     if tmp_qemu_stats_result is not None and qemu_stats_data['returncode'] is 0:
         ordered_results = []
@@ -1121,15 +1094,13 @@ def check_qemu_stats(timeout):
     
     if len(qemu_stats_data) > 0:
         cached_check_data['qemustats'] = qemu_stats_data
-    if verbose:
-        print('qemu stats check finished')
+    print_verbose('Qemu stats check finished', False)
     del qemu_stats_data['running']
 
 def check_docker_stats(timeout):
     global docker_stats_data
     
-    if verbose:
-        print('start docker stats check with timeout of %ss at %s' % (str(timeout), str(round(time.time()))))
+    print_verbose('Start docker stats check with timeout of %ss at %s' % (str(timeout), str(round(time.time()))), False)
     
     tmp_docker_stats_result = None
     docker_stats_data['running'] = "true";
@@ -1152,18 +1123,16 @@ def check_docker_stats(timeout):
             docker_stats_data['error'] = None if str(stderr) == 'None' else str(stderr)
             docker_stats_data['returncode'] = p.returncode
         except subprocess.TimeoutExpired:
-            if verbose:
-                print('docker stats check timed out')
+            print_verbose('Docker stats check timed out', False)
             p.kill()    #not needed; just to be sure
             docker_stats_data['result'] = None
             docker_stats_data['error'] = 'Docker stats check timeout after ' + str(timeout) + ' seconds'
             docker_stats_data['returncode'] = 124
     
     except:
+        print_verbose('An error occured while running the docker stats check!', True)
         if stacktrace:
             traceback.print_exc()
-        if verbose:
-            print ('An error occured while running the docker stats check! Enable --stacktrace to get more information.')
     
     if tmp_docker_stats_result is not None and docker_stats_data['returncode'] is 0:
         results = tmp_docker_stats_result.split('\n')
@@ -1190,8 +1159,7 @@ def check_docker_stats(timeout):
     
     if len(docker_stats_data) > 0:
         cached_check_data['dockerstats'] = docker_stats_data
-    if verbose:
-        print('docker stats check finished')
+    print_verbose('Docker stats check finished', False)
     del docker_stats_data['running']
 
 def collect_data_for_cache(check_interval):
@@ -1221,12 +1189,10 @@ def collect_data_for_cache(check_interval):
         i += 1
     
     permanent_check_thread_running = False
-    if verbose:
-        print('stopped permanent_check_thread')
+    print_verbose('Stopped permanent_check_thread', False)
 
 def run_customcheck_command(check):
-    if verbose:
-        print('start custom check "%s" with timeout %s at %s' % (str(check['name']), str(check['timeout']), str(round(time.time()))))
+    print_verbose('Start custom check "%s" with timeout %s at %s' % (str(check['name']), str(check['timeout']), str(round(time.time()))), False)
     cached_customchecks_check_data[check['name']]['running'] = "true";
     cached_customchecks_check_data[check['name']]['command'] = check['command']
     
@@ -1244,18 +1210,16 @@ def run_customcheck_command(check):
             cached_customchecks_check_data[check['name']]['error'] = None if str(stderr) == 'None' else str(stderr)
             cached_customchecks_check_data[check['name']]['returncode'] = p.returncode
         except subprocess.TimeoutExpired:
-            if verbose:
-                print('custom check "%s" timed out' % (check['name']))
+            print_verbose('Custom check "%s" timed out' % (check['name']), False)
             p.kill()    #not needed; just to be sure
             cached_customchecks_check_data[check['name']]['result'] = None
             cached_customchecks_check_data[check['name']]['error'] = 'Command timeout after ' + str(check['timeout']) + ' seconds'
             cached_customchecks_check_data[check['name']]['returncode'] = 124
     
     except:
+        print_verbose('An error occured while running the custom check "%s"!' % (check['name']), True)
         if stacktrace:
             traceback.print_exc()
-        if verbose:
-            print ('An error occured while running the custom check "%s"! Enable --stacktrace to get more information.' % (check['name']))
     
     cached_customchecks_check_data[check['name']]['last_updated_timestamp'] = round(time.time())
     cached_customchecks_check_data[check['name']]['last_updated'] = time.ctime()
@@ -1269,13 +1233,11 @@ def process_customcheck_results(future_checks):
         try:
             if not future.result(): #if run_customcheck_command do not return True (exception/error)
                 del cached_customchecks_check_data[check['name']]['running']
-            if verbose:
-                print('custom check "%s" stopped' % (check['name']))
+            print_verbose('Custom check "%s" stopped' % (check['name']), False)
         except:
+            print_verbose('An error occured while checking custom check "%s" alive!' % (check['name']), True)
             if stacktrace:
                 traceback.print_exc()
-            if verbose:
-                print ('An error occured while checking custom check "%s" alive! Enable --stacktrace to get more information.' % (check['name']))
     
     if len(cached_customchecks_check_data) > 0:
         cached_check_data['customchecks'] = cached_customchecks_check_data;
@@ -1291,8 +1253,7 @@ def collect_customchecks_data_for_cache(customchecks):
         if 'max_worker_threads' in customchecks['default']:
             max_workers = int(customchecks['default']['max_worker_threads'])
             
-    if verbose:
-        print('Start thread pool with max. %s workers' % (str(max_workers)))
+    print_verbose('Start thread pool with max. %s workers' % (str(max_workers)), False)
     
     executor = futures.ThreadPoolExecutor(max_workers=max_workers)
     
@@ -1325,7 +1286,6 @@ def collect_customchecks_data_for_cache(customchecks):
                             'timeout': timeout
                         }
                         need_to_be_checked.append(check)
-                        #executor.submit(run_customcheck_command, check)
         
         # Start the load operations and mark each future with its URL
         if len(need_to_be_checked) > 0:
@@ -1336,8 +1296,7 @@ def collect_customchecks_data_for_cache(customchecks):
         
         time.sleep(1)
     permanent_customchecks_check_thread_running = False
-    if verbose:
-        print('stopped permanent_customchecks_check_thread')
+    print_verbose('Stopped permanent_customchecks_check_thread', False)
 
 def notify_oitc(oitc):
     global oitc_notification_thread_running
@@ -1365,13 +1324,11 @@ def notify_oitc(oitc):
                     #    print(response.content.decode('utf-8'))
 
                 except:
+                    print_verbose('An error occured while trying to notify your configured openITCOCKPIT instance!', True)
                     if stacktrace:
                         traceback.print_exc()
-                    if verbose:
-                        print ('An error occured while trying to notify your configured openITCOCKPIT instance! Enable --stacktrace to get more information.')
     oitc_notification_thread_running = False
-    if verbose:
-        print('stopped oitc_notification_thread')
+    print_verbose('Stopped oitc_notification_thread', False)
 
 def process_webserver(enableSSL=False):
     global permanent_webserver_thread_running
@@ -1391,20 +1348,17 @@ def process_webserver(enableSSL=False):
         protocol = 'https'
         httpd.socket = ssl.wrap_socket(httpd.socket, keyfile=config['default']['autossl-key-file'], certfile=config['default']['autossl-crt-file'], server_side=True, cert_reqs = ssl.CERT_REQUIRED, ca_certs = config['default']['autossl-ca-file'])
     
-    if verbose:
-        print("Server started at %s://%s:%s with a check interval of %d seconds" % (protocol, config['default']['address'], str(config['default']['port']), int(config['default']['interval'])))
+    print_verbose("Server started at %s://%s:%s with a check interval of %d seconds" % (protocol, config['default']['address'], str(config['default']['port']), int(config['default']['interval'])), False)
     
     while not thread_stop_requested and not webserver_stop_requested:
         try:
             httpd.handle_request()
         except:
-            if verbose:
-                print('Webserver died, try to restart ..')
+            print_verbose('Webserver died, try to restart ...', False)
         sleep(1)
     del httpd
     permanent_webserver_thread_running = False
-    if verbose:
-        print('stopped permanent_webserver_thread')
+    print_verbose('Stopped permanent_webserver_thread', False)
 
 def restart_webserver():
     global webserver_stop_requested
@@ -1486,8 +1440,7 @@ def create_new_csr():
                     os.makedirs(os.path.dirname(filename))
                 except OSError as exc: # Guard against race condition
                     if exc.errno != errno.EEXIST:
-                        if verbose:
-                            print('An error occured while creating the ssl files containing folders')
+                        print_verbose('An error occured while creating the ssl files containing folders', True)
                         if stacktrace:
                             raise
 
@@ -1500,8 +1453,7 @@ def create_new_csr():
         ssl_csr = csr
             
     except:
-        if verbose:
-            print('An error occured while creating a new csr')
+        print_verbose('An error occured while creating a new certificate request (csr)', True)
         if stacktrace:
             traceback.print_exc()
     
@@ -1524,8 +1476,7 @@ def pull_crt_from_server():
             jdata = json.loads(response.content.decode('utf-8'));
 
             if 'unknown' in jdata:  # server dont know agent, manual confirmation in openITCOCKPIT frontend needed
-                if verbose:
-                    print('Untrusted agent. Try again in 10 minutes to get a certificate from the server.')
+                print_verbose('Untrusted agent! Try again in 10 minutes to get a certificate from the server.', False)
                 executor = futures.ThreadPoolExecutor(max_workers=1)
                 executor.submit(wait_and_check_auto_certificate, 600)
                 
@@ -1537,12 +1488,10 @@ def pull_crt_from_server():
             
                 restart_webserver()
 
-                if verbose:
-                    print('signed cert updated')
+                print_verbose('Signed certificate updated successfully', False)
                 return True
         except:
-            if verbose:
-                print('An error occured during autossl certificate renew process')
+            print_verbose('An error occurred during autossl certificate renew process', True)
             if stacktrace:
                 traceback.print_exc()
     
@@ -1551,8 +1500,7 @@ def pull_crt_from_server():
 def wait_and_check_auto_certificate(seconds):
     global wait_and_check_auto_certificate_thread_stop_requested
     
-    if verbose:
-        print('started wait_and_check_auto_certificate')
+    print_verbose('Started wait_and_check_auto_certificate', False)
 
     if autossl:
         i = 0
@@ -1563,10 +1511,8 @@ def wait_and_check_auto_certificate(seconds):
         if not wait_and_check_auto_certificate_thread_stop_requested:
             doNotWaitForReturnExecutor = futures.ThreadPoolExecutor(max_workers=1)
             doNotWaitForReturnExecutor.submit(check_auto_certificate)
-            #check_auto_certificate()
     wait_and_check_auto_certificate_thread_stop_requested = False
-    if verbose:
-        print('finished wait_and_check_auto_certificate')
+    print_verbose('Finished wait_and_check_auto_certificate', False)
 
 def check_auto_certificate():
     if not file_readable(config['default']['autossl-crt-file']):
@@ -1582,12 +1528,10 @@ def check_auto_certificate():
             exp_date = str(exp_day) + "-" + str(exp_month) + "-" + str(exp_year)
             
             if verbose:
-                print("SSL Certificate will be expired on (DD-MM-YYYY)", exp_date)
-                print("Expire in days:", datetime.date(int(exp_year), int(exp_month), int(exp_day)) - datetime.datetime.now().date())
+                print("SSL Certificate expires in %s on %s (DD-MM-YYYY)" % (str(datetime.date(int(exp_year), int(exp_month), int(exp_day)) - datetime.datetime.now().date()).split(',')[0], exp_date))
             
             if datetime.date(int(exp_year), int(exp_month), int(exp_day)) - datetime.datetime.now().date() <= datetime.timedelta(182):
-                if verbose:
-                    print('SSL Certificate will expire soon. Try to create a new one automatically')
+                print_verbose('SSL Certificate will expire soon. Try to create a new one automatically ...', False)
                 if pull_crt_from_server() is not False:
                     check_auto_certificate()
 
@@ -1660,13 +1604,11 @@ def load_configuration():
     if configpath is not "":
         if file_readable(configpath):
             with open(configpath, 'r') as configfile:
-                if verbose:
-                    print('load agent config file "%s"' % (configpath))
+                print_verbose('Load agent configuration file "%s"' % (configpath), False)
                 config.read_file(configfile)
         else:
             with open(configpath, 'w') as configfile:
-                if verbose:
-                    print('create new default agent config file "%s"' % (configpath))
+                print_verbose('Create new default agent configuration file "%s"' % (configpath), False)
                 config.write(configfile)
     
     build_autossl_defaults()
@@ -1768,11 +1710,10 @@ def load_configuration():
             if file_readable(config['default']['certfile']) and file_readable(config['default']['keyfile']):
                 enableSSL = True
             elif verbose:
-                print("could not read certfile or keyfile\nfall back to default http server")
+                print("Could not read certfile or keyfile\nFall back to default http server")
             
         except IOError:
-            if verbose:
-                print("could not read certfile or keyfile\nfall back to default http server")
+            print_verbose("Could not read certfile or keyfile\nFall back to default http server", False)
     
 def fake_webserver_request():
     protocol = 'http'
@@ -1820,8 +1761,7 @@ def load_main_processing():
     if config['default']['customchecks'] != "":
         if file_readable(config['default']['customchecks']):
             with open(config['default']['customchecks'], 'r') as customchecks_configfile:
-                if verbose:
-                    print('load custom check config file "%s"' % (config['default']['customchecks']))
+                print_verbose('Load custom check configuration file "%s"' % (config['default']['customchecks']), False)
                 customchecks.read_file(customchecks_configfile)
             if customchecks:
                 permanent_customchecks_check_thread(collect_customchecks_data_for_cache, (customchecks,))
