@@ -219,6 +219,11 @@ def print_verbose(msg, more_on_stacktrace):
             print(msg)
         if not stacktrace and more_on_stacktrace:
             print("Enable --stacktrace to get more information.")
+def print_verbose_without_lock(msg, more_on_stacktrace):
+    if verbose:
+        print(msg)
+    if not stacktrace and more_on_stacktrace:
+        print("Enable --stacktrace to get more information.")
 
 def signal_handler(sig, frame):
     global thread_stop_requested
@@ -297,7 +302,7 @@ def runDefaultChecks():
         else:
             uptime = int(time.time() - psutil.BOOT_TIME)
     except:
-        print_verbose("Could not get system uptime!", True)
+        print_verbose_without_lock("Could not get system uptime!", True)
         if stacktrace:
             traceback.print_exc()
 
@@ -440,7 +445,7 @@ def runDefaultChecks():
         else:
             sensors['temperatures'] = {}
     except:
-        print_verbose("Could not get temperature sensor data!", True)
+        print_verbose_without_lock("Could not get temperature sensor data!", True)
         if stacktrace:
             traceback.print_exc()
     
@@ -454,7 +459,7 @@ def runDefaultChecks():
         else:
             sensors['fans'] = {}
     except:
-        print_verbose("Could not get fans sensor data!", True)
+        print_verbose_without_lock("Could not get fans sensor data!", True)
         if stacktrace:
             traceback.print_exc()
     
@@ -468,7 +473,7 @@ def runDefaultChecks():
         else:
             sensors['battery'] = {}
     except:
-        print_verbose("Could not get battery sensor data!", True)
+        print_verbose_without_lock("Could not get battery sensor data!", True)
         if stacktrace:
             traceback.print_exc()
     
@@ -482,7 +487,7 @@ def runDefaultChecks():
         if hasattr(psutil, "getloadavg"):
             system_load_avg = psutil.getloadavg()
     except:
-        print_verbose("Could not get average system load!", True)
+        print_verbose_without_lock("Could not get average system load!", True)
         if stacktrace:
             traceback.print_exc()
             
@@ -491,7 +496,7 @@ def runDefaultChecks():
         if hasattr(psutil, "users"):
             users = [ user._asdict() for user in psutil.users() ]
     except:
-        print_verbose("Could not get users, connected to the system!", True)
+        print_verbose_without_lock("Could not get users, connected to the system!", True)
         if stacktrace:
             traceback.print_exc()
 
@@ -515,14 +520,14 @@ def runDefaultChecks():
                     
                 tmpProcessList.append(p)
             except:
-                print_verbose("'%s' Process is not allowing us to get the CPU usage!" % (name if name != "" else str(pid)), True)
+                print_verbose_without_lock("'%s' Process is not allowing us to get the CPU usage!" % (name if name != "" else str(pid)), True)
                 if stacktrace:
                     traceback.print_exc()
         
         except psutil.NoSuchProcess:
             continue;
         except:
-            print_verbose("An error occured during process check!", True)
+            print_verbose_without_lock("An error occured during process check!", True)
             if stacktrace:
                 traceback.print_exc()
     
@@ -553,7 +558,7 @@ def runDefaultChecks():
                 except (psutil.NoSuchProcess, ProcessLookupError):
                     continue;
                 except AttributeError:
-                    print_verbose("'%s' Process is not allowing us to get the parent process id!" % (str(pid)), True)
+                    print_verbose_without_lock("'%s' Process is not allowing us to get the parent process id!" % (str(pid)), True)
                     if stacktrace:
                         traceback.print_exc()
                 
@@ -563,7 +568,7 @@ def runDefaultChecks():
                             for child in p.children(recursive=True):
                                 children.append(child.pid)
                 except:
-                    print_verbose("'%s' Process is not allowing us to get the child process ids!" % (str(pid)), True)
+                    print_verbose_without_lock("'%s' Process is not allowing us to get the child process ids!" % (str(pid)), True)
                     if stacktrace:
                         traceback.print_exc()
             
@@ -573,7 +578,7 @@ def runDefaultChecks():
             except (psutil.NoSuchProcess, ProcessLookupError):
                 continue;
             except:
-                print_verbose("'%s' Process is not allowing us to get the nice option!" % (name if name != "" else str(pid)), True)
+                print_verbose_without_lock("'%s' Process is not allowing us to get the nice option!" % (name if name != "" else str(pid)), True)
                 if stacktrace:
                     traceback.print_exc()
         
@@ -582,7 +587,7 @@ def runDefaultChecks():
             except (psutil.NoSuchProcess, ProcessLookupError):
                 continue;
             except:
-                print_verbose("'%s' Process is not allowing us to get the name option!" % (name if name != "" else str(pid)), True)
+                print_verbose_without_lock("'%s' Process is not allowing us to get the name option!" % (name if name != "" else str(pid)), True)
                 if stacktrace:
                     traceback.print_exc()
         
@@ -591,7 +596,7 @@ def runDefaultChecks():
             except (psutil.NoSuchProcess, ProcessLookupError):
                 continue;
             except:
-                print_verbose("'%s' Process is not allowing us to get the exec option!" % (name if name != "" else str(pid)), True)
+                print_verbose_without_lock("'%s' Process is not allowing us to get the exec option!" % (name if name != "" else str(pid)), True)
                 if stacktrace:
                     traceback.print_exc()
             
@@ -600,7 +605,7 @@ def runDefaultChecks():
             except (psutil.NoSuchProcess, ProcessLookupError):
                 continue;
             except:
-                print_verbose("'%s' Process is not allowing us to get the cmdline option!" % (name if name != "" else str(pid)), True)
+                print_verbose_without_lock("'%s' Process is not allowing us to get the cmdline option!" % (name if name != "" else str(pid)), True)
                 if stacktrace:
                     traceback.print_exc()
                 
@@ -609,7 +614,7 @@ def runDefaultChecks():
             except (psutil.NoSuchProcess, ProcessLookupError):
                 continue;
             except:
-                print_verbose("'%s' Process is not allowing us to get the CPU usage!" % (name if name != "" else str(pid)), True)
+                print_verbose_without_lock("'%s' Process is not allowing us to get the CPU usage!" % (name if name != "" else str(pid)), True)
                 if stacktrace:
                     traceback.print_exc()
                 
@@ -618,7 +623,7 @@ def runDefaultChecks():
             except (psutil.NoSuchProcess, ProcessLookupError):
                 continue;
             except:
-                print_verbose("'%s' Process is not allowing us to get memory usage information!" % (name if name != "" else str(pid)), True)
+                print_verbose_without_lock("'%s' Process is not allowing us to get memory usage information!" % (name if name != "" else str(pid)), True)
                 if stacktrace:
                     traceback.print_exc()
                 
@@ -627,7 +632,7 @@ def runDefaultChecks():
             except (psutil.NoSuchProcess, ProcessLookupError):
                 continue;
             except:
-                print_verbose("'%s' Process is not allowing us to get the percent of memory usage!" % (name if name != "" else str(pid)), True)
+                print_verbose_without_lock("'%s' Process is not allowing us to get the percent of memory usage!" % (name if name != "" else str(pid)), True)
                 if stacktrace:
                     traceback.print_exc()
                 
@@ -636,7 +641,7 @@ def runDefaultChecks():
             except (psutil.NoSuchProcess, ProcessLookupError):
                 continue;
             except:
-                print_verbose("'%s' Process is not allowing us to get the num_fds option!" % (name if name != "" else str(pid)), True)
+                print_verbose_without_lock("'%s' Process is not allowing us to get the num_fds option!" % (name if name != "" else str(pid)), True)
                 if stacktrace:
                     traceback.print_exc()
             
@@ -645,7 +650,7 @@ def runDefaultChecks():
             except (psutil.NoSuchProcess, ProcessLookupError):
                 continue;
             except:
-                print_verbose("'%s' Process is not allowing us to get the IO counters!" % (name if name != "" else str(pid)), True)
+                print_verbose_without_lock("'%s' Process is not allowing us to get the IO counters!" % (name if name != "" else str(pid)), True)
                 if stacktrace:
                     traceback.print_exc()
             
@@ -654,7 +659,7 @@ def runDefaultChecks():
             except (psutil.NoSuchProcess, ProcessLookupError):
                 continue;
             except psutil.AccessDenied:
-                print_verbose("'%s' Process is not allowing us to get the open_files option!" % (name if name != "" else str(pid)), True)
+                print_verbose_without_lock("'%s' Process is not allowing us to get the open_files option!" % (name if name != "" else str(pid)), True)
                 if stacktrace:
                     traceback.print_exc()
 
@@ -680,7 +685,7 @@ def runDefaultChecks():
         except psutil.NoSuchProcess:
             continue;
         except:
-            print_verbose("An error occured during process check!", True)
+            print_verbose_without_lock("An error occured during process check!", True)
             if stacktrace:
                 traceback.print_exc()
     
@@ -1041,6 +1046,7 @@ def check_qemu_stats(timeout):
     qemu_stats_data['running'] = "true";
     
     # regex source: https://gist.github.com/kitschysynq/867caebec581cee4c44c764b4dd2bde7
+    # qemu_command = "ps -ef | awk -e '/qemu/ && !/awk/' | sed -e 's/[^/]*/\n/' -e 's/ -/\n\t-/g'" # customized (without secure character escape)
     qemu_command = "ps -ef | awk -e '/qemu/ && !/awk/' | sed -e 's/[^/]*/\\n/' -e 's/ -/\\n\\t-/g'" # customized
     
     try:
