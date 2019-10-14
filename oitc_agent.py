@@ -486,6 +486,8 @@ def runDefaultChecks():
     try:
         if hasattr(psutil, "getloadavg"):
             system_load_avg = psutil.getloadavg()
+        elif hasattr(os, "getloadavg"):
+            system_load_avg = os.getloadavg()
     except:
         print_verbose_without_lock("Could not get average system load!", True)
         if stacktrace:
