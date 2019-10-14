@@ -228,7 +228,8 @@ def signal_handler(sig, frame):
     thread_stop_requested = True
     webserver_stop_requested = True
     wait_and_check_auto_certificate_thread_stop_requested = True
-    print_verbose("... see you ...\n", False)
+    if verbose:
+        print("... see you ...\n")
     sys.exit(0)
 
 @contextmanager
@@ -277,7 +278,8 @@ def runDefaultChecks():
     global cached_diskIO
     global cached_netIO
     
-    print_lock.acquire()
+    if verbose:
+        print_lock.acquire()
     
     # CPU #
     cpuTotalPercentage = psutil.cpu_percent()
@@ -742,7 +744,8 @@ def runDefaultChecks():
     if len(qemu_stats_data) > 0:
         out['qemustats'] = qemu_stats_data
     
-    print_lock.release()
+    if verbose:
+        print_lock.release()
     return out
 
 def file_readable(path):
@@ -1024,19 +1027,21 @@ class MyServer(BaseHTTPRequestHandler):
                 traceback.print_exc()
 
     def log_message(self, format, *args):
-        print_verbose("%s - - [%s] %s" % (self.address_string(),self.log_date_time_string(),format%args), False)
+        if verbose:
+            print("%s - - [%s] %s" % (self.address_string(),self.log_date_time_string(),format%args))
         return
 
 def check_qemu_stats(timeout):
     global qemu_stats_data
     
-    print_verbose('Start qemu stats check with timeout of %ss at %s' % (str(timeout), str(round(time.time()))), False)
+    if verbose:
+        print('Start qemu stats check with timeout of %ss at %s' % (str(timeout), str(round(time.time()))))
     
     tmp_qemu_stats_result = None
     qemu_stats_data['running'] = "true";
     
     # regex source: https://gist.github.com/kitschysynq/867caebec581cee4c44c764b4dd2bde7
-    qemu_command = "ps -ef | awk -e '/qemu/ && !/awk/' | sed -e 's/[^/]*/\n/' -e 's/ -/\n\t-/g'" # customized
+    qemu_command = "ps -ef | awk -e '/qemu/ && !/awk/' | sed -e 's/[^/]*/\\n/' -e 's/ -/\\n\\t-/g'" # customized
     
     try:
         p = subprocess.Popen(qemu_command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
@@ -1099,13 +1104,15 @@ def check_qemu_stats(timeout):
     
     if len(qemu_stats_data) > 0:
         cached_check_data['qemustats'] = qemu_stats_data
-    print_verbose('Qemu stats check finished', False)
+    if verbose:
+        print('Qemu stats check finished')
     del qemu_stats_data['running']
 
 def check_docker_stats(timeout):
     global docker_stats_data
     
-    print_verbose('Start docker stats check with timeout of %ss at %s' % (str(timeout), str(round(time.time()))), False)
+    if verbose:
+        print('Start docker stats check with timeout of %ss at %s' % (str(timeout), str(round(time.time()))))
     
     tmp_docker_stats_result = None
     docker_stats_data['running'] = "true";
@@ -1169,7 +1176,8 @@ def check_docker_stats(timeout):
     
     if len(docker_stats_data) > 0:
         cached_check_data['dockerstats'] = docker_stats_data
-    print_verbose('Docker stats check finished', False)
+    if verbose:
+        print('Docker stats check finished')
     del docker_stats_data['running']
 
 def collect_data_for_cache(check_interval):
@@ -1186,11 +1194,11 @@ def collect_data_for_cache(check_interval):
     while not thread_stop_requested:
         if i >= check_interval:
             if config['default']['dockerstats'] in (1, "1", "true", "True") and 'running' not in docker_stats_data:
-                thread = Thread(target = check_docker_stats, args = (check_interval-1, ))
+                thread = Thread(target = check_docker_stats, args = (check_interval, ))
                 thread.start()
                 #thread.join()
             if system is 'linux' and config['default']['qemustats'] in (1, "1", "true", "True") and 'running' not in qemu_stats_data:
-                thread = Thread(target = check_qemu_stats, args = (check_interval-1, ))
+                thread = Thread(target = check_qemu_stats, args = (check_interval, ))
                 thread.start()
             
             cached_check_data = runDefaultChecks()
