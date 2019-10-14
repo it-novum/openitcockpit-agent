@@ -55,6 +55,12 @@ customchecks = /etc/openitcockpit-agent/customchecks.cnf
 # Return temperature values as fahrenheit
 temperature-fahrenheit = false
 
+# Try to check docker containers and return stats in default output
+dockerstats = false
+
+# Try to check qemu virtual machines and return stats in default output
+qemustats = false
+
 # By default openITCOCKPIT will pull check results from the openITCOCKPIT Agent.
 # In a Cloud environments or behind a NAT network it could become handy
 # if the openITCOCKPIT Agent will push the results to the openITCOCKPIT Server
