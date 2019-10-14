@@ -2,3 +2,4 @@ psutil>=5.5.0
 configparser
 pycryptodome
 pyopenssl
+requests
