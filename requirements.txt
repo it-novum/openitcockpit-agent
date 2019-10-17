@@ -3,3 +3,4 @@ configparser
 pycryptodome
 pyopenssl
 requests
+pyinstaller
