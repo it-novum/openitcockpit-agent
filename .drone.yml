@@ -27,7 +27,7 @@ steps:
     bucket: openitcockpit-agent
     source: public/*
     strip_prefix: public/
-    target: ./${DRONE_BUILD_NUMBER}/
+    target: ./$$BUILD_NUMBER
     recursive: true
     path_style: true
     access_key:
