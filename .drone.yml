@@ -25,8 +25,8 @@ steps:
   image: plugins/s3
   settings:
     bucket: openitcockpit-agent
-    source: public/*
-    target: /$$BUILD_NUMBER
+    source: public/packages*
+    target: /
     recursive: true
     path_style: true
     access_key:
