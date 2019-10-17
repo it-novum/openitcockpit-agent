@@ -9,7 +9,7 @@ steps:
   - yum -y install python36-devel python36-pip libffi-devel gcc glibc
   - yum -y install ruby-devel gcc make rpm-build rubygems rpm
   - gem install --no-ri --no-rdoc fpm
-  - mkdir -p public/{packages,binaries}
+  - mkdir -p ./public/{packages,binaries}
   - python3 -m venv ./python3-env
   - source ./python3-env/bin/activate
   - ./python3-env/bin/pip3 install -r requirements.txt
@@ -18,8 +18,7 @@ steps:
   - mv ./dist/oitc_agent ./public/binaries/openitcockpit-agent-python3.linux.bin
   - chmod +x ./public/binaries/openitcockpit-agent-python3.linux.bin
   - cp ./public/binaries/openitcockpit-agent-python3.linux.bin executables
-  - cd ..
-  - ./openitcockpit-agent/packages/scripts/build_linux.sh
+  - packages/scripts/build_linux.sh
   - mv openitcockpit-agent*.{deb,rpm} ./public/packages
 
 - name: upload
