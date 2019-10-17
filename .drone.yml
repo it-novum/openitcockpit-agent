@@ -4,7 +4,7 @@ name: openitcockpit-agent
 
 steps:
 - name: build_linux_packages
-  image: centos:centos7
+  image: localhost:5000/openitcockpit-agent-centos7:latests
   commands:
   - yum -y install python36-devel python36-pip libffi-devel gcc glibc
   - yum -y install ruby-devel gcc make rpm-build rubygems rpm
@@ -18,7 +18,7 @@ steps:
   - mv ./dist/oitc_agent ./public/binaries/openitcockpit-agent-python3.linux.bin
   - chmod +x ./public/binaries/openitcockpit-agent-python3.linux.bin
   - cp ./public/binaries/openitcockpit-agent-python3.linux.bin executables
-  - packages/scripts/build_linux.sh
+  - ./packages/scripts/build_linux.sh
   - mv openitcockpit-agent*.{deb,rpm} ./public/packages
 
 - name: upload
