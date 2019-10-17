@@ -4,7 +4,7 @@ name: openitcockpit-agent
 
 steps:
 - name: build_linux_packages
-  image: localhost:5000/openitcockpit-agent-centos7:latests
+  image: localhost:5000/openitcockpit-agent-centos7:latest
   commands:
   - yum -y install python36-devel python36-pip libffi-devel gcc glibc
   - yum -y install ruby-devel gcc make rpm-build rubygems rpm
