@@ -18,7 +18,7 @@ steps:
   - mv ./dist/oitc_agent ./public/binaries/openitcockpit-agent-python3.linux.bin
   - chmod +x ./public/binaries/openitcockpit-agent-python3.linux.bin
   - cp ./public/binaries/openitcockpit-agent-python3.linux.bin executables
-  - ./packages/scripts/build_linux.sh
+  - ./packages/scripts/build_linux_drone.sh
   - mv openitcockpit-agent*.{deb,rpm} ./public/packages
 
 - name: upload
