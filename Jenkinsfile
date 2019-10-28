@@ -18,15 +18,13 @@ pipeline {
                 sh 'gem install --no-ri --no-rdoc fpm'
                 sh 'mkdir -p ./public/{packages,binaries}'
                 
-                sh 'python3 -m venv ./python3-env'
-                sh 'source ./python3-env/bin/activate'
-                sh './python3-env/bin/pip3 install -r requirements.txt'
-                sh './python3-env/bin/python3 ./python3-env/bin/pyinstaller oitc_agent.py --onefile'
-                sh 'deactivate'
+                sh 'pip3 install -r requirements.txt'
+                sh 'pyinstaller oitc_agent.py --onefile'
+                
                 sh 'mv ./dist/oitc_agent ./public/binaries/openitcockpit-agent-python3.linux.bin'
                 sh 'chmod +x ./public/binaries/openitcockpit-agent-python3.linux.bin'
-                sh 'cp ./public/binaries/openitcockpit-agent-python3.linux.bin executables'
-                sh './packages/scripts/build_linux_drone.sh'
+                sh '/bin/cp -f ./public/binaries/openitcockpit-agent-python3.linux.bin executables'
+                sh './packages/scripts/build_linux_ci.sh'
                 sh 'mv openitcockpit-agent*.{deb,rpm} ./public/packages'
                 archiveArtifacts artifacts: 'public/packages/**', fingerprint: true
             }
