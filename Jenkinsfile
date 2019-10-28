@@ -5,7 +5,7 @@ pipeline {
         stage('Build agent linux packages') {
             when {
                 beforeAgent true
-                branch 'dronetest'
+                branch 'master'
             }
             agent {
                 docker { 
