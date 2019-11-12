@@ -195,6 +195,12 @@ config = configparser.ConfigParser(allow_no_value=True)
 customchecks = configparser.ConfigParser(allow_no_value=True)
 
 def reset_global_options():
+    """Function to reset global variables / objects
+    
+    Called on agent reload.
+    Threads need to be stopped before running this function!
+
+    """
     globals()['enableSSL'] = False
     globals()['cached_check_data'] = {}
     globals()['cached_customchecks_check_data'] = {}
@@ -924,6 +930,14 @@ def check_update_data(data):
             print(e)
     
 class MyServer(BaseHTTPRequestHandler):
+    """Webserver class
+
+    Parameters
+    ----------
+    BaseHTTPRequestHandler
+        BaseHTTPRequestHandler
+
+    """
     def _set_headers(self):
         self.send_response(200)
         self.send_header('Content-type', 'application/json')
@@ -1040,6 +1054,18 @@ class MyServer(BaseHTTPRequestHandler):
         return
 
 def check_qemu_stats(timeout):
+    """Function that starts as a thread to run the qemu stats check
+    
+    Proxmox (linux) only! (beta)
+    
+    Function that runs a (ps) command (as python subprocess) to get a stats result for each running qemu (kvm) virtual machine.
+
+    Parameters
+    ----------
+    timeout
+        Command timeout in seconds
+
+    """
     global qemu_stats_data
     
     if verbose:
@@ -1118,6 +1144,18 @@ def check_qemu_stats(timeout):
     del qemu_stats_data['running']
 
 def check_docker_stats(timeout):
+    """Function that starts as a thread to run the docker stats check
+    
+    Linux only!
+    
+    Function that runs a docker command (as python subprocess) to get a stats result for each running docker container.
+
+    Parameters
+    ----------
+    timeout
+        Command timeout in seconds
+
+    """
     global docker_stats_data
     
     if verbose:
@@ -1190,6 +1228,17 @@ def check_docker_stats(timeout):
     del docker_stats_data['running']
 
 def collect_data_for_cache(check_interval):
+    """Function that starts as a thread to process the default checks
+    
+    Function to process the default checks with a given check interval.
+    Starts the docker and qemu stats check threads (with timeout = check_interval) if configured.
+
+    Parameters
+    ----------
+    check_interval
+        Time in seconds to wait before running the next default check
+
+    """
     global permanent_check_thread_running
     global cached_check_data
 
@@ -1219,6 +1268,18 @@ def collect_data_for_cache(check_interval):
     print_verbose('Stopped permanent_check_thread', False)
 
 def run_customcheck_command(check):
+    """Function that starts as a thread (future) to process a custom check command
+    
+    Process a custom check command until a given timeout.
+    The result will be added to the cached_customchecks_check_data object.
+    process_customcheck_results() take care of a may dying run_customcheck_command thread.
+
+    Parameters
+    ----------
+    check
+        Object containing the specific check data (name, command, timeout)
+
+    """
     print_verbose('Start custom check "%s" with timeout %s at %s' % (str(check['name']), str(check['timeout']), str(round(time.time()))), False)
     cached_customchecks_check_data[check['name']]['running'] = "true";
     cached_customchecks_check_data[check['name']]['command'] = check['command']
@@ -1253,12 +1314,22 @@ def run_customcheck_command(check):
     del cached_customchecks_check_data[check['name']]['running']
     return True
 
-# wait for thread and delete 'running' option if thread had errors and does not return True
 def process_customcheck_results(future_checks):
+    """Function that starts as a thread (future) to collect the custom check results
+    
+    Wait until all custom check threads finished and remove the running flag (that prevents an concurrent execution) if a thread had errors and does not return True.
+    Overwrite the cached custom check check data with the new one(if there is was any result).
+
+    Parameters
+    ----------
+    future_checks
+        Object containing the running custom check threads (futures)
+
+    """
     for future in futures.as_completed(future_checks):   #, timeout=10
         check = future_checks[future]
         try:
-            if not future.result(): #if run_customcheck_command do not return True (exception/error)
+            if not future.result(): # if run_customcheck_command do not return True (exception/error)
                 del cached_customchecks_check_data[check['name']]['running']
             print_verbose('Custom check "%s" stopped' % (check['name']), False)
         except:
@@ -1270,6 +1341,16 @@ def process_customcheck_results(future_checks):
         cached_check_data['customchecks'] = cached_customchecks_check_data;
 
 def collect_customchecks_data_for_cache(customchecks):
+    """Function that starts as a thread to manage the custom checks 
+    
+    For each custom check an own thread (future) will (in a configured interval) be spawned to run the custom check command with a given timeout.
+
+    Parameters
+    ----------
+    customchecks
+        Configuration object that will be used to read the configured custom checks
+
+    """
     global permanent_customchecks_check_thread_running
     permanent_customchecks_check_thread_running = True
     max_workers = 4
@@ -1326,6 +1407,16 @@ def collect_customchecks_data_for_cache(customchecks):
     print_verbose('Stopped permanent_customchecks_check_thread', False)
 
 def notify_oitc(oitc):
+    """Function that starts as a thread to push check results to an openITCOCKPIT server
+    
+    Send a post request with a given interval to the configured openITCOCKPIT server containing the latest check results.
+
+    Parameters
+    ----------
+    oitc
+        Configuration object that will be used to create the push connection
+
+    """
     global oitc_notification_thread_running
     global cached_check_data
     
@@ -1358,6 +1449,20 @@ def notify_oitc(oitc):
     print_verbose('Stopped oitc_notification_thread', False)
 
 def process_webserver(enableSSL=False):
+    """Function that starts as a thread to process the webserver
+    
+    Starts a http webserver at the configured address and port.
+    If enableSSL is specified a custom certificate will be used to start a https webserver.
+    If the global autossl is enabled and the needed files are readable the automatically generated certificate will be used to start a https webserver.
+    
+    Restarts the "real" webserver application if it dies.
+
+    Parameters
+    ----------
+    enableSSL
+        Boolean to specify if ssl with a custom certificate will be used or not
+
+    """
     global permanent_webserver_thread_running
     permanent_webserver_thread_running = True
     
@@ -1388,6 +1493,14 @@ def process_webserver(enableSSL=False):
     print_verbose('Stopped permanent_webserver_thread', False)
 
 def restart_webserver():
+    """Function to restart the webserver
+    
+    Tries to stop the and start the webserver thred again.
+    Therefore a fake GET request is made, calling the function fake_webserver_request().
+    
+    If the web server has not been run before, it will not start!
+
+    """
     global webserver_stop_requested
     global wait_and_check_auto_certificate_thread_stop_requested
     
@@ -1410,11 +1523,24 @@ def restart_webserver():
             else:
                 webserver_stop_requested = False
     
-    if tmp_permanent_webserver_thread_running:  # webserver was running before
-        # start webserver thread
+    if tmp_permanent_webserver_thread_running:
         permanent_webserver_thread(process_webserver, (enableSSL,))
 
 def create_new_csr():
+    """Function that creates a new certificate request (csr)
+
+    Creates a RSA (4096) certificate request.
+    The hostname is config['oitc']['hostuuid'] + '.agent.oitc'.
+    Writes csr in the default or custom autossl-csr-file.
+    Writes certificate key in the default or custom autossl-key-file.
+    
+
+    Returns
+    -------
+    FILETYPE_PEM
+        Returns a pem object (FILETYPE_PEM) on success
+
+    """
     global ssl_csr
     
     try:
@@ -1487,7 +1613,24 @@ def create_new_csr():
     return csr
 
 def pull_crt_from_server():
-    # pip install pycryptodome pyopenssl
+    """Function to pull a new certificate using a csr
+
+    This function tries to pull a new certificate from the configured openITCOCKPIT Server.
+    Therefore a new certificate request (csr) is needed and create_new_csr() will be called.
+    The request with the csr should return the new client (and the CA) certificate.
+
+    If the agent is not known and not yet trusted by the openITCOCKPIT Server the function will be executed again in 10 minutes.
+    Therefore the function wait_and_check_auto_certificate(600) will be called as new thread (future).
+    
+    If the agent is not yet trusted by the openITCOCKPIT Server a manual confirmation in the openITCOCKPIT frontend is needed!
+    
+
+    Returns
+    -------
+    bool
+        True if successful, False otherwise.
+
+    """
 
     if config['oitc']['url'] and config['oitc']['url'] is not "" and config['oitc']['apikey'] and config['oitc']['apikey'] is not "" and config['oitc']['hostuuid'] and config['oitc']['hostuuid'] is not "":
         try:
@@ -1502,7 +1645,7 @@ def pull_crt_from_server():
             
             jdata = json.loads(response.content.decode('utf-8'));
 
-            if 'unknown' in jdata:  # server dont know agent, manual confirmation in openITCOCKPIT frontend needed
+            if 'unknown' in jdata:
                 print_verbose('Untrusted agent! Try again in 10 minutes to get a certificate from the server.', False)
                 executor = futures.ThreadPoolExecutor(max_workers=1)
                 executor.submit(wait_and_check_auto_certificate, 600)
@@ -1525,6 +1668,14 @@ def pull_crt_from_server():
     return False
 
 def wait_and_check_auto_certificate(seconds):
+    """Function to wait until the next automatic certificate check
+
+    Parameters
+    ----------
+    seconds
+        Time in seconds to wait before running the next automatic certificate check
+
+    """
     global wait_and_check_auto_certificate_thread_stop_requested
     
     print_verbose('Started wait_and_check_auto_certificate', False)
@@ -1542,6 +1693,12 @@ def wait_and_check_auto_certificate(seconds):
     print_verbose('Finished wait_and_check_auto_certificate', False)
 
 def check_auto_certificate():
+    """Function to check the automatically generated certificate
+
+    This function checks if the automatically generated certificate is installed and will otherwise trigger the download.
+    Otherwise it checks if the certificate will expire soon.
+        
+    """
     if not file_readable(config['default']['autossl-crt-file']):
         pull_crt_from_server()
     if file_readable(config['default']['autossl-crt-file']):    # repeat condition because pull_crt_from_server could fail
@@ -1563,6 +1720,11 @@ def check_auto_certificate():
                     check_auto_certificate()
 
 def print_help():
+    """Function to print the help
+
+    Prints the help text and the default configuration (file) options to cli.
+        
+    """
     print('usage: ./oitc_agent.py -v -i <check interval seconds> -p <port number> -a <ip address> -c <config path> --certfile <certfile path> --keyfile <keyfile path> --auth <user>:<password> --oitc-url <url> --oitc-apikey <api key> --oitc-interval <seconds>')
     print('\nOptions and arguments (overwrite options in config file):')
     print('-i --interval <seconds>      : check interval in seconds')
@@ -1600,6 +1762,12 @@ def print_help():
     print(sample_customcheck_config)
 
 def load_configuration():
+    """Function to load/reload all configuration options
+
+    Read and merge the start parameters and options from the configuration files (if configured).
+    Decides if ssl will be enabled or not.
+        
+    """
     global config
     global verbose
     global stacktrace
@@ -1696,7 +1864,7 @@ def load_configuration():
         elif opt == "--customchecks":
             config['default']['customchecks'] = str(arg)
     
-    # loop again to for default overwrite options
+    # loop again to consider default overwrite options
     for opt, arg in opts:
         if opt == "--disable-autossl":
             config['default']['try-autossl'] = "false"
@@ -1743,6 +1911,12 @@ def load_configuration():
             print_verbose("Could not read certfile or keyfile\nFall back to default http server", False)
     
 def fake_webserver_request():
+    """Runs a fake webserver request
+
+    GET Request (using python requests lib) to let webserver thread continue.
+    Usually called from reload_all() to notice the updated thread_stop_requested value.
+        
+    """
     protocol = 'http'
     if enableSSL:
         protocol = 'https'
@@ -1750,6 +1924,17 @@ def fake_webserver_request():
     requests.get(complete_address)
     
 def reload_all():
+    """Function to stop all thread and trigger the configuration reload
+
+    Wait until all running threads are stopped and reset the global variables/objects.
+    Call the load_configuration() function
+
+    Returns
+    -------
+    bool
+        True if successful (no failure expected)
+        
+    """
     global thread_stop_requested
     
     if initialized:
@@ -1772,6 +1957,16 @@ def reload_all():
     return True
     
 def load_main_processing():
+    """(Entry point) Function that initializes or reinitializes the agent on each call
+
+    Starts ...
+        - openITCOCKPIT Notification Thread (if enabled)
+        - customchecks collector thread (if needed)
+        - default check thread
+        - webserver thread
+    ... after (running check thread are stopped,) configuration is loaded and automatic certificate check is done.
+
+    """
     global initialized
     
     while not reload_all():
