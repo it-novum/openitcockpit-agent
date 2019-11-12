@@ -92,6 +92,7 @@ else:
     import subprocess32 as subprocess
     
     from concurrent import futures
+    from threading import Thread, Lock
     from thread import start_new_thread as permanent_check_thread
     from thread import start_new_thread as permanent_webserver_thread
     from thread import start_new_thread as oitc_notification_thread
@@ -177,7 +178,7 @@ sample_customcheck_config = """
 [default]
   # max_worker_threads should be increased with increasing number of custom checks
   # but consider: each thread needs (a bit) memory
-  max_worker_threads = 4
+  max_worker_threads = 8
 [username]
   command = whoami
   interval = 30
@@ -1048,8 +1049,8 @@ def check_qemu_stats(timeout):
     qemu_stats_data['running'] = "true";
     
     # regex source: https://gist.github.com/kitschysynq/867caebec581cee4c44c764b4dd2bde7
-    # qemu_command = "ps -ef | awk -e '/qemu/ && !/awk/' | sed -e 's/[^/]*/\n/' -e 's/ -/\n\t-/g'" # customized (without secure character escape)
-    qemu_command = "ps -ef | awk -e '/qemu/ && !/awk/' | sed -e 's/[^/]*/\\n/' -e 's/ -/\\n\\t-/g'" # customized
+    # qemu_command = "ps -ef | awk -e '/qemu/ && !/awk/ && !/agent/' | sed -e 's/[^/]*/\n/' -e 's/ -/\n\t-/g'" # customized (without secure character escape)
+    qemu_command = "ps -ef | awk -e '/qemu/ && !/awk/ && !/agent/' | sed -e 's/[^/]*/\\n/' -e 's/ -/\\n\\t-/g'" # customized
     
     try:
         p = subprocess.Popen(qemu_command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
@@ -1487,8 +1488,8 @@ def create_new_csr():
 
 def pull_crt_from_server():
     # pip install pycryptodome pyopenssl
-    
-    if config['oitc']['url'] is not "" and config['oitc']['apikey'] is not "" and config['oitc']['hostuuid'] is not "":
+
+    if config['oitc']['url'] and config['oitc']['url'] is not "" and config['oitc']['apikey'] and config['oitc']['apikey'] is not "" and config['oitc']['hostuuid'] and config['oitc']['hostuuid'] is not "":
         try:
             csr = create_new_csr()
 
