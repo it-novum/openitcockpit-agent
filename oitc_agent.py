@@ -9,26 +9,24 @@
 #
 # Windows:
 #   Download & install current python version from https://www.python.org/downloads/windows/
-#   open cmd and execute:   python.exe -m pip install psutil configparser pycryptodome pyopenssl --user
+#   open cmd and execute:   python.exe -m pip install configparser pycryptodome pyopenssl requests psutil --user
 #
 # Debian:       
-#       python3:
-#               apt-get install python3 python3-psutil
-#               pip3 uninstall psutil
-#               pip3 install configparser pycryptodome pyopenssl
+#       Python3:
+#               apt-get install python3 python3-pip
+#               pip3 install configparser pycryptodome pyopenssl requests psutil
 #       or
-#       python2:
-#               apt-get install python python-psutil
-#               pip uninstall psutil
-#               pip install configparser futures subprocess32
+#       Python2:
+#               apt-get install python2
+#               pip install configparser futures subprocess32 requests psutil
 # Ubuntu:
 #       Python 3:
 #               apt-get install python3 python3-pip
-#               pip3 install configparser psutil pycryptodome pyopenssl
+#               pip3 install configparser pycryptodome pyopenssl requests psutil
 #
 # Darwin:
 #               brew install python3
-#               pip3 install psutil configparser pycryptodome pyopenssl
+#               pip3 install configparser pycryptodome pyopenssl requests psutil
 #
 
 
@@ -221,18 +219,45 @@ def reset_global_options():
 
 print_lock = Lock()
 def print_verbose(msg, more_on_stacktrace):
+    """Function to print verbose output uniformly and prevent double verbose output at the same time
+    
+    Print verbose output and add stacktrace hint if requested.
+    Uses a lock to prevent duplicate verbose output at the same time,
+    which would result in one of the outputs not being displayed.
+
+    Parameters
+    ----------
+    msg
+        Message string
+    more_on_stacktrace
+        Boolean to decide whether the stacktrace hint will be printed or not
+
+    """
     with print_lock:
         if verbose:
             print(msg)
         if not stacktrace and more_on_stacktrace:
             print("Enable --stacktrace to get more information.")
 def print_verbose_without_lock(msg, more_on_stacktrace):
+    """Function to directly print verbose output uniformly
+    
+    Print verbose output and add stacktrace hint if requested.
+
+    Parameters
+    ----------
+    msg
+        Message string
+    more_on_stacktrace
+        Boolean to decide whether the stacktrace hint will be printed or not
+
+    """
     if verbose:
         print(msg)
     if not stacktrace and more_on_stacktrace:
         print("Enable --stacktrace to get more information.")
 
 def signal_handler(sig, frame):
+    """A custom signal handler to stop the agent if it is called"""
     global thread_stop_requested
     global webserver_stop_requested
     global wait_and_check_auto_certificate_thread_stop_requested
@@ -256,7 +281,8 @@ def suppress_stdout_stderr():
             sys.stdout = old_stdout
 
 def wrapdiff(last, curr):
-    """ Calculate the difference between last and curr.
+    """ Function to calculate the difference between last and curr
+    
         If last > curr, try to guess the boundary at which the value must have wrapped
         by trying the maximum values of 64, 32 and 16 bit signed and unsigned ints.
     """
@@ -274,6 +300,13 @@ def wrapdiff(last, curr):
     return float(2**boundary - last + curr)
 
 def build_autossl_defaults():
+    """ Function to define the system depending certificate file paths
+        
+        - Windows:        C:\Program Files\openitcockpit-agent\config.cnf
+        - Linux:          /etc/openitcockpit-agent/config.cnf
+        - macOS:          /Library/openitcockpit-agent/config.cnf
+    
+    """
     etc_agent_path = '/etc/openitcockpit-agent/'
     if system is 'windows':
         etc_agent_path = 'C:'+os.path.sep+'Program Files'+os.path.sep+'it-novum'+os.path.sep+'openitcockpit-agent'+os.path.sep
@@ -286,7 +319,37 @@ def build_autossl_defaults():
     config['default']['autossl-key-file'] = etc_agent_path + 'agent.key'
     config['default']['autossl-ca-file'] = etc_agent_path + 'server_ca.crt'
 
-def runDefaultChecks():
+def run_default_checks():
+    """Function to run the default checks
+    
+    Run default checks to get following information points.
+    
+    
+    - disks (Speichergeräte mit Mountpoint, Dateisystem und Speicherplatzangaben)
+    - disk_io (Lese- und Schreibstatistiken der Speichergeräte)
+    - net_io (Eingabe- und Ausgabestatistiken der Netzwerkgeräte)
+    - net_stats (Netzwerkgeräte mit zur Verfügung stehender Geschwindigkeit, ...)
+    - sensors (Angeschlossene Sensoren, z.B. Temperatur der CPU, Akkustatus)
+    - cpu_total_percentage (Verwendete CPU Rechenzeit in Prozent)
+    - cpu_percentage (Verwendete CPU Rechenzeit pro Kern in Prozent)
+    - cpu_total_percentage_detailed (CPU Rechenzeit (in %) je Systemressource)
+    - cpu_percentage_detailed (CPU Rechenzeit (in %) je Systemressource pro Kern)
+    - system_load (System Load 1, 5, 15 als Array)
+    - users (Am System angemeldete Benutzer, deren Terminal (PID), Loginzeitpunkt)
+    - memory (Informationen zum Arbeitsspeicher, verwendet, aktiv, gepuffert, ...)
+    - swap (Informationen zum Auslagerungsspeicher, insgesamt, verwendet, ...)
+    - processes (Informationen zu laufenden Prozessen, CPU, Arbeitsspeicher, PID, ...)
+    - agent (Version des Agenten, Zeitpunkt des letzten Checks, Systemversion, ...)
+    - dockerstats (Aktive Docker Container, ID, CPU, Arbeitsspeicher, Block IO, PID)
+    - qemustats (Informationen zu aktiven QEMU Maschinen (auf einem Proxmox))
+    
+    
+    Returns
+    -------
+    dict
+        Object (dictionary) containing all the default check results
+
+    """
     global cached_diskIO
     global cached_netIO
     
@@ -763,15 +826,41 @@ def runDefaultChecks():
     return out
 
 def file_readable(path):
+    """Function to check whether a file is readable or not
+    
+    Parameters
+    ----------
+    path
+        Path to file
+
+    """
     return (isfile(path) and access(path, R_OK))
 
-def isBase64(s):
+def is_base64(s):
+    """Function to check whether a string is base64 encoded or not
+    
+    Parameters
+    ----------
+    s
+        String to check
+
+    """
     try:
         return base64.b64encode(base64.b64decode(s)) == s
     except Exception:
         return False
 
 def update_crt_files(data):
+    """Function to update the certificate files
+    
+    Update the automatically generated agent certificate file and the ca certificate file if they are writeable.
+
+    Parameters
+    ----------
+    data
+        Object containing 'signed'(certificate file) and 'ca'(ca certificate) contents.
+
+    """
     try:
         jdata = json.loads(data.decode('utf-8'))
         if 'signed' in jdata and 'ca' in jdata:
@@ -789,6 +878,18 @@ def update_crt_files(data):
             print(e)
         
 def check_update_data(data):
+    """Function that starts as a thread (future) to check and update the agent configuration
+    
+    The POST Data Object will be parsed as valid json object.
+    The configuration options are loaded into the configparser objects and will be written to the configfiles(if defined).
+    After that an agent reload will be triggered calling load_main_processing().
+
+    Parameters
+    ----------
+    data
+        POST Data Object from webserver
+
+    """
     try:
         jdata = json.loads(data.decode('utf-8'))
 
@@ -929,7 +1030,7 @@ def check_update_data(data):
             traceback.print_exc()
             print(e)
     
-class MyServer(BaseHTTPRequestHandler):
+class AgentWebserver(BaseHTTPRequestHandler):
     """Webserver class
 
     Parameters
@@ -950,9 +1051,29 @@ class MyServer(BaseHTTPRequestHandler):
         self.end_headers()
         
     def get_csr(self):
+        """Returns new csr
+
+        Calls create_new_csr()
+
+        Returns
+        -------
+        FILETYPE_PEM
+            Certificate request (csr) in FILETYPE_PEM format.
+
+        """
         return create_new_csr()
     
     def build_json_config(self):
+        """Build / Prepare config for a JSON object
+
+        Build and returns the current configuration as object (dict).
+
+        Returns
+        -------
+        data
+            Dictionary object with the current configuration
+
+        """
         data = {}
         data['config'] = {}
         data['customchecks'] = {}
@@ -1259,7 +1380,7 @@ def collect_data_for_cache(check_interval):
                 thread = Thread(target = check_qemu_stats, args = (check_interval, ))
                 thread.start()
             
-            cached_check_data = runDefaultChecks()
+            cached_check_data = run_default_checks()
             i = 0
         time.sleep(1)
         i += 1
@@ -1272,7 +1393,8 @@ def run_customcheck_command(check):
     
     Process a custom check command until a given timeout.
     The result will be added to the cached_customchecks_check_data object.
-    process_customcheck_results() take care of a may dying run_customcheck_command thread.
+    
+    process_customcheck_results() takes care of a may dying run_customcheck_command thread.
 
     Parameters
     ----------
@@ -1471,7 +1593,7 @@ def process_webserver(enableSSL=False):
         config['default']['address'] = "127.0.0.1"
         
     server_address = (config['default']['address'], int(config['default']['port']))
-    httpd = HTTPServer(server_address, MyServer)
+    httpd = HTTPServer(server_address, AgentWebserver)
     
     if enableSSL:
         protocol = 'https'
@@ -1531,7 +1653,9 @@ def create_new_csr():
 
     Creates a RSA (4096) certificate request.
     The hostname is config['oitc']['hostuuid'] + '.agent.oitc'.
+    
     Writes csr in the default or custom autossl-csr-file.
+    
     Writes certificate key in the default or custom autossl-key-file.
     
 
@@ -1765,6 +1889,7 @@ def load_configuration():
     """Function to load/reload all configuration options
 
     Read and merge the start parameters and options from the configuration files (if configured).
+    
     Decides if ssl will be enabled or not.
         
     """
@@ -1894,7 +2019,7 @@ def load_configuration():
         temperatureIsFahrenheit = False
     
     if 'auth' in config['default'] and str(config['default']['auth']).strip():
-        if not isBase64(config['default']['auth']):
+        if not is_base64(config['default']['auth']):
             if isPython3:
                 config['default']['auth'] = str(base64.b64encode(config['default']['auth'].encode()), "utf-8")
             else:
@@ -1914,6 +2039,7 @@ def fake_webserver_request():
     """Runs a fake webserver request
 
     GET Request (using python requests lib) to let webserver thread continue.
+    
     Usually called from reload_all() to notice the updated thread_stop_requested value.
         
     """
@@ -1959,11 +2085,14 @@ def reload_all():
 def load_main_processing():
     """(Entry point) Function that initializes or reinitializes the agent on each call
 
+
     Starts ...
+
         - openITCOCKPIT Notification Thread (if enabled)
         - customchecks collector thread (if needed)
         - default check thread
         - webserver thread
+        
     ... after (running check thread are stopped,) configuration is loaded and automatic certificate check is done.
 
     """

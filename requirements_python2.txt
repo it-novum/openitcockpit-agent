@@ -2,3 +2,4 @@ psutil
 configparser
 subprocess32
 futures
+requests
