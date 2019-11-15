@@ -5,6 +5,7 @@ Monitoring agent for openITCOCKPIT
 2. [Usage](#Usage)
 3. [Sample files](#Sample-files)
 4. [Agent build instructions](#Agent-build-instructions)
+5. [Export documentation as html](#Export-documentation-as-html)
 
 
 ---
@@ -464,4 +465,14 @@ rm -r ./dist ./build ./__pycache__ oitc_agent.spec
 chmod +x ./executables/openitcockpit-agent-python3.macos
 
 rm -rf python3-macos-env
+```
+
+---
+
+## Export documentation as html
+
+```
+pip3 install pdoc3
+pdoc oitc_agent.py --html --output-dir docs
+rm -r ./__pycache__
 ```
