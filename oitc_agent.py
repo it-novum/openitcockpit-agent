@@ -1501,14 +1501,14 @@ def collect_customchecks_data_for_cache(customchecks):
                     if customchecks[check_name]['timeout']:
                         timeout = int(customchecks[check_name]['timeout'])
                     
-                    # wenn noch nicht ausgefuehrt erstelle Timestamp = 0
+                    # if not yet executed, create set timestamp = 0
                     if check_name not in cached_customchecks_check_data:
                         cached_customchecks_check_data[check_name] = {
                             'last_updated': time.ctime(0),
                             'last_updated_timestamp': 0
                         }
                     
-                    # ausfuehren wenn Differenz von Timestamp des letzten run und jetzt groesser gleich interval
+                    # execute if difference from timestamp of the last run and now greater or equal than interval
                     if (round(time.time()) - cached_customchecks_check_data[check_name]['last_updated_timestamp']) >= interval and 'running' not in cached_customchecks_check_data[check_name]:
                         check = {
                             'name': check_name,
