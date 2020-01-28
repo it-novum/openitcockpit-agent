@@ -164,6 +164,14 @@ sample_config = """
   temperature-fahrenheit = false
   dockerstats = false
   qemustats = false
+  cpustats = true
+  sensorstats = true
+  processstats = true
+  netstats = true
+  diskstats = true
+  netio = true
+  diskio = true
+
 [oitc]
   hostuuid = 
   url = 
@@ -355,15 +363,17 @@ def run_default_checks():
     
     if verbose:
         print_lock.acquire()
+        
+    if config['default']['cpustats'] in (1, "1", "true", "True"):
     
-    # CPU #
-    cpuTotalPercentage = psutil.cpu_percent()
-    cpuPercentage = psutil.cpu_percent(interval=0, percpu=True)
+        # CPU #
+        cpuTotalPercentage = psutil.cpu_percent()
+        cpuPercentage = psutil.cpu_percent(interval=0, percpu=True)
 
-    cpu = psutil.cpu_times_percent(interval=0, percpu=False)
-    cpuTotalPercentageDetailed = cpu._asdict()
-    
-    cpuPercentageDetailed = [dict(cpu._asdict()) for cpu in psutil.cpu_times_percent(interval=0, percpu=True)]
+        cpu = psutil.cpu_times_percent(interval=0, percpu=False)
+        cpuTotalPercentageDetailed = cpu._asdict()
+        
+        cpuPercentageDetailed = [dict(cpu._asdict()) for cpu in psutil.cpu_times_percent(interval=0, percpu=True)]
     
     uptime = 0
     try:
@@ -386,17 +396,16 @@ def run_default_checks():
     memory = psutil.virtual_memory()
     swap = psutil.swap_memory()
 
-    # DISKS #        
-    disks = [dict(
-        disk = disk._asdict(),
-        usage = psutil.disk_usage(disk.mountpoint)._asdict()
-        ) for disk in psutil.disk_partitions() ]
-    
-
-    #diskIOTotal = psutil.disk_io_counters(perdisk=False)._asdict()
+    if config['default']['diskstats'] in (1, "1", "true", "True"):
+        # DISKS #        
+        disks = [dict(
+            disk = disk._asdict(),
+            usage = psutil.disk_usage(disk.mountpoint)._asdict()
+            ) for disk in psutil.disk_partitions() ]
     
     diskIO = None
-    if hasattr(psutil, "disk_io_counters"):
+    if hasattr(psutil, "disk_io_counters") and config['default']['diskio'] in (1, "1", "true", "True"):
+        #diskIOTotal = psutil.disk_io_counters(perdisk=False)._asdict()
         #diskIO = psutil.disk_io_counters(perdisk=True)
         diskIO = { disk: iops._asdict() for disk,iops in psutil.disk_io_counters(perdisk=True).items() }
         diskIO['timestamp'] = time.time()
@@ -443,7 +452,7 @@ def run_default_checks():
         cached_diskIO = diskIO
     
     netIO = None
-    if hasattr(psutil, "net_io_counters"):
+    if hasattr(psutil, "net_io_counters") and config['default']['netio'] in (1, "1", "true", "True"):
         netIO = { device: data._asdict() for device,data in psutil.net_io_counters(pernic=True).items() }
         netIO['timestamp'] = time.time()
         
@@ -501,51 +510,52 @@ def run_default_checks():
         cached_netIO = netIO
     
     net_stats = None
-    if hasattr(psutil, "net_if_stats"):
+    if hasattr(psutil, "net_if_stats") and config['default']['netstats'] in (1, "1", "true", "True"):
         net_stats = { device: data._asdict() for device,data in psutil.net_if_stats().items() }
 
     sensors = {}
-    try:
-        if hasattr(psutil, "sensors_temperatures"):
-            sensors['temperatures'] = {}
-            for device,data in psutil.sensors_temperatures(fahrenheit=temperatureIsFahrenheit).items():
-                sensors['temperatures'][device] = []
-                for value in data:
-                    sensors['temperatures'][device].append(value._asdict())
-        else:
-            sensors['temperatures'] = {}
-    except:
-        print_verbose_without_lock("Could not get temperature sensor data!", True)
-        if stacktrace:
-            traceback.print_exc()
-    
-    try:
-        if hasattr(psutil, "sensors_fans"):
-            sensors['fans'] = {}
-            for device,data in psutil.sensors_fans().items():
-                sensors['fans'][device] = []
-                for value in data:
-                    sensors['fans'][device].append(value._asdict())
-        else:
-            sensors['fans'] = {}
-    except:
-        print_verbose_without_lock("Could not get fans sensor data!", True)
-        if stacktrace:
-            traceback.print_exc()
-    
-    try:
-        if hasattr(psutil, "sensors_battery"):
-            sensors_battery = psutil.sensors_battery()
-            if sensors_battery is not None:
-                sensors['battery'] = sensors_battery._asdict()
+    if config['default']['sensorstats'] in (1, "1", "true", "True"):
+        try:
+            if hasattr(psutil, "sensors_temperatures"):
+                sensors['temperatures'] = {}
+                for device,data in psutil.sensors_temperatures(fahrenheit=temperatureIsFahrenheit).items():
+                    sensors['temperatures'][device] = []
+                    for value in data:
+                        sensors['temperatures'][device].append(value._asdict())
+            else:
+                sensors['temperatures'] = {}
+        except:
+            print_verbose_without_lock("Could not get temperature sensor data!", True)
+            if stacktrace:
+                traceback.print_exc()
+        
+        try:
+            if hasattr(psutil, "sensors_fans"):
+                sensors['fans'] = {}
+                for device,data in psutil.sensors_fans().items():
+                    sensors['fans'][device] = []
+                    for value in data:
+                        sensors['fans'][device].append(value._asdict())
+            else:
+                sensors['fans'] = {}
+        except:
+            print_verbose_without_lock("Could not get fans sensor data!", True)
+            if stacktrace:
+                traceback.print_exc()
+        
+        try:
+            if hasattr(psutil, "sensors_battery"):
+                sensors_battery = psutil.sensors_battery()
+                if sensors_battery is not None:
+                    sensors['battery'] = sensors_battery._asdict()
+                else:
+                    sensors['battery'] = {}
             else:
                 sensors['battery'] = {}
-        else:
-            sensors['battery'] = {}
-    except:
-        print_verbose_without_lock("Could not get battery sensor data!", True)
-        if stacktrace:
-            traceback.print_exc()
+        except:
+            print_verbose_without_lock("Could not get battery sensor data!", True)
+            if stacktrace:
+                traceback.print_exc()
     
     if hasattr(psutil, "pids"):
         pids = psutil.pids()
@@ -579,29 +589,29 @@ def run_default_checks():
     
     tmpProcessList = []
     
-    
-    for pid in pids:
-        try:
-            p = psutil.Process(pid)
-            
+    if config['default']['processstats'] in (1, "1", "true", "True"):
+        for pid in pids:
             try:
-                if hasattr(p, "cpu_percent") and callable(p.cpu_percent):
-                    cpu_percent = p.cpu_percent(interval=None)
-                else:
-                    cpu_percent = p.get_cpu_percent(interval=None)
-                    
-                tmpProcessList.append(p)
+                p = psutil.Process(pid)
+                
+                try:
+                    if hasattr(p, "cpu_percent") and callable(p.cpu_percent):
+                        cpu_percent = p.cpu_percent(interval=None)
+                    else:
+                        cpu_percent = p.get_cpu_percent(interval=None)
+                        
+                    tmpProcessList.append(p)
+                except:
+                    print_verbose_without_lock("'%s' Process is not allowing us to get the CPU usage!" % (name if name != "" else str(pid)), True)
+                    if stacktrace:
+                        traceback.print_exc()
+            
+            except psutil.NoSuchProcess:
+                continue;
             except:
-                print_verbose_without_lock("'%s' Process is not allowing us to get the CPU usage!" % (name if name != "" else str(pid)), True)
+                print_verbose_without_lock("An error occured during process check!", True)
                 if stacktrace:
                     traceback.print_exc()
-        
-        except psutil.NoSuchProcess:
-            continue;
-        except:
-            print_verbose_without_lock("An error occured during process check!", True)
-            if stacktrace:
-                traceback.print_exc()
     
     for p in tmpProcessList:
         try:
@@ -786,18 +796,19 @@ def run_default_checks():
         }
 
     out = {
-        'disks': disks,
-        'disk_io': diskIO,
+        'agent': agent,
+        #'disks': disks,
+        #'disk_io': diskIO,
         #'disk_io_total': diskIOTotal,
-        'net_io': netIO,
-        'net_stats': net_stats,
+        #'net_stats': net_stats,
+        #'net_io': netIO,
         
-        'sensors': sensors,
+        #'sensors': sensors,
 
-        'cpu_total_percentage': cpuTotalPercentage,
-        'cpu_percentage': cpuPercentage,
-        'cpu_total_percentage_detailed': cpuTotalPercentageDetailed,
-        'cpu_percentage_detailed': cpuPercentageDetailed,
+        #'cpu_total_percentage': cpuTotalPercentage,
+        #'cpu_percentage': cpuPercentage,
+        #'cpu_total_percentage_detailed': cpuTotalPercentageDetailed,
+        #'cpu_percentage_detailed': cpuPercentageDetailed,
         
         'system_load': system_load_avg,
         'users': users,
@@ -805,9 +816,32 @@ def run_default_checks():
         'memory': memory._asdict(),
         'swap': swap._asdict(),
 
-        'processes': processes,
-        'agent': agent
+        #'processes': processes
     }
+        
+    if config['default']['diskstats'] in (1, "1", "true", "True"):
+        out['disks'] = disks
+        
+    if config['default']['diskio'] in (1, "1", "true", "True"):
+        out['disk_io'] = diskIO
+        
+    if config['default']['netstats'] in (1, "1", "true", "True"):
+        out['net_stats'] = net_stats
+        
+    if config['default']['netio'] in (1, "1", "true", "True"):
+        out['net_io'] = netIO
+        
+    if config['default']['sensorstats'] in (1, "1", "true", "True"):
+        out['sensors'] = sensors
+        
+    if config['default']['cpustats'] in (1, "1", "true", "True"):
+        out['cpu_total_percentage'] = cpuTotalPercentage
+        out['cpu_percentage'] = cpuPercentage
+        out['cpu_total_percentage_detailed'] = cpuTotalPercentageDetailed
+        out['cpu_percentage_detailed'] = cpuPercentageDetailed
+        
+    if config['default']['processstats'] in (1, "1", "true", "True"):
+        out['processes'] = processes
     
     if system is 'windows':
         out['windows_services'] = windows_services
@@ -953,6 +987,41 @@ def check_update_data(data):
                         newconfig['default']['qemustats'] = "true"
                     else:
                         newconfig['default']['qemustats'] = "false"
+                if 'cpustats' in jdata[key]:
+                    if jdata[key]['cpustats'] in (1, "1", "true", "True"):
+                        newconfig['default']['cpustats'] = "true"
+                    else:
+                        newconfig['default']['cpustats'] = "false"
+                if 'sensorstats' in jdata[key]:
+                    if jdata[key]['sensorstats'] in (1, "1", "true", "True"):
+                        newconfig['default']['sensorstats'] = "true"
+                    else:
+                        newconfig['default']['sensorstats'] = "false"
+                if 'processstats' in jdata[key]:
+                    if jdata[key]['processstats'] in (1, "1", "true", "True"):
+                        newconfig['default']['processstats'] = "true"
+                    else:
+                        newconfig['default']['processstats'] = "false"
+                if 'netstats' in jdata[key]:
+                    if jdata[key]['netstats'] in (1, "1", "true", "True"):
+                        newconfig['default']['netstats'] = "true"
+                    else:
+                        newconfig['default']['netstats'] = "false"
+                if 'diskstats' in jdata[key]:
+                    if jdata[key]['diskstats'] in (1, "1", "true", "True"):
+                        newconfig['default']['diskstats'] = "true"
+                    else:
+                        newconfig['default']['diskstats'] = "false"
+                if 'netio' in jdata[key]:
+                    if jdata[key]['netio'] in (1, "1", "true", "True"):
+                        newconfig['default']['netio'] = "true"
+                    else:
+                        newconfig['default']['netio'] = "false"
+                if 'diskio' in jdata[key]:
+                    if jdata[key]['diskio'] in (1, "1", "true", "True"):
+                        newconfig['default']['diskio'] = "true"
+                    else:
+                        newconfig['default']['diskio'] = "false"
                 if 'customchecks' in jdata[key]:
                     newconfig['default']['customchecks'] = str(jdata[key]['customchecks'])
                 if 'temperature-fahrenheit' in jdata[key]:
@@ -1859,6 +1928,13 @@ def print_help():
     print('--temperature-fahrenheit     : set temperature to fahrenheit if enabled (else use celsius)')
     print('--dockerstats                : enable docker stats check')
     print('--qemustats                  : enable qemu stats check (linux only)')
+    print('--no-cpustats                : disable default cpu stats check')
+    print('--no-sensorstats             : disable default sensor stats check')
+    print('--no-processstats            : disable default process stats check')
+    print('--no-netstats                : disable default network stats check')
+    print('--no-diskstats               : disable default disk stats check')
+    print('--no-netio                   : disable default network I/O calculation')
+    print('--no-diskio                  : disable default disk I/O calculation')
     print('--customchecks <file path>   : custom check config file path')
     print('--auth <user>:<password>     : enable http basic auth')
     print('-v --verbose                 : enable verbose mode')
@@ -1903,7 +1979,7 @@ def load_configuration():
     global temperatureIsFahrenheit
     
     try:
-        opts, args = getopt.getopt(sys.argv[1:],"h:i:p:a:c:vs",["interval=","port=","address=","config=","customchecks=","certfile=","keyfile=","auth=","oitc-hostuuid=","oitc-url=","oitc-apikey=","oitc-interval=","config-update-mode","temperature-fahrenheit","try-autossl","disable-autossl","autossl-folder","autossl-csr-file","autossl-crt-file","autossl-key-file","autossl-ca-file","dockerstats","qemustats","verbose","stacktrace","help"])
+        opts, args = getopt.getopt(sys.argv[1:],"h:i:p:a:c:vs",["interval=","port=","address=","config=","customchecks=","certfile=","keyfile=","auth=","oitc-hostuuid=","oitc-url=","oitc-apikey=","oitc-interval=","config-update-mode","temperature-fahrenheit","try-autossl","disable-autossl","autossl-folder","autossl-csr-file","autossl-crt-file","autossl-key-file","autossl-ca-file","dockerstats","qemustats","no-cpustats","no-sensorstats","no-processstats","no-netstats","no-diskstats","no-netio","no-diskio","verbose","stacktrace","help"])
     except getopt.GetoptError:
         print_help()
         sys.exit(2)
@@ -1974,6 +2050,20 @@ def load_configuration():
             config['default']['dockerstats'] = "true"
         elif opt == "--qemustats":
             config['default']['qemustats'] = "true"
+        elif opt == "--no-cpustats":
+            config['default']['cpustats'] = "false"
+        elif opt == "--no-sensorstats":
+            config['default']['sensorstats'] = "false"
+        elif opt == "--no-processstats":
+            config['default']['processstats'] = "false"
+        elif opt == "--no-netstats":
+            config['default']['netstats'] = "false"
+        elif opt == "--no-diskstats":
+            config['default']['diskstats'] = "false"
+        elif opt == "--no-netio":
+            config['default']['netio'] = "false"
+        elif opt == "--no-diskio":
+            config['default']['diskio'] = "false"
         elif opt == "--oitc-hostuuid":
             config['oitc']['hostuuid'] = str(arg)
             added_oitc_parameter += 1
