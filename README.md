@@ -107,8 +107,16 @@ Options (script start parameters overwrite options in config file):
 |-s --stacktrace       |       |print stackstrace for possible exceptions     | 
 |--config-update-mode       |       |enable configuration update mode threw post request and /config to get current configuration     | 
 |--temperature-fahrenheit       |       |set temperature to fahrenheit if enabled (else use celsius)     | 
-|--dockerstats       |       |enable docker stats check     | 
-|--qemustats       |       |enable qemu stats check (linux only)     | 
+|--dockerstats       |       |enable docker status check     | 
+|--qemustats       |       |enable qemu status check (linux only)     | 
+|--no-cpustats       |       |disable default cpu status check     | 
+|--no-sensorstats       |       |disable default sensor status check     | 
+|--no-processstats       |       |disable default process status check     | 
+|--no-netstats       |       |disable default network status check     | 
+|--no-diskstats       |       |disable default disk status check     | 
+|--no-netio       |       |disable default network I/O calculation     | 
+|--no-diskio       |       |disable default disk I/O calculation     | 
+|--no-winservices       |       |disable default windows services status check (windows only)    | 
 |-h --help       |       |print a help message and exit     | 
 
 Add there parameters to enable ssl encrypted http(s) server:
@@ -191,6 +199,15 @@ Sample config file (with default script values):
   temperature-fahrenheit = false
   dockerstats = false
   qemustats = false
+  cpustats = true
+  sensorstats = true
+  processstats = true
+  netstats = true
+  diskstats = true
+  netio = true
+  diskio = true
+  winservices = true
+
 [oitc]
   hostuuid = 
   url = 
@@ -240,6 +257,14 @@ JSON Example (file: new_config.json) for update mode and http://address:port/con
         "temperature-fahrenheit": "false",
         "dockerstats": "false",
         "qemustats": "false",
+        "cpustats": "true",
+        "sensorstats": "true",
+        "processstats": "true",
+        "netstats": "true",
+        "diskstats": "true",
+        "netio": "true",
+        "diskio": "true",
+        "winservices": "true",
         "oitc-hostuuid": "hostid_123456",
         "oitc-url": "https://demo.openitcockpit.io",
         "oitc-apikey": "",
