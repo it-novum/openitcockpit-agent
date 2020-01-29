@@ -171,6 +171,7 @@ sample_config = """
   diskstats = true
   netio = true
   diskio = true
+  winservices = true
 
 [oitc]
   hostuuid = 
@@ -771,7 +772,7 @@ def run_default_checks():
             if stacktrace:
                 traceback.print_exc()
     
-    if system is 'windows':
+    if system is 'windows' and config['default']['winservices'] in (1, "1", "true", "True"):
         for win_process in psutil.win_service_iter():
             windows_services.append(win_process.as_dict())
             
@@ -843,7 +844,7 @@ def run_default_checks():
     if config['default']['processstats'] in (1, "1", "true", "True"):
         out['processes'] = processes
     
-    if system is 'windows':
+    if system is 'windows' and config['default']['winservices'] in (1, "1", "true", "True"):
         out['windows_services'] = windows_services
         
     if len(cached_customchecks_check_data) > 0:
@@ -1022,6 +1023,11 @@ def check_update_data(data):
                         newconfig['default']['diskio'] = "true"
                     else:
                         newconfig['default']['diskio'] = "false"
+                if 'winservices' in jdata[key]:
+                    if jdata[key]['winservices'] in (1, "1", "true", "True"):
+                        newconfig['default']['winservices'] = "true"
+                    else:
+                        newconfig['default']['winservices'] = "false"
                 if 'customchecks' in jdata[key]:
                     newconfig['default']['customchecks'] = str(jdata[key]['customchecks'])
                 if 'temperature-fahrenheit' in jdata[key]:
@@ -1244,11 +1250,11 @@ class AgentWebserver(BaseHTTPRequestHandler):
         return
 
 def check_qemu_stats(timeout):
-    """Function that starts as a thread to run the qemu stats check
+    """Function that starts as a thread to run the qemu status check
     
     Proxmox (linux) only! (beta)
     
-    Function that runs a (ps) command (as python subprocess) to get a stats result for each running qemu (kvm) virtual machine.
+    Function that runs a (ps) command (as python subprocess) to get a status result for each running qemu (kvm) virtual machine.
 
     Parameters
     ----------
@@ -1259,7 +1265,7 @@ def check_qemu_stats(timeout):
     global qemu_stats_data
     
     if verbose:
-        print('Start qemu stats check with timeout of %ss at %s' % (str(timeout), str(round(time.time()))))
+        print('Start qemu status check with timeout of %ss at %s' % (str(timeout), str(round(time.time()))))
     
     tmp_qemu_stats_result = None
     qemu_stats_data['running'] = "true";
@@ -1282,14 +1288,14 @@ def check_qemu_stats(timeout):
             qemu_stats_data['error'] = None if str(stderr) == 'None' else str(stderr)
             qemu_stats_data['returncode'] = p.returncode
         except subprocess.TimeoutExpired:
-            print_verbose('Qemu stats check timed out', False)
+            print_verbose('Qemu status check timed out', False)
             p.kill()    #not needed; just to be sure
             qemu_stats_data['result'] = None
-            qemu_stats_data['error'] = 'Qemu stats check timeout after ' + str(timeout) + ' seconds'
+            qemu_stats_data['error'] = 'Qemu status check timeout after ' + str(timeout) + ' seconds'
             qemu_stats_data['returncode'] = 124
     
     except:
-        print_verbose('An error occured while running the qemu stats check!', True)
+        print_verbose('An error occured while running the qemu status check!', True)
         if stacktrace:
             traceback.print_exc()
     
@@ -1330,15 +1336,15 @@ def check_qemu_stats(timeout):
     if len(qemu_stats_data) > 0:
         cached_check_data['qemustats'] = qemu_stats_data
     if verbose:
-        print('Qemu stats check finished')
+        print('Qemu status check finished')
     del qemu_stats_data['running']
 
 def check_docker_stats(timeout):
-    """Function that starts as a thread to run the docker stats check
+    """Function that starts as a thread to run the docker status check
     
     Linux only!
     
-    Function that runs a docker command (as python subprocess) to get a stats result for each running docker container.
+    Function that runs a docker command (as python subprocess) to get a status result for each running docker container.
 
     Parameters
     ----------
@@ -1349,7 +1355,7 @@ def check_docker_stats(timeout):
     global docker_stats_data
     
     if verbose:
-        print('Start docker stats check with timeout of %ss at %s' % (str(timeout), str(round(time.time()))))
+        print('Start docker status check with timeout of %ss at %s' % (str(timeout), str(round(time.time()))))
     
     tmp_docker_stats_result = None
     docker_stats_data['running'] = "true";
@@ -1372,14 +1378,14 @@ def check_docker_stats(timeout):
             docker_stats_data['error'] = None if str(stderr) == 'None' else str(stderr)
             docker_stats_data['returncode'] = p.returncode
         except subprocess.TimeoutExpired:
-            print_verbose('Docker stats check timed out', False)
+            print_verbose('Docker status check timed out', False)
             p.kill()    #not needed; just to be sure
             docker_stats_data['result'] = None
-            docker_stats_data['error'] = 'Docker stats check timeout after ' + str(timeout) + ' seconds'
+            docker_stats_data['error'] = 'Docker status check timeout after ' + str(timeout) + ' seconds'
             docker_stats_data['returncode'] = 124
     
     except:
-        print_verbose('An error occured while running the docker stats check!', True)
+        print_verbose('An error occured while running the docker status check!', True)
         if stacktrace:
             traceback.print_exc()
     
@@ -1414,7 +1420,7 @@ def check_docker_stats(timeout):
     if len(docker_stats_data) > 0:
         cached_check_data['dockerstats'] = docker_stats_data
     if verbose:
-        print('Docker stats check finished')
+        print('Docker status check finished')
     del docker_stats_data['running']
 
 def collect_data_for_cache(check_interval):
@@ -1926,15 +1932,16 @@ def print_help():
     print('-c --config <config path>    : config file path')
     print('--config-update-mode         : enable config update mode threw post request and /config to get current configuration')
     print('--temperature-fahrenheit     : set temperature to fahrenheit if enabled (else use celsius)')
-    print('--dockerstats                : enable docker stats check')
-    print('--qemustats                  : enable qemu stats check (linux only)')
-    print('--no-cpustats                : disable default cpu stats check')
-    print('--no-sensorstats             : disable default sensor stats check')
-    print('--no-processstats            : disable default process stats check')
-    print('--no-netstats                : disable default network stats check')
-    print('--no-diskstats               : disable default disk stats check')
+    print('--dockerstats                : enable docker status check')
+    print('--qemustats                  : enable qemu status check (linux only)')
+    print('--no-cpustats                : disable default cpu status check')
+    print('--no-sensorstats             : disable default sensor status check')
+    print('--no-processstats            : disable default process status check')
+    print('--no-netstats                : disable default network status check')
+    print('--no-diskstats               : disable default disk status check')
     print('--no-netio                   : disable default network I/O calculation')
     print('--no-diskio                  : disable default disk I/O calculation')
+    print('--no-winservices             : disable default windows services status check (windows only)')
     print('--customchecks <file path>   : custom check config file path')
     print('--auth <user>:<password>     : enable http basic auth')
     print('-v --verbose                 : enable verbose mode')
@@ -1979,7 +1986,7 @@ def load_configuration():
     global temperatureIsFahrenheit
     
     try:
-        opts, args = getopt.getopt(sys.argv[1:],"h:i:p:a:c:vs",["interval=","port=","address=","config=","customchecks=","certfile=","keyfile=","auth=","oitc-hostuuid=","oitc-url=","oitc-apikey=","oitc-interval=","config-update-mode","temperature-fahrenheit","try-autossl","disable-autossl","autossl-folder","autossl-csr-file","autossl-crt-file","autossl-key-file","autossl-ca-file","dockerstats","qemustats","no-cpustats","no-sensorstats","no-processstats","no-netstats","no-diskstats","no-netio","no-diskio","verbose","stacktrace","help"])
+        opts, args = getopt.getopt(sys.argv[1:],"h:i:p:a:c:vs",["interval=","port=","address=","config=","customchecks=","certfile=","keyfile=","auth=","oitc-hostuuid=","oitc-url=","oitc-apikey=","oitc-interval=","config-update-mode","temperature-fahrenheit","try-autossl","disable-autossl","autossl-folder","autossl-csr-file","autossl-crt-file","autossl-key-file","autossl-ca-file","dockerstats","qemustats","no-cpustats","no-sensorstats","no-processstats","no-netstats","no-diskstats","no-netio","no-diskio","no-winservices","verbose","stacktrace","help"])
     except getopt.GetoptError:
         print_help()
         sys.exit(2)
@@ -2064,6 +2071,8 @@ def load_configuration():
             config['default']['netio'] = "false"
         elif opt == "--no-diskio":
             config['default']['diskio'] = "false"
+        elif opt == "--no-winservices":
+            config['default']['winservices'] = "false"
         elif opt == "--oitc-hostuuid":
             config['oitc']['hostuuid'] = str(arg)
             added_oitc_parameter += 1
