@@ -171,7 +171,7 @@ Default configuration update url: ```http://address:port```
 
 Command Example:
 ```
-curl -d @new_config.json http://127.0.0.1:3333 -u user:pass
+curl -d @new_config.json http://0.0.0.0:3333 -u user:pass
 ```
 
 ---
@@ -183,7 +183,7 @@ Sample config file (with default script values):
 [default]
   interval = 30
   port = 3333
-  address = 127.0.0.1
+  address = 0.0.0.0
   certfile = 
   keyfile = 
   try-autossl = true
@@ -240,7 +240,7 @@ JSON Example (file: new_config.json) for update mode and http://address:port/con
     "config": {
         "interval": 15,
         "port": 3333,
-        "address": "127.0.0.1",
+        "address": "0.0.0.0",
         "certfile": "/path",
         "keyfile": "",
         "try-autossl": "true",

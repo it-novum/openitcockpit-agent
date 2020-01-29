@@ -286,7 +286,7 @@ interval = 30
 port = 3333
 
 # Bind address of the build-in web server
-address = 127.0.0.1
+address = 0.0.0.0
 
 # If a certificate file is given, the agent will switch to https only
 # Example: /etc/ssl/certs/ssl-cert-snakeoil.pem
@@ -305,8 +305,8 @@ stacktrace = false
 
 # Enable remote read and write of THIS config file and custom checks defenition
 # Examples:
-#   Read config: curl http://127.0.0.1:3333/config
-#   Write config: curl -X POST -d '{"config": {"interval": "60", "port": "3333", "address": "127.0.0.1", "certfile": "/etc/ssl/certs/ssl-cert-snakeoil.pem", "keyfile": "/etc/ssl/private/ssl-cert-snakeoil.key", "verbose": "true", "stacktrace": "false", "config-update-mode": "true", "auth": "", "customchecks": "", "temperature-fahrenheit": "false", "oitc-host": "", "oitc-url": "", "oitc-apikey": "", "oitc-interval": "60", "oitc-enabled": "false"}, "customchecks": {}}' http://127.0.0.1:3333/config
+#   Read config: curl http://0.0.0.0:3333/config
+#   Write config: curl -X POST -d '{"config": {"interval": "60", "port": "3333", "address": "0.0.0.0", "certfile": "/etc/ssl/certs/ssl-cert-snakeoil.pem", "keyfile": "/etc/ssl/private/ssl-cert-snakeoil.key", "verbose": "true", "stacktrace": "false", "config-update-mode": "true", "auth": "", "customchecks": "", "temperature-fahrenheit": "false", "oitc-host": "", "oitc-url": "", "oitc-apikey": "", "oitc-interval": "60", "oitc-enabled": "false"}, "customchecks": {}}' http://0.0.0.0:3333/config
 config-update-mode = false
 
 # Enable Basic Authentication

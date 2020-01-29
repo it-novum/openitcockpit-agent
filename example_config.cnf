@@ -7,7 +7,7 @@ interval = 30
 port = 3333
 
 # Bind address of the build-in web server
-address = 127.0.0.1
+address = 0.0.0.0
 
 # If a certificate file is given, the agent will switch to https only
 # Example: /etc/ssl/certs/ssl-cert-snakeoil.pem
@@ -39,8 +39,8 @@ stacktrace = false
 
 # Enable remote read and write of THIS config file and custom checks defenition
 # Examples:
-#   Read config: curl http://127.0.0.1:3333/config
-#   Write config: curl -X POST -d '{"config": {"interval": "60", "port": "3333", "address": "127.0.0.1", "certfile": "/etc/ssl/certs/ssl-cert-snakeoil.pem", "keyfile": "/etc/ssl/private/ssl-cert-snakeoil.key", "verbose": "true", "stacktrace": "false", "config-update-mode": "true", "auth": "", "customchecks": "", "temperature-fahrenheit": "false", "oitc-host": "", "oitc-url": "", "oitc-apikey": "", "oitc-interval": "60", "oitc-enabled": "false"}, "customchecks": {}}' http://127.0.0.1:3333/config
+#   Read config: curl http://0.0.0.0:3333/config
+#   Write config: curl -X POST -d '{"config": {"interval": "60", "port": "3333", "address": "0.0.0.0", "certfile": "/etc/ssl/certs/ssl-cert-snakeoil.pem", "keyfile": "/etc/ssl/private/ssl-cert-snakeoil.key", "verbose": "true", "stacktrace": "false", "config-update-mode": "true", "auth": "", "customchecks": "", "temperature-fahrenheit": "false", "oitc-host": "", "oitc-url": "", "oitc-apikey": "", "oitc-interval": "60", "oitc-enabled": "false"}, "customchecks": {}}' http://0.0.0.0:3333/config
 config-update-mode = false
 
 # Enable Basic Authentication
@@ -61,9 +61,34 @@ dockerstats = false
 # Try to check qemu virtual machines and return stats in default output
 qemustats = false
 
+# Enable default cpu status check
+cpustats = true
+
+# Enable default sensor status check
+sensorstats = true
+
+# Enable default process status check
+processstats = true
+
+# Enable default network status check
+netstats = true
+
+# Enable default disk status check
+diskstats = true
+
+# Enable default network I/O calculation
+netio = true
+
+# Enable default disk I/O calculation
+diskio = true
+
+# Enable default windows services status check
+winservices = true
+
+
 # By default openITCOCKPIT will pull check results from the openITCOCKPIT Agent.
 # In a Cloud environments or behind a NAT network it could become handy
-# if the openITCOCKPIT Agent will push the results to the openITCOCKPIT Server
+# if the openITCOCKPIT Agent will push the results to your openITCOCKPIT Server
 [oitc]
 
 # Enable Push Mode
@@ -74,13 +99,13 @@ enabled = false
 # Example: 402357e4-dc34-4f5b-a86d-e59cfbb3ffe7
 hostuuid =
 
-# Address of the openITCOCKPIT Server
+# Address of your openITCOCKPIT Server
 # Example: https://openitcockpit.io/receiver
 url = 
 
-# API-Key of the openITCOCKPIT Server
+# API-Key of your openITCOCKPIT Server
 apikey =
 
 # Determines in seconds how often the agent will push
-# check results to the openITCOCKPIT Server
+# check results to your openITCOCKPIT Server
 interval = 60

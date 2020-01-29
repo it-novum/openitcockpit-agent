@@ -3,7 +3,7 @@
 # supports python2.7 and python3.7
 #
 #
-# start with parameters:    ./oitc_agent.py -i 30 -p 3333 -a 127.0.0.1
+# start with parameters:    ./oitc_agent.py -i 30 -p 3333 -a 0.0.0.0
 #
 # Download & install python
 #
@@ -147,7 +147,7 @@ sample_config = """
 [default]
   interval = 30
   port = 3333
-  address = 127.0.0.1
+  address = 0.0.0.0
   certfile = 
   keyfile = 
   try-autossl = true
@@ -1271,8 +1271,8 @@ def check_qemu_stats(timeout):
     qemu_stats_data['running'] = "true";
     
     # regex source: https://gist.github.com/kitschysynq/867caebec581cee4c44c764b4dd2bde7
-    # qemu_command = "ps -ef | awk -e '/qemu/ && !/awk/ && !/agent/' | sed -e 's/[^/]*/\n/' -e 's/ -/\n\t-/g'" # customized (without secure character escape)
-    qemu_command = "ps -ef | awk -e '/qemu/ && !/awk/ && !/agent/' | sed -e 's/[^/]*/\\n/' -e 's/ -/\\n\\t-/g'" # customized
+    # qemu_command = "ps -ef | awk -e '/qemu/ && !/awk/ && !/openitcockpit-agent/' | sed -e 's/[^/]*/\n/' -e 's/ -/\n\t-/g'" # customized (without secure character escape)
+    qemu_command = "ps -ef | awk -e '/qemu/ && !/awk/ && !/openitcockpit-agent/' | sed -e 's/[^/]*/\\n/' -e 's/ -/\\n\\t-/g'" # customized
     
     try:
         p = subprocess.Popen(qemu_command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
@@ -1665,7 +1665,7 @@ def process_webserver(enableSSL=False):
     
     protocol = 'http'
     if config['default']['address'] == "":
-        config['default']['address'] = "127.0.0.1"
+        config['default']['address'] = "0.0.0.0"
         
     server_address = (config['default']['address'], int(config['default']['port']))
     httpd = HTTPServer(server_address, AgentWebserver)

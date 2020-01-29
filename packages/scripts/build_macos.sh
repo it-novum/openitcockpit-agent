@@ -18,7 +18,7 @@ mkdir -p package_osx/Library/openitcockpit-agent
 mkdir -p package_osx/Library/LaunchDaemons
 
 cp openitcockpit-agent/executables/openitcockpit-agent-python3.macos.bin package_osx/usr/bin/
-cp openitcockpit-agent/exaple_config.cnf package_osx/Library/openitcockpit-agent/config.cnf
+cp openitcockpit-agent/example_config.cnf package_osx/Library/openitcockpit-agent/config.cnf
 cp openitcockpit-agent/example_customchecks.cnf package_osx/Library/openitcockpit-agent/customchecks.cnf
 cp openitcockpit-agent/packages/init/com.it-novum.openitcockpit.agent.plist package_osx/Library/LaunchDaemons/com.it-novum.openitcockpit.agent.plist
 

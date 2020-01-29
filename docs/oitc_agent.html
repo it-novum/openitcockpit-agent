@@ -29,7 +29,7 @@
 # supports python2.7 and python3.7
 #
 #
-# start with parameters:    ./oitc_agent.py -i 30 -p 3333 -a 127.0.0.1
+# start with parameters:    ./oitc_agent.py -i 30 -p 3333 -a 0.0.0.0
 #
 # Download &amp; install python
 #
@@ -173,7 +173,7 @@ sample_config = &#34;&#34;&#34;
 [default]
   interval = 30
   port = 3333
-  address = 127.0.0.1
+  address = 0.0.0.0
   certfile = 
   keyfile = 
   try-autossl = true
@@ -190,6 +190,15 @@ sample_config = &#34;&#34;&#34;
   temperature-fahrenheit = false
   dockerstats = false
   qemustats = false
+  cpustats = true
+  sensorstats = true
+  processstats = true
+  netstats = true
+  diskstats = true
+  netio = true
+  diskio = true
+  winservices = true
+
 [oitc]
   hostuuid = 
   url = 
@@ -381,15 +390,17 @@ def run_default_checks():
     
     if verbose:
         print_lock.acquire()
+        
+    if config[&#39;default&#39;][&#39;cpustats&#39;] in (1, &#34;1&#34;, &#34;true&#34;, &#34;True&#34;):
     
-    # CPU #
-    cpuTotalPercentage = psutil.cpu_percent()
-    cpuPercentage = psutil.cpu_percent(interval=0, percpu=True)
+        # CPU #
+        cpuTotalPercentage = psutil.cpu_percent()
+        cpuPercentage = psutil.cpu_percent(interval=0, percpu=True)
 
-    cpu = psutil.cpu_times_percent(interval=0, percpu=False)
-    cpuTotalPercentageDetailed = cpu._asdict()
-    
-    cpuPercentageDetailed = [dict(cpu._asdict()) for cpu in psutil.cpu_times_percent(interval=0, percpu=True)]
+        cpu = psutil.cpu_times_percent(interval=0, percpu=False)
+        cpuTotalPercentageDetailed = cpu._asdict()
+        
+        cpuPercentageDetailed = [dict(cpu._asdict()) for cpu in psutil.cpu_times_percent(interval=0, percpu=True)]
     
     uptime = 0
     try:
@@ -412,17 +423,16 @@ def run_default_checks():
     memory = psutil.virtual_memory()
     swap = psutil.swap_memory()
 
-    # DISKS #        
-    disks = [dict(
-        disk = disk._asdict(),
-        usage = psutil.disk_usage(disk.mountpoint)._asdict()
-        ) for disk in psutil.disk_partitions() ]
-    
-
-    #diskIOTotal = psutil.disk_io_counters(perdisk=False)._asdict()
+    if config[&#39;default&#39;][&#39;diskstats&#39;] in (1, &#34;1&#34;, &#34;true&#34;, &#34;True&#34;):
+        # DISKS #        
+        disks = [dict(
+            disk = disk._asdict(),
+            usage = psutil.disk_usage(disk.mountpoint)._asdict()
+            ) for disk in psutil.disk_partitions() ]
     
     diskIO = None
-    if hasattr(psutil, &#34;disk_io_counters&#34;):
+    if hasattr(psutil, &#34;disk_io_counters&#34;) and config[&#39;default&#39;][&#39;diskio&#39;] in (1, &#34;1&#34;, &#34;true&#34;, &#34;True&#34;):
+        #diskIOTotal = psutil.disk_io_counters(perdisk=False)._asdict()
         #diskIO = psutil.disk_io_counters(perdisk=True)
         diskIO = { disk: iops._asdict() for disk,iops in psutil.disk_io_counters(perdisk=True).items() }
         diskIO[&#39;timestamp&#39;] = time.time()
@@ -469,7 +479,7 @@ def run_default_checks():
         cached_diskIO = diskIO
     
     netIO = None
-    if hasattr(psutil, &#34;net_io_counters&#34;):
+    if hasattr(psutil, &#34;net_io_counters&#34;) and config[&#39;default&#39;][&#39;netio&#39;] in (1, &#34;1&#34;, &#34;true&#34;, &#34;True&#34;):
         netIO = { device: data._asdict() for device,data in psutil.net_io_counters(pernic=True).items() }
         netIO[&#39;timestamp&#39;] = time.time()
         
@@ -527,51 +537,52 @@ def run_default_checks():
         cached_netIO = netIO
     
     net_stats = None
-    if hasattr(psutil, &#34;net_if_stats&#34;):
+    if hasattr(psutil, &#34;net_if_stats&#34;) and config[&#39;default&#39;][&#39;netstats&#39;] in (1, &#34;1&#34;, &#34;true&#34;, &#34;True&#34;):
         net_stats = { device: data._asdict() for device,data in psutil.net_if_stats().items() }
 
     sensors = {}
-    try:
-        if hasattr(psutil, &#34;sensors_temperatures&#34;):
-            sensors[&#39;temperatures&#39;] = {}
-            for device,data in psutil.sensors_temperatures(fahrenheit=temperatureIsFahrenheit).items():
-                sensors[&#39;temperatures&#39;][device] = []
-                for value in data:
-                    sensors[&#39;temperatures&#39;][device].append(value._asdict())
-        else:
-            sensors[&#39;temperatures&#39;] = {}
-    except:
-        print_verbose_without_lock(&#34;Could not get temperature sensor data!&#34;, True)
-        if stacktrace:
-            traceback.print_exc()
-    
-    try:
-        if hasattr(psutil, &#34;sensors_fans&#34;):
-            sensors[&#39;fans&#39;] = {}
-            for device,data in psutil.sensors_fans().items():
-                sensors[&#39;fans&#39;][device] = []
-                for value in data:
-                    sensors[&#39;fans&#39;][device].append(value._asdict())
-        else:
-            sensors[&#39;fans&#39;] = {}
-    except:
-        print_verbose_without_lock(&#34;Could not get fans sensor data!&#34;, True)
-        if stacktrace:
-            traceback.print_exc()
-    
-    try:
-        if hasattr(psutil, &#34;sensors_battery&#34;):
-            sensors_battery = psutil.sensors_battery()
-            if sensors_battery is not None:
-                sensors[&#39;battery&#39;] = sensors_battery._asdict()
+    if config[&#39;default&#39;][&#39;sensorstats&#39;] in (1, &#34;1&#34;, &#34;true&#34;, &#34;True&#34;):
+        try:
+            if hasattr(psutil, &#34;sensors_temperatures&#34;):
+                sensors[&#39;temperatures&#39;] = {}
+                for device,data in psutil.sensors_temperatures(fahrenheit=temperatureIsFahrenheit).items():
+                    sensors[&#39;temperatures&#39;][device] = []
+                    for value in data:
+                        sensors[&#39;temperatures&#39;][device].append(value._asdict())
+            else:
+                sensors[&#39;temperatures&#39;] = {}
+        except:
+            print_verbose_without_lock(&#34;Could not get temperature sensor data!&#34;, True)
+            if stacktrace:
+                traceback.print_exc()
+        
+        try:
+            if hasattr(psutil, &#34;sensors_fans&#34;):
+                sensors[&#39;fans&#39;] = {}
+                for device,data in psutil.sensors_fans().items():
+                    sensors[&#39;fans&#39;][device] = []
+                    for value in data:
+                        sensors[&#39;fans&#39;][device].append(value._asdict())
+            else:
+                sensors[&#39;fans&#39;] = {}
+        except:
+            print_verbose_without_lock(&#34;Could not get fans sensor data!&#34;, True)
+            if stacktrace:
+                traceback.print_exc()
+        
+        try:
+            if hasattr(psutil, &#34;sensors_battery&#34;):
+                sensors_battery = psutil.sensors_battery()
+                if sensors_battery is not None:
+                    sensors[&#39;battery&#39;] = sensors_battery._asdict()
+                else:
+                    sensors[&#39;battery&#39;] = {}
             else:
                 sensors[&#39;battery&#39;] = {}
-        else:
-            sensors[&#39;battery&#39;] = {}
-    except:
-        print_verbose_without_lock(&#34;Could not get battery sensor data!&#34;, True)
-        if stacktrace:
-            traceback.print_exc()
+        except:
+            print_verbose_without_lock(&#34;Could not get battery sensor data!&#34;, True)
+            if stacktrace:
+                traceback.print_exc()
     
     if hasattr(psutil, &#34;pids&#34;):
         pids = psutil.pids()
@@ -605,29 +616,29 @@ def run_default_checks():
     
     tmpProcessList = []
     
-    
-    for pid in pids:
-        try:
-            p = psutil.Process(pid)
-            
+    if config[&#39;default&#39;][&#39;processstats&#39;] in (1, &#34;1&#34;, &#34;true&#34;, &#34;True&#34;):
+        for pid in pids:
             try:
-                if hasattr(p, &#34;cpu_percent&#34;) and callable(p.cpu_percent):
-                    cpu_percent = p.cpu_percent(interval=None)
-                else:
-                    cpu_percent = p.get_cpu_percent(interval=None)
-                    
-                tmpProcessList.append(p)
+                p = psutil.Process(pid)
+                
+                try:
+                    if hasattr(p, &#34;cpu_percent&#34;) and callable(p.cpu_percent):
+                        cpu_percent = p.cpu_percent(interval=None)
+                    else:
+                        cpu_percent = p.get_cpu_percent(interval=None)
+                        
+                    tmpProcessList.append(p)
+                except:
+                    print_verbose_without_lock(&#34;&#39;%s&#39; Process is not allowing us to get the CPU usage!&#34; % (name if name != &#34;&#34; else str(pid)), True)
+                    if stacktrace:
+                        traceback.print_exc()
+            
+            except psutil.NoSuchProcess:
+                continue;
             except:
-                print_verbose_without_lock(&#34;&#39;%s&#39; Process is not allowing us to get the CPU usage!&#34; % (name if name != &#34;&#34; else str(pid)), True)
+                print_verbose_without_lock(&#34;An error occured during process check!&#34;, True)
                 if stacktrace:
                     traceback.print_exc()
-        
-        except psutil.NoSuchProcess:
-            continue;
-        except:
-            print_verbose_without_lock(&#34;An error occured during process check!&#34;, True)
-            if stacktrace:
-                traceback.print_exc()
     
     for p in tmpProcessList:
         try:
@@ -787,7 +798,7 @@ def run_default_checks():
             if stacktrace:
                 traceback.print_exc()
     
-    if system is &#39;windows&#39;:
+    if system is &#39;windows&#39; and config[&#39;default&#39;][&#39;winservices&#39;] in (1, &#34;1&#34;, &#34;true&#34;, &#34;True&#34;):
         for win_process in psutil.win_service_iter():
             windows_services.append(win_process.as_dict())
             
@@ -812,18 +823,19 @@ def run_default_checks():
         }
 
     out = {
-        &#39;disks&#39;: disks,
-        &#39;disk_io&#39;: diskIO,
+        &#39;agent&#39;: agent,
+        #&#39;disks&#39;: disks,
+        #&#39;disk_io&#39;: diskIO,
         #&#39;disk_io_total&#39;: diskIOTotal,
-        &#39;net_io&#39;: netIO,
-        &#39;net_stats&#39;: net_stats,
+        #&#39;net_stats&#39;: net_stats,
+        #&#39;net_io&#39;: netIO,
         
-        &#39;sensors&#39;: sensors,
+        #&#39;sensors&#39;: sensors,
 
-        &#39;cpu_total_percentage&#39;: cpuTotalPercentage,
-        &#39;cpu_percentage&#39;: cpuPercentage,
-        &#39;cpu_total_percentage_detailed&#39;: cpuTotalPercentageDetailed,
-        &#39;cpu_percentage_detailed&#39;: cpuPercentageDetailed,
+        #&#39;cpu_total_percentage&#39;: cpuTotalPercentage,
+        #&#39;cpu_percentage&#39;: cpuPercentage,
+        #&#39;cpu_total_percentage_detailed&#39;: cpuTotalPercentageDetailed,
+        #&#39;cpu_percentage_detailed&#39;: cpuPercentageDetailed,
         
         &#39;system_load&#39;: system_load_avg,
         &#39;users&#39;: users,
@@ -831,11 +843,34 @@ def run_default_checks():
         &#39;memory&#39;: memory._asdict(),
         &#39;swap&#39;: swap._asdict(),
 
-        &#39;processes&#39;: processes,
-        &#39;agent&#39;: agent
+        #&#39;processes&#39;: processes
     }
+        
+    if config[&#39;default&#39;][&#39;diskstats&#39;] in (1, &#34;1&#34;, &#34;true&#34;, &#34;True&#34;):
+        out[&#39;disks&#39;] = disks
+        
+    if config[&#39;default&#39;][&#39;diskio&#39;] in (1, &#34;1&#34;, &#34;true&#34;, &#34;True&#34;):
+        out[&#39;disk_io&#39;] = diskIO
+        
+    if config[&#39;default&#39;][&#39;netstats&#39;] in (1, &#34;1&#34;, &#34;true&#34;, &#34;True&#34;):
+        out[&#39;net_stats&#39;] = net_stats
+        
+    if config[&#39;default&#39;][&#39;netio&#39;] in (1, &#34;1&#34;, &#34;true&#34;, &#34;True&#34;):
+        out[&#39;net_io&#39;] = netIO
+        
+    if config[&#39;default&#39;][&#39;sensorstats&#39;] in (1, &#34;1&#34;, &#34;true&#34;, &#34;True&#34;):
+        out[&#39;sensors&#39;] = sensors
+        
+    if config[&#39;default&#39;][&#39;cpustats&#39;] in (1, &#34;1&#34;, &#34;true&#34;, &#34;True&#34;):
+        out[&#39;cpu_total_percentage&#39;] = cpuTotalPercentage
+        out[&#39;cpu_percentage&#39;] = cpuPercentage
+        out[&#39;cpu_total_percentage_detailed&#39;] = cpuTotalPercentageDetailed
+        out[&#39;cpu_percentage_detailed&#39;] = cpuPercentageDetailed
+        
+    if config[&#39;default&#39;][&#39;processstats&#39;] in (1, &#34;1&#34;, &#34;true&#34;, &#34;True&#34;):
+        out[&#39;processes&#39;] = processes
     
-    if system is &#39;windows&#39;:
+    if system is &#39;windows&#39; and config[&#39;default&#39;][&#39;winservices&#39;] in (1, &#34;1&#34;, &#34;true&#34;, &#34;True&#34;):
         out[&#39;windows_services&#39;] = windows_services
         
     if len(cached_customchecks_check_data) &gt; 0:
@@ -979,6 +1014,46 @@ def check_update_data(data):
                         newconfig[&#39;default&#39;][&#39;qemustats&#39;] = &#34;true&#34;
                     else:
                         newconfig[&#39;default&#39;][&#39;qemustats&#39;] = &#34;false&#34;
+                if &#39;cpustats&#39; in jdata[key]:
+                    if jdata[key][&#39;cpustats&#39;] in (1, &#34;1&#34;, &#34;true&#34;, &#34;True&#34;):
+                        newconfig[&#39;default&#39;][&#39;cpustats&#39;] = &#34;true&#34;
+                    else:
+                        newconfig[&#39;default&#39;][&#39;cpustats&#39;] = &#34;false&#34;
+                if &#39;sensorstats&#39; in jdata[key]:
+                    if jdata[key][&#39;sensorstats&#39;] in (1, &#34;1&#34;, &#34;true&#34;, &#34;True&#34;):
+                        newconfig[&#39;default&#39;][&#39;sensorstats&#39;] = &#34;true&#34;
+                    else:
+                        newconfig[&#39;default&#39;][&#39;sensorstats&#39;] = &#34;false&#34;
+                if &#39;processstats&#39; in jdata[key]:
+                    if jdata[key][&#39;processstats&#39;] in (1, &#34;1&#34;, &#34;true&#34;, &#34;True&#34;):
+                        newconfig[&#39;default&#39;][&#39;processstats&#39;] = &#34;true&#34;
+                    else:
+                        newconfig[&#39;default&#39;][&#39;processstats&#39;] = &#34;false&#34;
+                if &#39;netstats&#39; in jdata[key]:
+                    if jdata[key][&#39;netstats&#39;] in (1, &#34;1&#34;, &#34;true&#34;, &#34;True&#34;):
+                        newconfig[&#39;default&#39;][&#39;netstats&#39;] = &#34;true&#34;
+                    else:
+                        newconfig[&#39;default&#39;][&#39;netstats&#39;] = &#34;false&#34;
+                if &#39;diskstats&#39; in jdata[key]:
+                    if jdata[key][&#39;diskstats&#39;] in (1, &#34;1&#34;, &#34;true&#34;, &#34;True&#34;):
+                        newconfig[&#39;default&#39;][&#39;diskstats&#39;] = &#34;true&#34;
+                    else:
+                        newconfig[&#39;default&#39;][&#39;diskstats&#39;] = &#34;false&#34;
+                if &#39;netio&#39; in jdata[key]:
+                    if jdata[key][&#39;netio&#39;] in (1, &#34;1&#34;, &#34;true&#34;, &#34;True&#34;):
+                        newconfig[&#39;default&#39;][&#39;netio&#39;] = &#34;true&#34;
+                    else:
+                        newconfig[&#39;default&#39;][&#39;netio&#39;] = &#34;false&#34;
+                if &#39;diskio&#39; in jdata[key]:
+                    if jdata[key][&#39;diskio&#39;] in (1, &#34;1&#34;, &#34;true&#34;, &#34;True&#34;):
+                        newconfig[&#39;default&#39;][&#39;diskio&#39;] = &#34;true&#34;
+                    else:
+                        newconfig[&#39;default&#39;][&#39;diskio&#39;] = &#34;false&#34;
+                if &#39;winservices&#39; in jdata[key]:
+                    if jdata[key][&#39;winservices&#39;] in (1, &#34;1&#34;, &#34;true&#34;, &#34;True&#34;):
+                        newconfig[&#39;default&#39;][&#39;winservices&#39;] = &#34;true&#34;
+                    else:
+                        newconfig[&#39;default&#39;][&#39;winservices&#39;] = &#34;false&#34;
                 if &#39;customchecks&#39; in jdata[key]:
                     newconfig[&#39;default&#39;][&#39;customchecks&#39;] = str(jdata[key][&#39;customchecks&#39;])
                 if &#39;temperature-fahrenheit&#39; in jdata[key]:
@@ -1201,11 +1276,11 @@ class AgentWebserver(BaseHTTPRequestHandler):
         return
 
 def check_qemu_stats(timeout):
-    &#34;&#34;&#34;Function that starts as a thread to run the qemu stats check
+    &#34;&#34;&#34;Function that starts as a thread to run the qemu status check
     
     Proxmox (linux) only! (beta)
     
-    Function that runs a (ps) command (as python subprocess) to get a stats result for each running qemu (kvm) virtual machine.
+    Function that runs a (ps) command (as python subprocess) to get a status result for each running qemu (kvm) virtual machine.
 
     Parameters
     ----------
@@ -1216,14 +1291,14 @@ def check_qemu_stats(timeout):
     global qemu_stats_data
     
     if verbose:
-        print(&#39;Start qemu stats check with timeout of %ss at %s&#39; % (str(timeout), str(round(time.time()))))
+        print(&#39;Start qemu status check with timeout of %ss at %s&#39; % (str(timeout), str(round(time.time()))))
     
     tmp_qemu_stats_result = None
     qemu_stats_data[&#39;running&#39;] = &#34;true&#34;;
     
     # regex source: https://gist.github.com/kitschysynq/867caebec581cee4c44c764b4dd2bde7
-    # qemu_command = &#34;ps -ef | awk -e &#39;/qemu/ &amp;&amp; !/awk/ &amp;&amp; !/agent/&#39; | sed -e &#39;s/[^/]*/\n/&#39; -e &#39;s/ -/\n\t-/g&#39;&#34; # customized (without secure character escape)
-    qemu_command = &#34;ps -ef | awk -e &#39;/qemu/ &amp;&amp; !/awk/ &amp;&amp; !/agent/&#39; | sed -e &#39;s/[^/]*/\\n/&#39; -e &#39;s/ -/\\n\\t-/g&#39;&#34; # customized
+    # qemu_command = &#34;ps -ef | awk -e &#39;/qemu/ &amp;&amp; !/awk/ &amp;&amp; !/openitcockpit-agent/&#39; | sed -e &#39;s/[^/]*/\n/&#39; -e &#39;s/ -/\n\t-/g&#39;&#34; # customized (without secure character escape)
+    qemu_command = &#34;ps -ef | awk -e &#39;/qemu/ &amp;&amp; !/awk/ &amp;&amp; !/openitcockpit-agent/&#39; | sed -e &#39;s/[^/]*/\\n/&#39; -e &#39;s/ -/\\n\\t-/g&#39;&#34; # customized
     
     try:
         p = subprocess.Popen(qemu_command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
@@ -1239,14 +1314,14 @@ def check_qemu_stats(timeout):
             qemu_stats_data[&#39;error&#39;] = None if str(stderr) == &#39;None&#39; else str(stderr)
             qemu_stats_data[&#39;returncode&#39;] = p.returncode
         except subprocess.TimeoutExpired:
-            print_verbose(&#39;Qemu stats check timed out&#39;, False)
+            print_verbose(&#39;Qemu status check timed out&#39;, False)
             p.kill()    #not needed; just to be sure
             qemu_stats_data[&#39;result&#39;] = None
-            qemu_stats_data[&#39;error&#39;] = &#39;Qemu stats check timeout after &#39; + str(timeout) + &#39; seconds&#39;
+            qemu_stats_data[&#39;error&#39;] = &#39;Qemu status check timeout after &#39; + str(timeout) + &#39; seconds&#39;
             qemu_stats_data[&#39;returncode&#39;] = 124
     
     except:
-        print_verbose(&#39;An error occured while running the qemu stats check!&#39;, True)
+        print_verbose(&#39;An error occured while running the qemu status check!&#39;, True)
         if stacktrace:
             traceback.print_exc()
     
@@ -1287,15 +1362,15 @@ def check_qemu_stats(timeout):
     if len(qemu_stats_data) &gt; 0:
         cached_check_data[&#39;qemustats&#39;] = qemu_stats_data
     if verbose:
-        print(&#39;Qemu stats check finished&#39;)
+        print(&#39;Qemu status check finished&#39;)
     del qemu_stats_data[&#39;running&#39;]
 
 def check_docker_stats(timeout):
-    &#34;&#34;&#34;Function that starts as a thread to run the docker stats check
+    &#34;&#34;&#34;Function that starts as a thread to run the docker status check
     
     Linux only!
     
-    Function that runs a docker command (as python subprocess) to get a stats result for each running docker container.
+    Function that runs a docker command (as python subprocess) to get a status result for each running docker container.
 
     Parameters
     ----------
@@ -1306,7 +1381,7 @@ def check_docker_stats(timeout):
     global docker_stats_data
     
     if verbose:
-        print(&#39;Start docker stats check with timeout of %ss at %s&#39; % (str(timeout), str(round(time.time()))))
+        print(&#39;Start docker status check with timeout of %ss at %s&#39; % (str(timeout), str(round(time.time()))))
     
     tmp_docker_stats_result = None
     docker_stats_data[&#39;running&#39;] = &#34;true&#34;;
@@ -1329,14 +1404,14 @@ def check_docker_stats(timeout):
             docker_stats_data[&#39;error&#39;] = None if str(stderr) == &#39;None&#39; else str(stderr)
             docker_stats_data[&#39;returncode&#39;] = p.returncode
         except subprocess.TimeoutExpired:
-            print_verbose(&#39;Docker stats check timed out&#39;, False)
+            print_verbose(&#39;Docker status check timed out&#39;, False)
             p.kill()    #not needed; just to be sure
             docker_stats_data[&#39;result&#39;] = None
-            docker_stats_data[&#39;error&#39;] = &#39;Docker stats check timeout after &#39; + str(timeout) + &#39; seconds&#39;
+            docker_stats_data[&#39;error&#39;] = &#39;Docker status check timeout after &#39; + str(timeout) + &#39; seconds&#39;
             docker_stats_data[&#39;returncode&#39;] = 124
     
     except:
-        print_verbose(&#39;An error occured while running the docker stats check!&#39;, True)
+        print_verbose(&#39;An error occured while running the docker status check!&#39;, True)
         if stacktrace:
             traceback.print_exc()
     
@@ -1371,7 +1446,7 @@ def check_docker_stats(timeout):
     if len(docker_stats_data) &gt; 0:
         cached_check_data[&#39;dockerstats&#39;] = docker_stats_data
     if verbose:
-        print(&#39;Docker stats check finished&#39;)
+        print(&#39;Docker status check finished&#39;)
     del docker_stats_data[&#39;running&#39;]
 
 def collect_data_for_cache(check_interval):
@@ -1527,14 +1602,14 @@ def collect_customchecks_data_for_cache(customchecks):
                     if customchecks[check_name][&#39;timeout&#39;]:
                         timeout = int(customchecks[check_name][&#39;timeout&#39;])
                     
-                    # wenn noch nicht ausgefuehrt erstelle Timestamp = 0
+                    # if not yet executed, create set timestamp = 0
                     if check_name not in cached_customchecks_check_data:
                         cached_customchecks_check_data[check_name] = {
                             &#39;last_updated&#39;: time.ctime(0),
                             &#39;last_updated_timestamp&#39;: 0
                         }
                     
-                    # ausfuehren wenn Differenz von Timestamp des letzten run und jetzt groesser gleich interval
+                    # execute if difference from timestamp of the last run and now greater or equal than interval
                     if (round(time.time()) - cached_customchecks_check_data[check_name][&#39;last_updated_timestamp&#39;]) &gt;= interval and &#39;running&#39; not in cached_customchecks_check_data[check_name]:
                         check = {
                             &#39;name&#39;: check_name,
@@ -1616,7 +1691,7 @@ def process_webserver(enableSSL=False):
     
     protocol = &#39;http&#39;
     if config[&#39;default&#39;][&#39;address&#39;] == &#34;&#34;:
-        config[&#39;default&#39;][&#39;address&#39;] = &#34;127.0.0.1&#34;
+        config[&#39;default&#39;][&#39;address&#39;] = &#34;0.0.0.0&#34;
         
     server_address = (config[&#39;default&#39;][&#39;address&#39;], int(config[&#39;default&#39;][&#39;port&#39;]))
     httpd = HTTPServer(server_address, AgentWebserver)
@@ -1883,8 +1958,16 @@ def print_help():
     print(&#39;-c --config &lt;config path&gt;    : config file path&#39;)
     print(&#39;--config-update-mode         : enable config update mode threw post request and /config to get current configuration&#39;)
     print(&#39;--temperature-fahrenheit     : set temperature to fahrenheit if enabled (else use celsius)&#39;)
-    print(&#39;--dockerstats                : enable docker stats check&#39;)
-    print(&#39;--qemustats                  : enable qemu stats check (linux only)&#39;)
+    print(&#39;--dockerstats                : enable docker status check&#39;)
+    print(&#39;--qemustats                  : enable qemu status check (linux only)&#39;)
+    print(&#39;--no-cpustats                : disable default cpu status check&#39;)
+    print(&#39;--no-sensorstats             : disable default sensor status check&#39;)
+    print(&#39;--no-processstats            : disable default process status check&#39;)
+    print(&#39;--no-netstats                : disable default network status check&#39;)
+    print(&#39;--no-diskstats               : disable default disk status check&#39;)
+    print(&#39;--no-netio                   : disable default network I/O calculation&#39;)
+    print(&#39;--no-diskio                  : disable default disk I/O calculation&#39;)
+    print(&#39;--no-winservices             : disable default windows services status check (windows only)&#39;)
     print(&#39;--customchecks &lt;file path&gt;   : custom check config file path&#39;)
     print(&#39;--auth &lt;user&gt;:&lt;password&gt;     : enable http basic auth&#39;)
     print(&#39;-v --verbose                 : enable verbose mode&#39;)
@@ -1929,7 +2012,7 @@ def load_configuration():
     global temperatureIsFahrenheit
     
     try:
-        opts, args = getopt.getopt(sys.argv[1:],&#34;h:i:p:a:c:vs&#34;,[&#34;interval=&#34;,&#34;port=&#34;,&#34;address=&#34;,&#34;config=&#34;,&#34;customchecks=&#34;,&#34;certfile=&#34;,&#34;keyfile=&#34;,&#34;auth=&#34;,&#34;oitc-hostuuid=&#34;,&#34;oitc-url=&#34;,&#34;oitc-apikey=&#34;,&#34;oitc-interval=&#34;,&#34;config-update-mode&#34;,&#34;temperature-fahrenheit&#34;,&#34;try-autossl&#34;,&#34;disable-autossl&#34;,&#34;autossl-folder&#34;,&#34;autossl-csr-file&#34;,&#34;autossl-crt-file&#34;,&#34;autossl-key-file&#34;,&#34;autossl-ca-file&#34;,&#34;dockerstats&#34;,&#34;qemustats&#34;,&#34;verbose&#34;,&#34;stacktrace&#34;,&#34;help&#34;])
+        opts, args = getopt.getopt(sys.argv[1:],&#34;h:i:p:a:c:vs&#34;,[&#34;interval=&#34;,&#34;port=&#34;,&#34;address=&#34;,&#34;config=&#34;,&#34;customchecks=&#34;,&#34;certfile=&#34;,&#34;keyfile=&#34;,&#34;auth=&#34;,&#34;oitc-hostuuid=&#34;,&#34;oitc-url=&#34;,&#34;oitc-apikey=&#34;,&#34;oitc-interval=&#34;,&#34;config-update-mode&#34;,&#34;temperature-fahrenheit&#34;,&#34;try-autossl&#34;,&#34;disable-autossl&#34;,&#34;autossl-folder&#34;,&#34;autossl-csr-file&#34;,&#34;autossl-crt-file&#34;,&#34;autossl-key-file&#34;,&#34;autossl-ca-file&#34;,&#34;dockerstats&#34;,&#34;qemustats&#34;,&#34;no-cpustats&#34;,&#34;no-sensorstats&#34;,&#34;no-processstats&#34;,&#34;no-netstats&#34;,&#34;no-diskstats&#34;,&#34;no-netio&#34;,&#34;no-diskio&#34;,&#34;no-winservices&#34;,&#34;verbose&#34;,&#34;stacktrace&#34;,&#34;help&#34;])
     except getopt.GetoptError:
         print_help()
         sys.exit(2)
@@ -2000,6 +2083,22 @@ def load_configuration():
             config[&#39;default&#39;][&#39;dockerstats&#39;] = &#34;true&#34;
         elif opt == &#34;--qemustats&#34;:
             config[&#39;default&#39;][&#39;qemustats&#39;] = &#34;true&#34;
+        elif opt == &#34;--no-cpustats&#34;:
+            config[&#39;default&#39;][&#39;cpustats&#39;] = &#34;false&#34;
+        elif opt == &#34;--no-sensorstats&#34;:
+            config[&#39;default&#39;][&#39;sensorstats&#39;] = &#34;false&#34;
+        elif opt == &#34;--no-processstats&#34;:
+            config[&#39;default&#39;][&#39;processstats&#39;] = &#34;false&#34;
+        elif opt == &#34;--no-netstats&#34;:
+            config[&#39;default&#39;][&#39;netstats&#39;] = &#34;false&#34;
+        elif opt == &#34;--no-diskstats&#34;:
+            config[&#39;default&#39;][&#39;diskstats&#39;] = &#34;false&#34;
+        elif opt == &#34;--no-netio&#34;:
+            config[&#39;default&#39;][&#39;netio&#39;] = &#34;false&#34;
+        elif opt == &#34;--no-diskio&#34;:
+            config[&#39;default&#39;][&#39;diskio&#39;] = &#34;false&#34;
+        elif opt == &#34;--no-winservices&#34;:
+            config[&#39;default&#39;][&#39;winservices&#39;] = &#34;false&#34;
         elif opt == &#34;--oitc-hostuuid&#34;:
             config[&#39;oitc&#39;][&#39;hostuuid&#39;] = str(arg)
             added_oitc_parameter += 1
@@ -2249,9 +2348,9 @@ Otherwise it checks if the certificate will expire soon.</p></section>
 <span>def <span class="ident">check_docker_stats</span></span>(<span>timeout)</span>
 </code></dt>
 <dd>
-<section class="desc"><p>Function that starts as a thread to run the docker stats check</p>
+<section class="desc"><p>Function that starts as a thread to run the docker status check</p>
 <p>Linux only!</p>
-<p>Function that runs a docker command (as python subprocess) to get a stats result for each running docker container.</p>
+<p>Function that runs a docker command (as python subprocess) to get a status result for each running docker container.</p>
 <h2 id="parameters">Parameters</h2>
 <dl>
 <dt><strong><code>timeout</code></strong></dt>
@@ -2262,11 +2361,11 @@ Otherwise it checks if the certificate will expire soon.</p></section>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def check_docker_stats(timeout):
-    &#34;&#34;&#34;Function that starts as a thread to run the docker stats check
+    &#34;&#34;&#34;Function that starts as a thread to run the docker status check
     
     Linux only!
     
-    Function that runs a docker command (as python subprocess) to get a stats result for each running docker container.
+    Function that runs a docker command (as python subprocess) to get a status result for each running docker container.
 
     Parameters
     ----------
@@ -2277,7 +2376,7 @@ Otherwise it checks if the certificate will expire soon.</p></section>
     global docker_stats_data
     
     if verbose:
-        print(&#39;Start docker stats check with timeout of %ss at %s&#39; % (str(timeout), str(round(time.time()))))
+        print(&#39;Start docker status check with timeout of %ss at %s&#39; % (str(timeout), str(round(time.time()))))
     
     tmp_docker_stats_result = None
     docker_stats_data[&#39;running&#39;] = &#34;true&#34;;
@@ -2300,14 +2399,14 @@ Otherwise it checks if the certificate will expire soon.</p></section>
             docker_stats_data[&#39;error&#39;] = None if str(stderr) == &#39;None&#39; else str(stderr)
             docker_stats_data[&#39;returncode&#39;] = p.returncode
         except subprocess.TimeoutExpired:
-            print_verbose(&#39;Docker stats check timed out&#39;, False)
+            print_verbose(&#39;Docker status check timed out&#39;, False)
             p.kill()    #not needed; just to be sure
             docker_stats_data[&#39;result&#39;] = None
-            docker_stats_data[&#39;error&#39;] = &#39;Docker stats check timeout after &#39; + str(timeout) + &#39; seconds&#39;
+            docker_stats_data[&#39;error&#39;] = &#39;Docker status check timeout after &#39; + str(timeout) + &#39; seconds&#39;
             docker_stats_data[&#39;returncode&#39;] = 124
     
     except:
-        print_verbose(&#39;An error occured while running the docker stats check!&#39;, True)
+        print_verbose(&#39;An error occured while running the docker status check!&#39;, True)
         if stacktrace:
             traceback.print_exc()
     
@@ -2342,7 +2441,7 @@ Otherwise it checks if the certificate will expire soon.</p></section>
     if len(docker_stats_data) &gt; 0:
         cached_check_data[&#39;dockerstats&#39;] = docker_stats_data
     if verbose:
-        print(&#39;Docker stats check finished&#39;)
+        print(&#39;Docker status check finished&#39;)
     del docker_stats_data[&#39;running&#39;]</code></pre>
 </details>
 </dd>
@@ -2350,9 +2449,9 @@ Otherwise it checks if the certificate will expire soon.</p></section>
 <span>def <span class="ident">check_qemu_stats</span></span>(<span>timeout)</span>
 </code></dt>
 <dd>
-<section class="desc"><p>Function that starts as a thread to run the qemu stats check</p>
+<section class="desc"><p>Function that starts as a thread to run the qemu status check</p>
 <p>Proxmox (linux) only! (beta)</p>
-<p>Function that runs a (ps) command (as python subprocess) to get a stats result for each running qemu (kvm) virtual machine.</p>
+<p>Function that runs a (ps) command (as python subprocess) to get a status result for each running qemu (kvm) virtual machine.</p>
 <h2 id="parameters">Parameters</h2>
 <dl>
 <dt><strong><code>timeout</code></strong></dt>
@@ -2363,11 +2462,11 @@ Otherwise it checks if the certificate will expire soon.</p></section>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def check_qemu_stats(timeout):
-    &#34;&#34;&#34;Function that starts as a thread to run the qemu stats check
+    &#34;&#34;&#34;Function that starts as a thread to run the qemu status check
     
     Proxmox (linux) only! (beta)
     
-    Function that runs a (ps) command (as python subprocess) to get a stats result for each running qemu (kvm) virtual machine.
+    Function that runs a (ps) command (as python subprocess) to get a status result for each running qemu (kvm) virtual machine.
 
     Parameters
     ----------
@@ -2378,14 +2477,14 @@ Otherwise it checks if the certificate will expire soon.</p></section>
     global qemu_stats_data
     
     if verbose:
-        print(&#39;Start qemu stats check with timeout of %ss at %s&#39; % (str(timeout), str(round(time.time()))))
+        print(&#39;Start qemu status check with timeout of %ss at %s&#39; % (str(timeout), str(round(time.time()))))
     
     tmp_qemu_stats_result = None
     qemu_stats_data[&#39;running&#39;] = &#34;true&#34;;
     
     # regex source: https://gist.github.com/kitschysynq/867caebec581cee4c44c764b4dd2bde7
-    # qemu_command = &#34;ps -ef | awk -e &#39;/qemu/ &amp;&amp; !/awk/ &amp;&amp; !/agent/&#39; | sed -e &#39;s/[^/]*/\n/&#39; -e &#39;s/ -/\n\t-/g&#39;&#34; # customized (without secure character escape)
-    qemu_command = &#34;ps -ef | awk -e &#39;/qemu/ &amp;&amp; !/awk/ &amp;&amp; !/agent/&#39; | sed -e &#39;s/[^/]*/\\n/&#39; -e &#39;s/ -/\\n\\t-/g&#39;&#34; # customized
+    # qemu_command = &#34;ps -ef | awk -e &#39;/qemu/ &amp;&amp; !/awk/ &amp;&amp; !/openitcockpit-agent/&#39; | sed -e &#39;s/[^/]*/\n/&#39; -e &#39;s/ -/\n\t-/g&#39;&#34; # customized (without secure character escape)
+    qemu_command = &#34;ps -ef | awk -e &#39;/qemu/ &amp;&amp; !/awk/ &amp;&amp; !/openitcockpit-agent/&#39; | sed -e &#39;s/[^/]*/\\n/&#39; -e &#39;s/ -/\\n\\t-/g&#39;&#34; # customized
     
     try:
         p = subprocess.Popen(qemu_command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
@@ -2401,14 +2500,14 @@ Otherwise it checks if the certificate will expire soon.</p></section>
             qemu_stats_data[&#39;error&#39;] = None if str(stderr) == &#39;None&#39; else str(stderr)
             qemu_stats_data[&#39;returncode&#39;] = p.returncode
         except subprocess.TimeoutExpired:
-            print_verbose(&#39;Qemu stats check timed out&#39;, False)
+            print_verbose(&#39;Qemu status check timed out&#39;, False)
             p.kill()    #not needed; just to be sure
             qemu_stats_data[&#39;result&#39;] = None
-            qemu_stats_data[&#39;error&#39;] = &#39;Qemu stats check timeout after &#39; + str(timeout) + &#39; seconds&#39;
+            qemu_stats_data[&#39;error&#39;] = &#39;Qemu status check timeout after &#39; + str(timeout) + &#39; seconds&#39;
             qemu_stats_data[&#39;returncode&#39;] = 124
     
     except:
-        print_verbose(&#39;An error occured while running the qemu stats check!&#39;, True)
+        print_verbose(&#39;An error occured while running the qemu status check!&#39;, True)
         if stacktrace:
             traceback.print_exc()
     
@@ -2449,7 +2548,7 @@ Otherwise it checks if the certificate will expire soon.</p></section>
     if len(qemu_stats_data) &gt; 0:
         cached_check_data[&#39;qemustats&#39;] = qemu_stats_data
     if verbose:
-        print(&#39;Qemu stats check finished&#39;)
+        print(&#39;Qemu status check finished&#39;)
     del qemu_stats_data[&#39;running&#39;]</code></pre>
 </details>
 </dd>
@@ -2546,6 +2645,46 @@ After that an agent reload will be triggered calling load_main_processing().</p>
                         newconfig[&#39;default&#39;][&#39;qemustats&#39;] = &#34;true&#34;
                     else:
                         newconfig[&#39;default&#39;][&#39;qemustats&#39;] = &#34;false&#34;
+                if &#39;cpustats&#39; in jdata[key]:
+                    if jdata[key][&#39;cpustats&#39;] in (1, &#34;1&#34;, &#34;true&#34;, &#34;True&#34;):
+                        newconfig[&#39;default&#39;][&#39;cpustats&#39;] = &#34;true&#34;
+                    else:
+                        newconfig[&#39;default&#39;][&#39;cpustats&#39;] = &#34;false&#34;
+                if &#39;sensorstats&#39; in jdata[key]:
+                    if jdata[key][&#39;sensorstats&#39;] in (1, &#34;1&#34;, &#34;true&#34;, &#34;True&#34;):
+                        newconfig[&#39;default&#39;][&#39;sensorstats&#39;] = &#34;true&#34;
+                    else:
+                        newconfig[&#39;default&#39;][&#39;sensorstats&#39;] = &#34;false&#34;
+                if &#39;processstats&#39; in jdata[key]:
+                    if jdata[key][&#39;processstats&#39;] in (1, &#34;1&#34;, &#34;true&#34;, &#34;True&#34;):
+                        newconfig[&#39;default&#39;][&#39;processstats&#39;] = &#34;true&#34;
+                    else:
+                        newconfig[&#39;default&#39;][&#39;processstats&#39;] = &#34;false&#34;
+                if &#39;netstats&#39; in jdata[key]:
+                    if jdata[key][&#39;netstats&#39;] in (1, &#34;1&#34;, &#34;true&#34;, &#34;True&#34;):
+                        newconfig[&#39;default&#39;][&#39;netstats&#39;] = &#34;true&#34;
+                    else:
+                        newconfig[&#39;default&#39;][&#39;netstats&#39;] = &#34;false&#34;
+                if &#39;diskstats&#39; in jdata[key]:
+                    if jdata[key][&#39;diskstats&#39;] in (1, &#34;1&#34;, &#34;true&#34;, &#34;True&#34;):
+                        newconfig[&#39;default&#39;][&#39;diskstats&#39;] = &#34;true&#34;
+                    else:
+                        newconfig[&#39;default&#39;][&#39;diskstats&#39;] = &#34;false&#34;
+                if &#39;netio&#39; in jdata[key]:
+                    if jdata[key][&#39;netio&#39;] in (1, &#34;1&#34;, &#34;true&#34;, &#34;True&#34;):
+                        newconfig[&#39;default&#39;][&#39;netio&#39;] = &#34;true&#34;
+                    else:
+                        newconfig[&#39;default&#39;][&#39;netio&#39;] = &#34;false&#34;
+                if &#39;diskio&#39; in jdata[key]:
+                    if jdata[key][&#39;diskio&#39;] in (1, &#34;1&#34;, &#34;true&#34;, &#34;True&#34;):
+                        newconfig[&#39;default&#39;][&#39;diskio&#39;] = &#34;true&#34;
+                    else:
+                        newconfig[&#39;default&#39;][&#39;diskio&#39;] = &#34;false&#34;
+                if &#39;winservices&#39; in jdata[key]:
+                    if jdata[key][&#39;winservices&#39;] in (1, &#34;1&#34;, &#34;true&#34;, &#34;True&#34;):
+                        newconfig[&#39;default&#39;][&#39;winservices&#39;] = &#34;true&#34;
+                    else:
+                        newconfig[&#39;default&#39;][&#39;winservices&#39;] = &#34;false&#34;
                 if &#39;customchecks&#39; in jdata[key]:
                     newconfig[&#39;default&#39;][&#39;customchecks&#39;] = str(jdata[key][&#39;customchecks&#39;])
                 if &#39;temperature-fahrenheit&#39; in jdata[key]:
@@ -2678,14 +2817,14 @@ After that an agent reload will be triggered calling load_main_processing().</p>
                     if customchecks[check_name][&#39;timeout&#39;]:
                         timeout = int(customchecks[check_name][&#39;timeout&#39;])
                     
-                    # wenn noch nicht ausgefuehrt erstelle Timestamp = 0
+                    # if not yet executed, create set timestamp = 0
                     if check_name not in cached_customchecks_check_data:
                         cached_customchecks_check_data[check_name] = {
                             &#39;last_updated&#39;: time.ctime(0),
                             &#39;last_updated_timestamp&#39;: 0
                         }
                     
-                    # ausfuehren wenn Differenz von Timestamp des letzten run und jetzt groesser gleich interval
+                    # execute if difference from timestamp of the last run and now greater or equal than interval
                     if (round(time.time()) - cached_customchecks_check_data[check_name][&#39;last_updated_timestamp&#39;]) &gt;= interval and &#39;running&#39; not in cached_customchecks_check_data[check_name]:
                         check = {
                             &#39;name&#39;: check_name,
@@ -2980,7 +3119,7 @@ The hostname is config['oitc']['hostuuid'] + '.agent.oitc'.</p>
     global temperatureIsFahrenheit
     
     try:
-        opts, args = getopt.getopt(sys.argv[1:],&#34;h:i:p:a:c:vs&#34;,[&#34;interval=&#34;,&#34;port=&#34;,&#34;address=&#34;,&#34;config=&#34;,&#34;customchecks=&#34;,&#34;certfile=&#34;,&#34;keyfile=&#34;,&#34;auth=&#34;,&#34;oitc-hostuuid=&#34;,&#34;oitc-url=&#34;,&#34;oitc-apikey=&#34;,&#34;oitc-interval=&#34;,&#34;config-update-mode&#34;,&#34;temperature-fahrenheit&#34;,&#34;try-autossl&#34;,&#34;disable-autossl&#34;,&#34;autossl-folder&#34;,&#34;autossl-csr-file&#34;,&#34;autossl-crt-file&#34;,&#34;autossl-key-file&#34;,&#34;autossl-ca-file&#34;,&#34;dockerstats&#34;,&#34;qemustats&#34;,&#34;verbose&#34;,&#34;stacktrace&#34;,&#34;help&#34;])
+        opts, args = getopt.getopt(sys.argv[1:],&#34;h:i:p:a:c:vs&#34;,[&#34;interval=&#34;,&#34;port=&#34;,&#34;address=&#34;,&#34;config=&#34;,&#34;customchecks=&#34;,&#34;certfile=&#34;,&#34;keyfile=&#34;,&#34;auth=&#34;,&#34;oitc-hostuuid=&#34;,&#34;oitc-url=&#34;,&#34;oitc-apikey=&#34;,&#34;oitc-interval=&#34;,&#34;config-update-mode&#34;,&#34;temperature-fahrenheit&#34;,&#34;try-autossl&#34;,&#34;disable-autossl&#34;,&#34;autossl-folder&#34;,&#34;autossl-csr-file&#34;,&#34;autossl-crt-file&#34;,&#34;autossl-key-file&#34;,&#34;autossl-ca-file&#34;,&#34;dockerstats&#34;,&#34;qemustats&#34;,&#34;no-cpustats&#34;,&#34;no-sensorstats&#34;,&#34;no-processstats&#34;,&#34;no-netstats&#34;,&#34;no-diskstats&#34;,&#34;no-netio&#34;,&#34;no-diskio&#34;,&#34;no-winservices&#34;,&#34;verbose&#34;,&#34;stacktrace&#34;,&#34;help&#34;])
     except getopt.GetoptError:
         print_help()
         sys.exit(2)
@@ -3051,6 +3190,22 @@ The hostname is config['oitc']['hostuuid'] + '.agent.oitc'.</p>
             config[&#39;default&#39;][&#39;dockerstats&#39;] = &#34;true&#34;
         elif opt == &#34;--qemustats&#34;:
             config[&#39;default&#39;][&#39;qemustats&#39;] = &#34;true&#34;
+        elif opt == &#34;--no-cpustats&#34;:
+            config[&#39;default&#39;][&#39;cpustats&#39;] = &#34;false&#34;
+        elif opt == &#34;--no-sensorstats&#34;:
+            config[&#39;default&#39;][&#39;sensorstats&#39;] = &#34;false&#34;
+        elif opt == &#34;--no-processstats&#34;:
+            config[&#39;default&#39;][&#39;processstats&#39;] = &#34;false&#34;
+        elif opt == &#34;--no-netstats&#34;:
+            config[&#39;default&#39;][&#39;netstats&#39;] = &#34;false&#34;
+        elif opt == &#34;--no-diskstats&#34;:
+            config[&#39;default&#39;][&#39;diskstats&#39;] = &#34;false&#34;
+        elif opt == &#34;--no-netio&#34;:
+            config[&#39;default&#39;][&#39;netio&#39;] = &#34;false&#34;
+        elif opt == &#34;--no-diskio&#34;:
+            config[&#39;default&#39;][&#39;diskio&#39;] = &#34;false&#34;
+        elif opt == &#34;--no-winservices&#34;:
+            config[&#39;default&#39;][&#39;winservices&#39;] = &#34;false&#34;
         elif opt == &#34;--oitc-hostuuid&#34;:
             config[&#39;oitc&#39;][&#39;hostuuid&#39;] = str(arg)
             added_oitc_parameter += 1
@@ -3250,8 +3405,16 @@ The hostname is config['oitc']['hostuuid'] + '.agent.oitc'.</p>
     print(&#39;-c --config &lt;config path&gt;    : config file path&#39;)
     print(&#39;--config-update-mode         : enable config update mode threw post request and /config to get current configuration&#39;)
     print(&#39;--temperature-fahrenheit     : set temperature to fahrenheit if enabled (else use celsius)&#39;)
-    print(&#39;--dockerstats                : enable docker stats check&#39;)
-    print(&#39;--qemustats                  : enable qemu stats check (linux only)&#39;)
+    print(&#39;--dockerstats                : enable docker status check&#39;)
+    print(&#39;--qemustats                  : enable qemu status check (linux only)&#39;)
+    print(&#39;--no-cpustats                : disable default cpu status check&#39;)
+    print(&#39;--no-sensorstats             : disable default sensor status check&#39;)
+    print(&#39;--no-processstats            : disable default process status check&#39;)
+    print(&#39;--no-netstats                : disable default network status check&#39;)
+    print(&#39;--no-diskstats               : disable default disk status check&#39;)
+    print(&#39;--no-netio                   : disable default network I/O calculation&#39;)
+    print(&#39;--no-diskio                  : disable default disk I/O calculation&#39;)
+    print(&#39;--no-winservices             : disable default windows services status check (windows only)&#39;)
     print(&#39;--customchecks &lt;file path&gt;   : custom check config file path&#39;)
     print(&#39;--auth &lt;user&gt;:&lt;password&gt;     : enable http basic auth&#39;)
     print(&#39;-v --verbose                 : enable verbose mode&#39;)
@@ -3437,7 +3600,7 @@ If the global autossl is enabled and the needed files are readable the automatic
     
     protocol = &#39;http&#39;
     if config[&#39;default&#39;][&#39;address&#39;] == &#34;&#34;:
-        config[&#39;default&#39;][&#39;address&#39;] = &#34;127.0.0.1&#34;
+        config[&#39;default&#39;][&#39;address&#39;] = &#34;0.0.0.0&#34;
         
     server_address = (config[&#39;default&#39;][&#39;address&#39;], int(config[&#39;default&#39;][&#39;port&#39;]))
     httpd = HTTPServer(server_address, AgentWebserver)
@@ -3808,15 +3971,17 @@ The result will be added to the cached_customchecks_check_data object.</p>
     
     if verbose:
         print_lock.acquire()
+        
+    if config[&#39;default&#39;][&#39;cpustats&#39;] in (1, &#34;1&#34;, &#34;true&#34;, &#34;True&#34;):
     
-    # CPU #
-    cpuTotalPercentage = psutil.cpu_percent()
-    cpuPercentage = psutil.cpu_percent(interval=0, percpu=True)
+        # CPU #
+        cpuTotalPercentage = psutil.cpu_percent()
+        cpuPercentage = psutil.cpu_percent(interval=0, percpu=True)
 
-    cpu = psutil.cpu_times_percent(interval=0, percpu=False)
-    cpuTotalPercentageDetailed = cpu._asdict()
-    
-    cpuPercentageDetailed = [dict(cpu._asdict()) for cpu in psutil.cpu_times_percent(interval=0, percpu=True)]
+        cpu = psutil.cpu_times_percent(interval=0, percpu=False)
+        cpuTotalPercentageDetailed = cpu._asdict()
+        
+        cpuPercentageDetailed = [dict(cpu._asdict()) for cpu in psutil.cpu_times_percent(interval=0, percpu=True)]
     
     uptime = 0
     try:
@@ -3839,17 +4004,16 @@ The result will be added to the cached_customchecks_check_data object.</p>
     memory = psutil.virtual_memory()
     swap = psutil.swap_memory()
 
-    # DISKS #        
-    disks = [dict(
-        disk = disk._asdict(),
-        usage = psutil.disk_usage(disk.mountpoint)._asdict()
-        ) for disk in psutil.disk_partitions() ]
-    
-
-    #diskIOTotal = psutil.disk_io_counters(perdisk=False)._asdict()
+    if config[&#39;default&#39;][&#39;diskstats&#39;] in (1, &#34;1&#34;, &#34;true&#34;, &#34;True&#34;):
+        # DISKS #        
+        disks = [dict(
+            disk = disk._asdict(),
+            usage = psutil.disk_usage(disk.mountpoint)._asdict()
+            ) for disk in psutil.disk_partitions() ]
     
     diskIO = None
-    if hasattr(psutil, &#34;disk_io_counters&#34;):
+    if hasattr(psutil, &#34;disk_io_counters&#34;) and config[&#39;default&#39;][&#39;diskio&#39;] in (1, &#34;1&#34;, &#34;true&#34;, &#34;True&#34;):
+        #diskIOTotal = psutil.disk_io_counters(perdisk=False)._asdict()
         #diskIO = psutil.disk_io_counters(perdisk=True)
         diskIO = { disk: iops._asdict() for disk,iops in psutil.disk_io_counters(perdisk=True).items() }
         diskIO[&#39;timestamp&#39;] = time.time()
@@ -3896,7 +4060,7 @@ The result will be added to the cached_customchecks_check_data object.</p>
         cached_diskIO = diskIO
     
     netIO = None
-    if hasattr(psutil, &#34;net_io_counters&#34;):
+    if hasattr(psutil, &#34;net_io_counters&#34;) and config[&#39;default&#39;][&#39;netio&#39;] in (1, &#34;1&#34;, &#34;true&#34;, &#34;True&#34;):
         netIO = { device: data._asdict() for device,data in psutil.net_io_counters(pernic=True).items() }
         netIO[&#39;timestamp&#39;] = time.time()
         
@@ -3954,51 +4118,52 @@ The result will be added to the cached_customchecks_check_data object.</p>
         cached_netIO = netIO
     
     net_stats = None
-    if hasattr(psutil, &#34;net_if_stats&#34;):
+    if hasattr(psutil, &#34;net_if_stats&#34;) and config[&#39;default&#39;][&#39;netstats&#39;] in (1, &#34;1&#34;, &#34;true&#34;, &#34;True&#34;):
         net_stats = { device: data._asdict() for device,data in psutil.net_if_stats().items() }
 
     sensors = {}
-    try:
-        if hasattr(psutil, &#34;sensors_temperatures&#34;):
-            sensors[&#39;temperatures&#39;] = {}
-            for device,data in psutil.sensors_temperatures(fahrenheit=temperatureIsFahrenheit).items():
-                sensors[&#39;temperatures&#39;][device] = []
-                for value in data:
-                    sensors[&#39;temperatures&#39;][device].append(value._asdict())
-        else:
-            sensors[&#39;temperatures&#39;] = {}
-    except:
-        print_verbose_without_lock(&#34;Could not get temperature sensor data!&#34;, True)
-        if stacktrace:
-            traceback.print_exc()
-    
-    try:
-        if hasattr(psutil, &#34;sensors_fans&#34;):
-            sensors[&#39;fans&#39;] = {}
-            for device,data in psutil.sensors_fans().items():
-                sensors[&#39;fans&#39;][device] = []
-                for value in data:
-                    sensors[&#39;fans&#39;][device].append(value._asdict())
-        else:
-            sensors[&#39;fans&#39;] = {}
-    except:
-        print_verbose_without_lock(&#34;Could not get fans sensor data!&#34;, True)
-        if stacktrace:
-            traceback.print_exc()
-    
-    try:
-        if hasattr(psutil, &#34;sensors_battery&#34;):
-            sensors_battery = psutil.sensors_battery()
-            if sensors_battery is not None:
-                sensors[&#39;battery&#39;] = sensors_battery._asdict()
+    if config[&#39;default&#39;][&#39;sensorstats&#39;] in (1, &#34;1&#34;, &#34;true&#34;, &#34;True&#34;):
+        try:
+            if hasattr(psutil, &#34;sensors_temperatures&#34;):
+                sensors[&#39;temperatures&#39;] = {}
+                for device,data in psutil.sensors_temperatures(fahrenheit=temperatureIsFahrenheit).items():
+                    sensors[&#39;temperatures&#39;][device] = []
+                    for value in data:
+                        sensors[&#39;temperatures&#39;][device].append(value._asdict())
+            else:
+                sensors[&#39;temperatures&#39;] = {}
+        except:
+            print_verbose_without_lock(&#34;Could not get temperature sensor data!&#34;, True)
+            if stacktrace:
+                traceback.print_exc()
+        
+        try:
+            if hasattr(psutil, &#34;sensors_fans&#34;):
+                sensors[&#39;fans&#39;] = {}
+                for device,data in psutil.sensors_fans().items():
+                    sensors[&#39;fans&#39;][device] = []
+                    for value in data:
+                        sensors[&#39;fans&#39;][device].append(value._asdict())
+            else:
+                sensors[&#39;fans&#39;] = {}
+        except:
+            print_verbose_without_lock(&#34;Could not get fans sensor data!&#34;, True)
+            if stacktrace:
+                traceback.print_exc()
+        
+        try:
+            if hasattr(psutil, &#34;sensors_battery&#34;):
+                sensors_battery = psutil.sensors_battery()
+                if sensors_battery is not None:
+                    sensors[&#39;battery&#39;] = sensors_battery._asdict()
+                else:
+                    sensors[&#39;battery&#39;] = {}
             else:
                 sensors[&#39;battery&#39;] = {}
-        else:
-            sensors[&#39;battery&#39;] = {}
-    except:
-        print_verbose_without_lock(&#34;Could not get battery sensor data!&#34;, True)
-        if stacktrace:
-            traceback.print_exc()
+        except:
+            print_verbose_without_lock(&#34;Could not get battery sensor data!&#34;, True)
+            if stacktrace:
+                traceback.print_exc()
     
     if hasattr(psutil, &#34;pids&#34;):
         pids = psutil.pids()
@@ -4032,29 +4197,29 @@ The result will be added to the cached_customchecks_check_data object.</p>
     
     tmpProcessList = []
     
-    
-    for pid in pids:
-        try:
-            p = psutil.Process(pid)
-            
+    if config[&#39;default&#39;][&#39;processstats&#39;] in (1, &#34;1&#34;, &#34;true&#34;, &#34;True&#34;):
+        for pid in pids:
             try:
-                if hasattr(p, &#34;cpu_percent&#34;) and callable(p.cpu_percent):
-                    cpu_percent = p.cpu_percent(interval=None)
-                else:
-                    cpu_percent = p.get_cpu_percent(interval=None)
-                    
-                tmpProcessList.append(p)
+                p = psutil.Process(pid)
+                
+                try:
+                    if hasattr(p, &#34;cpu_percent&#34;) and callable(p.cpu_percent):
+                        cpu_percent = p.cpu_percent(interval=None)
+                    else:
+                        cpu_percent = p.get_cpu_percent(interval=None)
+                        
+                    tmpProcessList.append(p)
+                except:
+                    print_verbose_without_lock(&#34;&#39;%s&#39; Process is not allowing us to get the CPU usage!&#34; % (name if name != &#34;&#34; else str(pid)), True)
+                    if stacktrace:
+                        traceback.print_exc()
+            
+            except psutil.NoSuchProcess:
+                continue;
             except:
-                print_verbose_without_lock(&#34;&#39;%s&#39; Process is not allowing us to get the CPU usage!&#34; % (name if name != &#34;&#34; else str(pid)), True)
+                print_verbose_without_lock(&#34;An error occured during process check!&#34;, True)
                 if stacktrace:
                     traceback.print_exc()
-        
-        except psutil.NoSuchProcess:
-            continue;
-        except:
-            print_verbose_without_lock(&#34;An error occured during process check!&#34;, True)
-            if stacktrace:
-                traceback.print_exc()
     
     for p in tmpProcessList:
         try:
@@ -4214,7 +4379,7 @@ The result will be added to the cached_customchecks_check_data object.</p>
             if stacktrace:
                 traceback.print_exc()
     
-    if system is &#39;windows&#39;:
+    if system is &#39;windows&#39; and config[&#39;default&#39;][&#39;winservices&#39;] in (1, &#34;1&#34;, &#34;true&#34;, &#34;True&#34;):
         for win_process in psutil.win_service_iter():
             windows_services.append(win_process.as_dict())
             
@@ -4239,18 +4404,19 @@ The result will be added to the cached_customchecks_check_data object.</p>
         }
 
     out = {
-        &#39;disks&#39;: disks,
-        &#39;disk_io&#39;: diskIO,
+        &#39;agent&#39;: agent,
+        #&#39;disks&#39;: disks,
+        #&#39;disk_io&#39;: diskIO,
         #&#39;disk_io_total&#39;: diskIOTotal,
-        &#39;net_io&#39;: netIO,
-        &#39;net_stats&#39;: net_stats,
+        #&#39;net_stats&#39;: net_stats,
+        #&#39;net_io&#39;: netIO,
         
-        &#39;sensors&#39;: sensors,
+        #&#39;sensors&#39;: sensors,
 
-        &#39;cpu_total_percentage&#39;: cpuTotalPercentage,
-        &#39;cpu_percentage&#39;: cpuPercentage,
-        &#39;cpu_total_percentage_detailed&#39;: cpuTotalPercentageDetailed,
-        &#39;cpu_percentage_detailed&#39;: cpuPercentageDetailed,
+        #&#39;cpu_total_percentage&#39;: cpuTotalPercentage,
+        #&#39;cpu_percentage&#39;: cpuPercentage,
+        #&#39;cpu_total_percentage_detailed&#39;: cpuTotalPercentageDetailed,
+        #&#39;cpu_percentage_detailed&#39;: cpuPercentageDetailed,
         
         &#39;system_load&#39;: system_load_avg,
         &#39;users&#39;: users,
@@ -4258,11 +4424,34 @@ The result will be added to the cached_customchecks_check_data object.</p>
         &#39;memory&#39;: memory._asdict(),
         &#39;swap&#39;: swap._asdict(),
 
-        &#39;processes&#39;: processes,
-        &#39;agent&#39;: agent
+        #&#39;processes&#39;: processes
     }
+        
+    if config[&#39;default&#39;][&#39;diskstats&#39;] in (1, &#34;1&#34;, &#34;true&#34;, &#34;True&#34;):
+        out[&#39;disks&#39;] = disks
+        
+    if config[&#39;default&#39;][&#39;diskio&#39;] in (1, &#34;1&#34;, &#34;true&#34;, &#34;True&#34;):
+        out[&#39;disk_io&#39;] = diskIO
+        
+    if config[&#39;default&#39;][&#39;netstats&#39;] in (1, &#34;1&#34;, &#34;true&#34;, &#34;True&#34;):
+        out[&#39;net_stats&#39;] = net_stats
+        
+    if config[&#39;default&#39;][&#39;netio&#39;] in (1, &#34;1&#34;, &#34;true&#34;, &#34;True&#34;):
+        out[&#39;net_io&#39;] = netIO
+        
+    if config[&#39;default&#39;][&#39;sensorstats&#39;] in (1, &#34;1&#34;, &#34;true&#34;, &#34;True&#34;):
+        out[&#39;sensors&#39;] = sensors
+        
+    if config[&#39;default&#39;][&#39;cpustats&#39;] in (1, &#34;1&#34;, &#34;true&#34;, &#34;True&#34;):
+        out[&#39;cpu_total_percentage&#39;] = cpuTotalPercentage
+        out[&#39;cpu_percentage&#39;] = cpuPercentage
+        out[&#39;cpu_total_percentage_detailed&#39;] = cpuTotalPercentageDetailed
+        out[&#39;cpu_percentage_detailed&#39;] = cpuPercentageDetailed
+        
+    if config[&#39;default&#39;][&#39;processstats&#39;] in (1, &#34;1&#34;, &#34;true&#34;, &#34;True&#34;):
+        out[&#39;processes&#39;] = processes
     
-    if system is &#39;windows&#39;:
+    if system is &#39;windows&#39; and config[&#39;default&#39;][&#39;winservices&#39;] in (1, &#34;1&#34;, &#34;true&#34;, &#34;True&#34;):
         out[&#39;windows_services&#39;] = windows_services
         
     if len(cached_customchecks_check_data) &gt; 0:

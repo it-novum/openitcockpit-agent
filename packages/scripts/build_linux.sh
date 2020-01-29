@@ -13,7 +13,7 @@ mkdir -p package/usr/bin
 mkdir -p package/etc/openitcockpit-agent/
 
 cp openitcockpit-agent/executables/openitcockpit-agent-python3.linux.bin package/usr/bin/
-cp openitcockpit-agent/exaple_config.cnf package/etc/openitcockpit-agent/config.cnf
+cp openitcockpit-agent/example_config.cnf package/etc/openitcockpit-agent/config.cnf
 cp openitcockpit-agent/example_customchecks.cnf package/etc/openitcockpit-agent/customchecks.cnf
 cp -r openitcockpit-agent/packages/init package/etc/openitcockpit-agent/
 
