@@ -22,8 +22,8 @@ namespace OitcAgentSvc
         public Process AgentProcess;
 
         // Using @ to not require escaping \
-        private string registryKey = @"SOFTWARE\it-novum\InstalledProducts\oitcAgent\";
-        private string agentPath = @"C:\Program Files\it-novum\oitcAgent\";
+        private string registryKey = @"SOFTWARE\it-novum\InstalledProducts\openitcockpit-agent\";
+        private string agentPath = @"C:\Program Files\it-novum\openitcockpit-agent\";
 
 
         public enum ServiceState
