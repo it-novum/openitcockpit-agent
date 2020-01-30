@@ -29,6 +29,30 @@ pipeline {
                 archiveArtifacts artifacts: 'public/packages/**', fingerprint: true
             }
         }
+        stage('Build agent windows packages') {
+            when {
+                beforeAgent true
+                branch 'master'
+            }
+            agent {
+                docker { 
+                    image 'srvitsmdrone01.master.dns:5000/alpine-rsync'
+                    registryUrl 'http://srvitsmdrone01.master.dns:5000'
+                }
+            }
+            environment {
+                SSH_KEY = credentials('JENKINS_SSH_KEY')
+            }
+            steps {
+                sh 'scp -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -i $SSH_KEY -r ./openitcockpit-agent kress@172.16.166.223:openitcockpit-agent'
+                sh 'ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -i $SSH_KEY \'powershell "cd openitcockpit-agent; python.exe -m venv ./python3-windows-env; .\python3-windows-env\Scripts\activate.bat; .\python3-windows-env\Scripts\pip.exe install -r requirements.txt servicemanager; .\python3-windows-env\Scripts\pyinstaller.exe oitc_agent.py --onefile; .\python3-windows-env\Scripts\deactivate.bat"\''
+                sh 'ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -i $SSH_KEY \'powershell "cd openitcockpit-agent; rm -fo executables\openitcockpit-agent-python3.exe; mv .\dist\oitc_agent.exe executables\openitcockpit-agent-python3.exe; rm -r -fo .\dist; rm -r -fo .\build; rm -r -fo .\__pycache__; rm -r -fo .\oitc_agent.spec; rm -r -fo .\python3-windows-env"\''
+                sh 'ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -i $SSH_KEY \'cd openitcockpit-agent/msi && "C:\Program Files (x86)\WiX Toolset v3.11\bin\candle.exe" -v -arch x64 Product.wxs WixUi_Main.wxs LicenseAgreementDlg_HK.wxs -dVersionNumber="1.0.0" && "C:\Program Files (x86)\WiX Toolset v3.11\bin\light.exe" Product.wixobj WixUi_Main.wixobj LicenseAgreementDlg_HK.wixobj -o openitcockpit-agent.msi -loc Product_en-us.wxl -ext WixUIExtension -sw1076\''
+                sh 'scp -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -i $SSH_KEY kress@172.16.166.223:openitcockpit-agent/msi/openitcockpit-agent.msi .'
+                sh 'ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -i $SSH_KEY \'powershell "rm -r -fo openitcockpit-agent"\''
+                archiveArtifacts artifacts: 'openitcockpit-agent.msi', fingerprint: true
+            }
+        }
         stage('Nothing done') {
             when {
                 beforeAgent true

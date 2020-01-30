@@ -2,5 +2,5 @@ psutil>=5.5.0
 configparser
 pycryptodome
 pyopenssl
-requests
+requests==2.8.1
 pyinstaller
