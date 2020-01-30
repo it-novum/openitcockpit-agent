@@ -398,11 +398,16 @@ def run_default_checks():
     swap = psutil.swap_memory()
 
     if config['default']['diskstats'] in (1, "1", "true", "True"):
-        # DISKS #        
-        disks = [dict(
-            disk = disk._asdict(),
-            usage = psutil.disk_usage(disk.mountpoint)._asdict()
-            ) for disk in psutil.disk_partitions() ]
+        # DISKS #
+        try:
+            disks = [dict(
+                disk = disk._asdict(),
+                usage = psutil.disk_usage(disk.mountpoint)._asdict()
+                ) for disk in psutil.disk_partitions() ]
+        except:
+            print_verbose_without_lock("Could not get system disks!", True)
+            if stacktrace:
+                traceback.print_exc()
     
     diskIO = None
     if hasattr(psutil, "disk_io_counters") and config['default']['diskio'] in (1, "1", "true", "True"):
@@ -1447,15 +1452,20 @@ def collect_data_for_cache(check_interval):
     
     while not thread_stop_requested:
         if i >= check_interval:
-            if config['default']['dockerstats'] in (1, "1", "true", "True") and 'running' not in docker_stats_data:
-                thread = Thread(target = check_docker_stats, args = (check_interval, ))
-                thread.start()
-                #thread.join()
-            if system is 'linux' and config['default']['qemustats'] in (1, "1", "true", "True") and 'running' not in qemu_stats_data:
-                thread = Thread(target = check_qemu_stats, args = (check_interval, ))
-                thread.start()
-            
-            cached_check_data = run_default_checks()
+            try:
+                if config['default']['dockerstats'] in (1, "1", "true", "True") and 'running' not in docker_stats_data:
+                    thread = Thread(target = check_docker_stats, args = (check_interval, ))
+                    thread.start()
+                    #thread.join()
+                if system is 'linux' and config['default']['qemustats'] in (1, "1", "true", "True") and 'running' not in qemu_stats_data:
+                    thread = Thread(target = check_qemu_stats, args = (check_interval, ))
+                    thread.start()
+                
+                cached_check_data = run_default_checks()
+            except:
+                print_verbose_without_lock("Could not run default checks!", True)
+                if stacktrace:
+                    traceback.print_exc()
             i = 0
         time.sleep(1)
         i += 1
