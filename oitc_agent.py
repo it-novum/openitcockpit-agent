@@ -47,6 +47,7 @@ import signal
 import OpenSSL
 import ssl
 import requests
+import hashlib
 
 from os import access, R_OK, devnull
 from os.path import isfile
@@ -116,6 +117,8 @@ except ImportError:
     sys.exit(1)
 
 agentVersion = "1.0.0"
+days_until_cert_warning = 120
+days_until_ca_warning = 30
 enableSSL = False
 autossl = True
 cached_check_data = {}
@@ -141,7 +144,9 @@ oitc_notification_thread_running = False
 permanent_customchecks_check_thread_running = False
 
 ssl_csr = None
-
+sha512 = hashlib.sha512()
+print_lock = Lock()
+certificate_check_lock = Lock()
 
 sample_config = """
 [default]
@@ -226,7 +231,7 @@ def reset_global_options():
     globals()['config'] = configparser.ConfigParser(allow_no_value=True)
     globals()['customchecks'] = configparser.ConfigParser(allow_no_value=True)
 
-print_lock = Lock()
+
 def print_verbose(msg, more_on_stacktrace):
     """Function to print verbose output uniformly and prevent double verbose output at the same time
     
@@ -1433,6 +1438,7 @@ def collect_data_for_cache(check_interval):
     
     Function to process the default checks with a given check interval.
     Starts the docker and qemu stats check threads (with timeout = check_interval) if configured.
+    It also runs the daily certificate expiration check.
 
     Parameters
     ----------
@@ -1448,10 +1454,21 @@ def collect_data_for_cache(check_interval):
     time.sleep(1)
     if check_interval <= 0:
         check_interval = 5
-    i = check_interval
+    check_interval_counter = check_interval
+    cert_expiration_interval_counter = 0
     
     while not thread_stop_requested:
-        if i >= check_interval:
+        if check_interval_counter >= check_interval:
+            try:
+                if cert_expiration_interval_counter >= 86400:   # approx. every day - time of run_default_checks()
+                    executor = futures.ThreadPoolExecutor(max_workers=1)
+                    executor.submit(check_auto_certificate)
+                    cert_expiration_interval_counter = 0
+            except:
+                print_verbose_without_lock("Error while starting the regularly certificate expiration check!", True)
+                if stacktrace:
+                    traceback.print_exc()
+            
             try:
                 if config['default']['dockerstats'] in (1, "1", "true", "True") and 'running' not in docker_stats_data:
                     thread = Thread(target = check_docker_stats, args = (check_interval, ))
@@ -1466,9 +1483,10 @@ def collect_data_for_cache(check_interval):
                 print_verbose_without_lock("Could not run default checks!", True)
                 if stacktrace:
                     traceback.print_exc()
-            i = 0
+            check_interval_counter = 0
         time.sleep(1)
-        i += 1
+        check_interval_counter += 1
+        cert_expiration_interval_counter += 1
     
     permanent_check_thread_running = False
     print_verbose('Stopped permanent_check_thread', False)
@@ -1821,7 +1839,7 @@ def create_new_csr():
     
     return csr
 
-def pull_crt_from_server():
+def pull_crt_from_server(renew=False):
     """Function to pull a new certificate using a csr
 
     This function tries to pull a new certificate from the configured openITCOCKPIT Server.
@@ -1840,39 +1858,53 @@ def pull_crt_from_server():
         True if successful, False otherwise.
 
     """
+    
+    if certificate_check_lock.locked():
+        print_verbose('Function to pull a new certificate is locked!', False)
+        return False
+    
+    with certificate_check_lock:
+        if config['oitc']['url'] and config['oitc']['url'] is not "" and config['oitc']['apikey'] and config['oitc']['apikey'] is not "" and config['oitc']['hostuuid'] and config['oitc']['hostuuid'] is not "":
+            try:
+                csr = create_new_csr()
 
-    if config['oitc']['url'] and config['oitc']['url'] is not "" and config['oitc']['apikey'] and config['oitc']['apikey'] is not "" and config['oitc']['hostuuid'] and config['oitc']['hostuuid'] is not "":
-        try:
-            csr = create_new_csr()
-
-            data = {'csr': csr.decode()}
-            headers = {
-                'Content-Type': 'application/x-www-form-urlencoded',
-                'Authorization': 'X-OITC-API '+config['oitc']['apikey'].strip(),
-            }
-            response = requests.post(config['oitc']['url'].strip(), data=data, headers=headers)
-            
-            jdata = json.loads(response.content.decode('utf-8'));
-
-            if 'unknown' in jdata:
-                print_verbose('Untrusted agent! Try again in 10 minutes to get a certificate from the server.', False)
-                executor = futures.ThreadPoolExecutor(max_workers=1)
-                executor.submit(wait_and_check_auto_certificate, 600)
+                data = {
+                    'csr': csr.decode(),
+                    'hostuuid': config['oitc']['hostuuid']
+                }
+                headers = {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                    'Authorization': 'X-OITC-API '+config['oitc']['apikey'].strip(),
+                }
+                if renew:
+                    with open(config['default']['autossl-crt-file'], 'rb') as f:
+                        cert = f.read()
+                        sha512.update(cert)
+                        data['checksum'] = sha512.hexdigest().upper()
                 
-            if 'signed' in jdata and 'ca' in jdata:
-                with open(config['default']['autossl-crt-file'], 'w+') as f:
-                    f.write(jdata['signed'])
-                with open(config['default']['autossl-ca-file'], 'w+') as f:
-                    f.write(jdata['ca'])
-            
-                restart_webserver()
+                response = requests.post(config['oitc']['url'].strip() + '/agentconnector/certificate.json', data=data, headers=headers)
+                
+                jdata = json.loads(response.content.decode('utf-8'));
 
-                print_verbose('Signed certificate updated successfully', False)
-                return True
-        except:
-            print_verbose('An error occurred during autossl certificate renew process', True)
-            if stacktrace:
-                traceback.print_exc()
+                if 'unknown' in jdata:
+                    print_verbose('Untrusted agent! Try again in 10 minutes to get a certificate from the server.', False)
+                    executor = futures.ThreadPoolExecutor(max_workers=1)
+                    executor.submit(wait_and_check_auto_certificate, 600)
+                    
+                if 'signed' in jdata and 'ca' in jdata:
+                    with open(config['default']['autossl-crt-file'], 'w+') as f:
+                        f.write(jdata['signed'])
+                    with open(config['default']['autossl-ca-file'], 'w+') as f:
+                        f.write(jdata['ca'])
+                
+                    restart_webserver()
+
+                    print_verbose('Signed certificate updated successfully', False)
+                    return True
+            except:
+                print_verbose('An error occurred during autossl certificate renew process', True)
+                if stacktrace:
+                    traceback.print_exc()
     
     return False
 
@@ -1908,6 +1940,7 @@ def check_auto_certificate():
     Otherwise it checks if the certificate will expire soon.
         
     """
+    requestNewCertificate = False
     if not file_readable(config['default']['autossl-crt-file']):
         pull_crt_from_server()
     if file_readable(config['default']['autossl-crt-file']):    # repeat condition because pull_crt_from_server could fail
@@ -1920,13 +1953,29 @@ def check_auto_certificate():
             exp_year = x509info[:4].decode('utf-8')
             exp_date = str(exp_day) + "-" + str(exp_month) + "-" + str(exp_year)
             
-            if verbose:
-                print("SSL Certificate expires in %s on %s (DD-MM-YYYY)" % (str(datetime.date(int(exp_year), int(exp_month), int(exp_day)) - datetime.datetime.now().date()).split(',')[0], exp_date))
+            print_verbose("SSL Certificate expires in %s on %s (DD-MM-YYYY)" % (str(datetime.date(int(exp_year), int(exp_month), int(exp_day)) - datetime.datetime.now().date()).split(',')[0], exp_date), False)
             
-            if datetime.date(int(exp_year), int(exp_month), int(exp_day)) - datetime.datetime.now().date() <= datetime.timedelta(182):
+            if datetime.date(int(exp_year), int(exp_month), int(exp_day)) - datetime.datetime.now().date() <= datetime.timedelta(days_until_cert_warning):
                 print_verbose('SSL Certificate will expire soon. Try to create a new one automatically ...', False)
-                if pull_crt_from_server() is not False:
-                    check_auto_certificate()
+                requestNewCertificate = True
+    
+    if file_readable(config['default']['autossl-ca-file']):
+        with open(config['default']['autossl-ca-file'], 'r') as f:
+            ca = f.read()
+            x509 = load_certificate(FILETYPE_PEM, ca)
+            x509info = x509.get_notAfter()
+            exp_day = x509info[6:8].decode('utf-8')
+            exp_month = x509info[4:6].decode('utf-8')
+            exp_year = x509info[:4].decode('utf-8')
+            exp_date = str(exp_day) + "-" + str(exp_month) + "-" + str(exp_year)
+            
+            if datetime.date(int(exp_year), int(exp_month), int(exp_day)) - datetime.datetime.now().date() <= datetime.timedelta(days_until_ca_warning):
+                print_verbose("CA Certificate expires in %s on %s (DD-MM-YYYY)" % (str(datetime.date(int(exp_year), int(exp_month), int(exp_day)) - datetime.datetime.now().date()).split(',')[0], exp_date), False)
+                requestNewCertificate = True
+                    
+    if requestNewCertificate:
+        if pull_crt_from_server(True) is not False:
+            check_auto_certificate()
 
 def print_help():
     """Function to print the help
@@ -2199,7 +2248,7 @@ def load_main_processing():
 
         - openITCOCKPIT Notification Thread (if enabled)
         - customchecks collector thread (if needed)
-        - default check thread
+        - default check thread (including daily certificate expiration check)
         - webserver thread
         
     ... after (running check thread are stopped,) configuration is loaded and automatic certificate check is done.
@@ -2241,5 +2290,5 @@ if __name__ == '__main__':
     except AttributeError:
         # signal.pause() is missing for Windows; wait 1ms and loop instead
         while True:
-            time.sleep(1)
+            time.sleep(0.1)
 
