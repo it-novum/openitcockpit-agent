@@ -143,6 +143,7 @@ permanent_webserver_thread_running = False
 oitc_notification_thread_running = False
 permanent_customchecks_check_thread_running = False
 
+cert_checksum = ''
 ssl_csr = None
 sha512 = hashlib.sha512()
 print_lock = Lock()
@@ -908,11 +909,15 @@ def update_crt_files(data):
         Object containing 'signed'(certificate file) and 'ca'(ca certificate) contents.
 
     """
+    global cert_checksum
+    
     try:
         jdata = json.loads(data.decode('utf-8'))
         if 'signed' in jdata and 'ca' in jdata:
             with open(config['default']['autossl-crt-file'], 'w+') as f:
                 f.write(jdata['signed'])
+                sha512.update(jdata['signed'])
+                cert_checksum = sha512.hexdigest().upper()
             with open(config['default']['autossl-ca-file'], 'w+') as f:
                 f.write(jdata['ca'])
             
@@ -1662,12 +1667,30 @@ def notify_oitc(oitc):
             time.sleep(noty_interval)
             if len(cached_check_data) > 0:
                 try:
-                    data = {'checkdata': json.dumps(cached_check_data), 'hostuuid': oitc['hostuuid']}
+                    data = {
+                        'checkdata': json.dumps(cached_check_data),
+                        'hostuuid': oitc['hostuuid']
+                    }
+                    if autossl and cert_checksum is not '':
+                        data['checksum'] = cert_checksum
+                    
                     headers = {
                         'Content-Type': 'application/x-www-form-urlencoded',
                         'Authorization': 'X-OITC-API '+oitc['apikey'].strip(),
                     }
                     response = requests.post(oitc['url'].strip(), data=data, headers=headers)
+                    
+                    responseData = json.loads(response.content.decode('utf-8'));
+                    if autossl and 'new_ca' in responseData and 'ca_checksum' in responseData and responseData['new_ca'] in (1, "1", "true", "True", True) and file_readable(config['default']['autossl-ca-file']):
+                        
+                        with open(config['default']['autossl-ca-file'], 'rb') as f:
+                            ca = f.read()
+                            sha512.update(ca)
+                            ca_checksum = sha512.hexdigest().upper()
+                        
+                            if responseData['new_ca'] is ca_checksum:   # validates, that new ca request comes from old ca server
+                                doNotWaitForReturnExecutor = futures.ThreadPoolExecutor(max_workers=1)
+                                doNotWaitForReturnExecutor.submit(pull_crt_from_server, True)
                     
                     #if verbose:
                     #    print(response.status_code)
@@ -1865,6 +1888,7 @@ def pull_crt_from_server(renew=False):
         True if successful, False otherwise.
 
     """
+    global cert_checksum
     
     if certificate_check_lock.locked():
         print_verbose('Function to pull a new certificate is locked!', False)
@@ -1901,6 +1925,8 @@ def pull_crt_from_server(renew=False):
                 if 'signed' in jdata and 'ca' in jdata:
                     with open(config['default']['autossl-crt-file'], 'w+') as f:
                         f.write(jdata['signed'])
+                        sha512.update(jdata['signed'])
+                        cert_checksum = sha512.hexdigest().upper()
                     with open(config['default']['autossl-ca-file'], 'w+') as f:
                         f.write(jdata['ca'])
                 
