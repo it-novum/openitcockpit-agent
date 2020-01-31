@@ -172,6 +172,7 @@ sample_config = """
   cpustats = true
   sensorstats = true
   processstats = true
+  processstats-including-child-ids = false
   netstats = true
   diskstats = true
   netio = true
@@ -655,15 +656,16 @@ def run_default_checks():
                     if stacktrace:
                         traceback.print_exc()
                 
-                try:
-                    if callable(p.children):
-                        with suppress_stdout_stderr():
-                            for child in p.children(recursive=True):
-                                children.append(child.pid)
-                except:
-                    print_verbose_without_lock("'%s' Process is not allowing us to get the child process ids!" % (str(pid)), True)
-                    if stacktrace:
-                        traceback.print_exc()
+                if config['default']['processstats-including-child-ids'] in (1, "1", "true", "True"):
+                    try:
+                        if callable(p.children):
+                            with suppress_stdout_stderr():
+                                for child in p.children(recursive=True):
+                                    children.append(child.pid)
+                    except:
+                        print_verbose_without_lock("'%s' Process is not allowing us to get the child process ids!" % (str(pid)), True)
+                        if stacktrace:
+                            traceback.print_exc()
             
             
             try:
@@ -1013,6 +1015,11 @@ def check_update_data(data):
                         newconfig['default']['processstats'] = "true"
                     else:
                         newconfig['default']['processstats'] = "false"
+                if 'processstats-including-child-ids' in jdata[key]:
+                    if jdata[key]['processstats-including-child-ids'] in (1, "1", "true", "True"):
+                        newconfig['default']['processstats-including-child-ids'] = "true"
+                    else:
+                        newconfig['default']['processstats-including-child-ids'] = "false"
                 if 'netstats' in jdata[key]:
                     if jdata[key]['netstats'] in (1, "1", "true", "True"):
                         newconfig['default']['netstats'] = "true"
@@ -1985,43 +1992,44 @@ def print_help():
     """
     print('usage: ./oitc_agent.py -v -i <check interval seconds> -p <port number> -a <ip address> -c <config path> --certfile <certfile path> --keyfile <keyfile path> --auth <user>:<password> --oitc-url <url> --oitc-apikey <api key> --oitc-interval <seconds>')
     print('\nOptions and arguments (overwrite options in config file):')
-    print('-i --interval <seconds>      : check interval in seconds')
-    print('-p --port <number>           : webserver port number')
-    print('-a --address <ip address>    : webserver ip address')
-    print('-c --config <config path>    : config file path')
-    print('--config-update-mode         : enable config update mode threw post request and /config to get current configuration')
-    print('--temperature-fahrenheit     : set temperature to fahrenheit if enabled (else use celsius)')
-    print('--dockerstats                : enable docker status check')
-    print('--qemustats                  : enable qemu status check (linux only)')
-    print('--no-cpustats                : disable default cpu status check')
-    print('--no-sensorstats             : disable default sensor status check')
-    print('--no-processstats            : disable default process status check')
-    print('--no-netstats                : disable default network status check')
-    print('--no-diskstats               : disable default disk status check')
-    print('--no-netio                   : disable default network I/O calculation')
-    print('--no-diskio                  : disable default disk I/O calculation')
-    print('--no-winservices             : disable default windows services status check (windows only)')
-    print('--customchecks <file path>   : custom check config file path')
-    print('--auth <user>:<password>     : enable http basic auth')
-    print('-v --verbose                 : enable verbose mode')
-    print('-s --stacktrace              : print stacktrace for possible exceptions')
-    print('-h --help                    : print this help message and exit')
+    print('-i --interval <seconds>                  : check interval in seconds')
+    print('-p --port <number>                       : webserver port number')
+    print('-a --address <ip address>                : webserver ip address')
+    print('-c --config <config path>                : config file path')
+    print('--config-update-mode                     : enable config update mode threw post request and /config to get current configuration')
+    print('--temperature-fahrenheit                 : set temperature to fahrenheit if enabled (else use celsius)')
+    print('--dockerstats                            : enable docker status check')
+    print('--qemustats                              : enable qemu status check (linux only)')
+    print('--no-cpustats                            : disable default cpu status check')
+    print('--no-sensorstats                         : disable default sensor status check')
+    print('--no-processstats                        : disable default process status check')
+    print('--processstats-including-child-ids       : add process child ids to the default process status check (computationally intensive)')
+    print('--no-netstats                            : disable default network status check')
+    print('--no-diskstats                           : disable default disk status check')
+    print('--no-netio                               : disable default network I/O calculation')
+    print('--no-diskio                              : disable default disk I/O calculation')
+    print('--no-winservices                         : disable default windows services status check (windows only)')
+    print('--customchecks <file path>               : custom check config file path')
+    print('--auth <user>:<password>                 : enable http basic auth')
+    print('-v --verbose                             : enable verbose mode')
+    print('-s --stacktrace                          : print stacktrace for possible exceptions')
+    print('-h --help                                : print this help message and exit')
     print('\nAdd there parameters (all required) to enable transfer of check results to a openITCOCKPIT server:')
-    print('--oitc-hostuuid <host uuid>  : host uuid from openITCOCKPIT')
-    print('--oitc-url <url>             : openITCOCKPIT url (https://demo.openitcockpit.io)')
-    print('--oitc-apikey <api key>      : openITCOCKPIT api key')
-    print('--oitc-interval <seconds>    : transfer interval in seconds')
+    print('--oitc-hostuuid <host uuid>              : host uuid from openITCOCKPIT')
+    print('--oitc-url <url>                         : openITCOCKPIT url (https://demo.openitcockpit.io)')
+    print('--oitc-apikey <api key>                  : openITCOCKPIT api key')
+    print('--oitc-interval <seconds>                : transfer interval in seconds')
     print('\nAdd there parameters to enable ssl encrypted http(s) server:')
-    print('--certfile <certfile path>   : /path/to/cert.pem')
-    print('--keyfile <keyfile path>     : /path/to/key.pem')
-    print('--try-autossl                : try to enable auto webserver ssl mode')
-    print('--disable-autossl            : disable auto webserver ssl mode (overwrite default)')
+    print('--certfile <certfile path>               : /path/to/cert.pem')
+    print('--keyfile <keyfile path>                 : /path/to/key.pem')
+    print('--try-autossl                            : try to enable auto webserver ssl mode')
+    print('--disable-autossl                        : disable auto webserver ssl mode (overwrite default)')
     print('\nFile paths used for autossl (default: /etc/openitcockpit-agent/... or C:\Program Files\openitcockpit-agent\...):')
-    print('--autossl-folder <path>      : /default/folder/for/ssl/files (use instead of the following four arguments)')
-    print('--autossl-csr-file <path>    : /path/to/agent.csr')
-    print('--autossl-crt-file <path>    : /path/to/agent.crt')
-    print('--autossl-key-file <path>    : /path/to/agent.key')
-    print('--autossl-ca-file <path>     : /path/to/server_ca.crt')
+    print('--autossl-folder <path>                  : /default/folder/for/ssl/files (use instead of the following four arguments)')
+    print('--autossl-csr-file <path>                : /path/to/agent.csr')
+    print('--autossl-crt-file <path>                : /path/to/agent.crt')
+    print('--autossl-key-file <path>                : /path/to/agent.key')
+    print('--autossl-ca-file <path>                 : /path/to/server_ca.crt')
     print('\nSample config file:')
     print(sample_config)
     print('\nSample config file for custom check commands:')
@@ -2045,7 +2053,7 @@ def load_configuration():
     global temperatureIsFahrenheit
     
     try:
-        opts, args = getopt.getopt(sys.argv[1:],"h:i:p:a:c:vs",["interval=","port=","address=","config=","customchecks=","certfile=","keyfile=","auth=","oitc-hostuuid=","oitc-url=","oitc-apikey=","oitc-interval=","config-update-mode","temperature-fahrenheit","try-autossl","disable-autossl","autossl-folder","autossl-csr-file","autossl-crt-file","autossl-key-file","autossl-ca-file","dockerstats","qemustats","no-cpustats","no-sensorstats","no-processstats","no-netstats","no-diskstats","no-netio","no-diskio","no-winservices","verbose","stacktrace","help"])
+        opts, args = getopt.getopt(sys.argv[1:],"h:i:p:a:c:vs",["interval=","port=","address=","config=","customchecks=","certfile=","keyfile=","auth=","oitc-hostuuid=","oitc-url=","oitc-apikey=","oitc-interval=","config-update-mode","temperature-fahrenheit","try-autossl","disable-autossl","autossl-folder","autossl-csr-file","autossl-crt-file","autossl-key-file","autossl-ca-file","dockerstats","qemustats","no-cpustats","no-sensorstats","no-processstats","processstats-including-child-ids","no-netstats","no-diskstats","no-netio","no-diskio","no-winservices","verbose","stacktrace","help"])
     except getopt.GetoptError:
         print_help()
         sys.exit(2)
@@ -2122,6 +2130,8 @@ def load_configuration():
             config['default']['sensorstats'] = "false"
         elif opt == "--no-processstats":
             config['default']['processstats'] = "false"
+        elif opt == "--processstats-including-child-ids":
+            config['default']['processstats-including-child-ids'] = "true"
         elif opt == "--no-netstats":
             config['default']['netstats'] = "false"
         elif opt == "--no-diskstats":

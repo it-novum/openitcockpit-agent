@@ -70,6 +70,9 @@ sensorstats = true
 # Enable default process status check
 processstats = true
 
+# Add process child ids to the default process status check (computationally intensive)
+processstats-including-child-ids = false
+
 # Enable default network status check
 netstats = true
 

@@ -112,6 +112,7 @@ Options (script start parameters overwrite options in config file):
 |--no-cpustats       |       |disable default cpu status check     | 
 |--no-sensorstats       |       |disable default sensor status check     | 
 |--no-processstats       |       |disable default process status check     | 
+|--processstats-including-child-ids       |       |add process child ids to the default process status check (computationally intensive)     | 
 |--no-netstats       |       |disable default network status check     | 
 |--no-diskstats       |       |disable default disk status check     | 
 |--no-netio       |       |disable default network I/O calculation     | 
@@ -202,6 +203,7 @@ Sample config file (with default script values):
   cpustats = true
   sensorstats = true
   processstats = true
+  processstats-including-child-ids = false
   netstats = true
   diskstats = true
   netio = true
@@ -260,6 +262,7 @@ JSON Example (file: new_config.json) for update mode and http://address:port/con
         "cpustats": "true",
         "sensorstats": "true",
         "processstats": "true",
+        "processstats-including-child-ids": "false",
         "netstats": "true",
         "diskstats": "true",
         "netio": "true",
