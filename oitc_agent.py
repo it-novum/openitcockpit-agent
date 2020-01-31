@@ -2137,7 +2137,7 @@ def load_configuration():
         elif opt == "--autossl-ca-file":
             config['default']['autossl-ca-file'] = str(arg)
         elif opt == "--auth":
-            config['default']['auth'] = str(base64.b64encode(arg.encode())).encode("utf-8")
+            config['default']['auth'] = str(arg)
         elif opt in ("-v", "--verbose"):
             config['default']['verbose'] = "true"
         elif opt in ("-s", "--stacktrace"):
