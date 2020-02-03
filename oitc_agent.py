@@ -1239,7 +1239,7 @@ class AgentWebserver(BaseHTTPRequestHandler):
             executor.submit(check_update_data, data)
             returnMessage['success'] = True
         
-        elif self.path == "/updateCrt":
+        elif self.path == "/updateCrt" and autossl:
             if update_crt_files(data) == True:
                 executor.submit(restart_webserver)
                 returnMessage['success'] = True
@@ -1472,7 +1472,7 @@ def collect_data_for_cache(check_interval):
     while not thread_stop_requested:
         if check_interval_counter >= check_interval:
             try:
-                if cert_expiration_interval_counter >= 86400:   # approx. every day - time of run_default_checks()
+                if autossl and cert_expiration_interval_counter >= 86400:   # approx. every day - time of run_default_checks()
                     executor = futures.ThreadPoolExecutor(max_workers=1)
                     executor.submit(check_auto_certificate)
                     cert_expiration_interval_counter = 0
