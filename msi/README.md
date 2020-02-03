@@ -13,11 +13,11 @@ cd `msi` folder
 ````
 
 ````
-"C:\Program Files (x86)\WiX Toolset v3.11\bin\light.exe" Product.wixobj WixUi_Main.wixobj LicenseAgreementDlg_HK.wixobj -o oitcAgent.msi -loc Product_en-us.wxl -ext WixUIExtension -sw1076
+"C:\Program Files (x86)\WiX Toolset v3.11\bin\light.exe" Product.wixobj WixUi_Main.wixobj LicenseAgreementDlg_HK.wixobj -o openitcockpit-agent.msi -loc Product_en-us.wxl -ext WixUIExtension -sw1076
 ````
 
 ## Automated installation
 
 ````
-msiexec.exe /i oitcAgent.msi INSTALLDIR="C:\Program Files\it-novum\oitcAgent\" /qn
+msiexec.exe /i openitcockpit-agent.msi INSTALLDIR="C:\Program Files\it-novum\openitcockpit-agent\" /qn
 ````

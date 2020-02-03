@@ -13,11 +13,10 @@ if [ -f /usr/bin/openitcockpit-agent-python3.linux.bin ]; then
     if [ -x "$(command -v systemctl)" ]; then
         if [ ! -f /lib/systemd/system/openitcockpit-agent.service ]; then
             if [ -d /lib/systemd/system/ ]; then
-                # Debian
+                # Debian / Ubuntu / Arch
                 ln /etc/openitcockpit-agent/init/openitcockpit-agent.service /lib/systemd/system/openitcockpit-agent.service
-            fi
-            if [ -d /usr/lib/systemd/system/ ]; then
-                # ReadHat / Suse
+            elif [ -d /usr/lib/systemd/system/ ]; then
+                # RedHat / Suse
                 ln /etc/openitcockpit-agent/init/openitcockpit-agent.service /usr/lib/systemd/system/openitcockpit-agent.service
             fi
         fi

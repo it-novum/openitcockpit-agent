@@ -431,7 +431,7 @@ def run_default_checks():
                 
                 for attr in diskIO[disk]:
                     diff = wrapdiff(float(cached_diskIO[disk][attr]), float(diskIO[disk][attr]))
-                    diskIODiff[attr] = diff;
+                    diskIODiff[attr] = diff
                 
                 diskIO[disk]['read_iops'] = diskIODiff['read_count'] / diskIODiff['timestamp']
                 diskIO[disk]['write_iops'] = diskIODiff['write_count'] / diskIODiff['timestamp']
@@ -477,7 +477,7 @@ def run_default_checks():
                 
                 for attr in netIO[device]:
                     diff = wrapdiff(float(cached_netIO[device][attr]), float(netIO[device][attr]))
-                    netIODiff[attr] = diff;
+                    netIODiff[attr] = diff
                     
                 if netIODiff['bytes_sent']:
                     netIO[device]['avg_bytes_sent_ps'] = float(netIODiff['bytes_sent'] / netIODiff['timestamp'])
@@ -620,7 +620,7 @@ def run_default_checks():
                         traceback.print_exc()
             
             except psutil.NoSuchProcess:
-                continue;
+                continue
             except:
                 print_verbose_without_lock("An error occured during process check!", True)
                 if stacktrace:
@@ -651,7 +651,7 @@ def run_default_checks():
                     if callable(p.parent):
                         ppid = p.parent().pid
                 except (psutil.NoSuchProcess, ProcessLookupError):
-                    continue;
+                    continue
                 except AttributeError:
                     print_verbose_without_lock("'%s' Process is not allowing us to get the parent process id!" % (str(pid)), True)
                     if stacktrace:
@@ -672,7 +672,7 @@ def run_default_checks():
             try:
                 nice = p.nice()
             except (psutil.NoSuchProcess, ProcessLookupError):
-                continue;
+                continue
             except:
                 print_verbose_without_lock("'%s' Process is not allowing us to get the nice option!" % (name if name != "" else str(pid)), True)
                 if stacktrace:
@@ -681,7 +681,7 @@ def run_default_checks():
             try:
                 name = p.name()
             except (psutil.NoSuchProcess, ProcessLookupError):
-                continue;
+                continue
             except:
                 print_verbose_without_lock("'%s' Process is not allowing us to get the name option!" % (name if name != "" else str(pid)), True)
                 if stacktrace:
@@ -690,7 +690,7 @@ def run_default_checks():
             try:
                 exe = p.exe()
             except (psutil.NoSuchProcess, ProcessLookupError):
-                continue;
+                continue
             except:
                 print_verbose_without_lock("'%s' Process is not allowing us to get the exec option!" % (name if name != "" else str(pid)), True)
                 if stacktrace:
@@ -699,7 +699,7 @@ def run_default_checks():
             try:
                 cmdline = p.cmdline()
             except (psutil.NoSuchProcess, ProcessLookupError):
-                continue;
+                continue
             except:
                 print_verbose_without_lock("'%s' Process is not allowing us to get the cmdline option!" % (name if name != "" else str(pid)), True)
                 if stacktrace:
@@ -708,7 +708,7 @@ def run_default_checks():
             try:
                 cpu_percent = p.cpu_percent(interval=None)
             except (psutil.NoSuchProcess, ProcessLookupError):
-                continue;
+                continue
             except:
                 print_verbose_without_lock("'%s' Process is not allowing us to get the CPU usage!" % (name if name != "" else str(pid)), True)
                 if stacktrace:
@@ -717,7 +717,7 @@ def run_default_checks():
             try:
                 memory_info = p.memory_info()._asdict()
             except (psutil.NoSuchProcess, ProcessLookupError):
-                continue;
+                continue
             except:
                 print_verbose_without_lock("'%s' Process is not allowing us to get memory usage information!" % (name if name != "" else str(pid)), True)
                 if stacktrace:
@@ -726,7 +726,7 @@ def run_default_checks():
             try:
                 memory_percent = p.memory_percent()
             except (psutil.NoSuchProcess, ProcessLookupError):
-                continue;
+                continue
             except:
                 print_verbose_without_lock("'%s' Process is not allowing us to get the percent of memory usage!" % (name if name != "" else str(pid)), True)
                 if stacktrace:
@@ -735,7 +735,7 @@ def run_default_checks():
             try:
                 num_fds = p.num_fds()
             except (psutil.NoSuchProcess, ProcessLookupError):
-                continue;
+                continue
             except:
                 print_verbose_without_lock("'%s' Process is not allowing us to get the num_fds option!" % (name if name != "" else str(pid)), True)
                 if stacktrace:
@@ -744,7 +744,7 @@ def run_default_checks():
             try:
                 io_counters = p.io_counters.__dict__
             except (psutil.NoSuchProcess, ProcessLookupError):
-                continue;
+                continue
             except:
                 print_verbose_without_lock("'%s' Process is not allowing us to get the IO counters!" % (name if name != "" else str(pid)), True)
                 if stacktrace:
@@ -753,7 +753,7 @@ def run_default_checks():
             try:
                 open_files = p.open_files()
             except (psutil.NoSuchProcess, ProcessLookupError):
-                continue;
+                continue
             except psutil.AccessDenied:
                 print_verbose_without_lock("'%s' Process is not allowing us to get the open_files option!" % (name if name != "" else str(pid)), True)
                 if stacktrace:
@@ -779,7 +779,7 @@ def run_default_checks():
             }
             processes.append(process)
         except psutil.NoSuchProcess:
-            continue;
+            continue
         except:
             print_verbose_without_lock("An error occured during process check!", True)
             if stacktrace:
@@ -1290,7 +1290,7 @@ def check_qemu_stats(timeout):
         print('Start qemu status check with timeout of %ss at %s' % (str(timeout), str(round(time.time()))))
     
     tmp_qemu_stats_result = None
-    qemu_stats_data['running'] = "true";
+    qemu_stats_data['running'] = "true"
     
     # regex source: https://gist.github.com/kitschysynq/867caebec581cee4c44c764b4dd2bde7
     # qemu_command = "ps -ef | awk -e '/qemu/ && !/awk/ && !/openitcockpit-agent/' | sed -e 's/[^/]*/\n/' -e 's/ -/\n\t-/g'" # customized (without secure character escape)
@@ -1380,7 +1380,7 @@ def check_docker_stats(timeout):
         print('Start docker status check with timeout of %ss at %s' % (str(timeout), str(round(time.time()))))
     
     tmp_docker_stats_result = None
-    docker_stats_data['running'] = "true";
+    docker_stats_data['running'] = "true"
     
     docker_command = 'docker stats --no-stream --format "{{.ID}};{{.Name}};{{.CPUPerc}};{{.MemUsage}};{{.MemPerc}};{{.NetIO}};{{.BlockIO}};{{.PIDs}}"'
     if system is 'windows':
@@ -1518,7 +1518,7 @@ def run_customcheck_command(check):
 
     """
     print_verbose('Start custom check "%s" with timeout %s at %s' % (str(check['name']), str(check['timeout']), str(round(time.time()))), False)
-    cached_customchecks_check_data[check['name']]['running'] = "true";
+    cached_customchecks_check_data[check['name']]['running'] = "true"
     cached_customchecks_check_data[check['name']]['command'] = check['command']
     
     try:
@@ -1575,7 +1575,7 @@ def process_customcheck_results(future_checks):
                 traceback.print_exc()
     
     if len(cached_customchecks_check_data) > 0:
-        cached_check_data['customchecks'] = cached_customchecks_check_data;
+        cached_check_data['customchecks'] = cached_customchecks_check_data
 
 def collect_customchecks_data_for_cache(customchecks):
     """Function that starts as a thread to manage the custom checks 
@@ -1680,7 +1680,7 @@ def notify_oitc(oitc):
                     }
                     response = requests.post(oitc['url'].strip(), data=data, headers=headers)
                     
-                    responseData = json.loads(response.content.decode('utf-8'));
+                    responseData = json.loads(response.content.decode('utf-8'))
                     if autossl and 'new_ca' in responseData and 'ca_checksum' in responseData and responseData['new_ca'] in (1, "1", "true", "True", True) and file_readable(config['default']['autossl-ca-file']):
                         
                         with open(config['default']['autossl-ca-file'], 'rb') as f:
@@ -1915,7 +1915,7 @@ def pull_crt_from_server(renew=False):
                 
                 response = requests.post(config['oitc']['url'].strip() + '/agentconnector/certificate.json', data=data, headers=headers)
                 
-                jdata = json.loads(response.content.decode('utf-8'));
+                jdata = json.loads(response.content.decode('utf-8'))
 
                 if 'unknown' in jdata:
                     print_verbose('Untrusted agent! Try again in 10 minutes to get a certificate from the server.', False)
@@ -2187,7 +2187,7 @@ def load_configuration():
     for opt, arg in opts:
         if opt == "--disable-autossl":
             config['default']['try-autossl'] = "false"
-            break;
+            break
     
     if config['default']['verbose'] in (1, "1", "true", "True", True):
         verbose = True
