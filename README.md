@@ -24,17 +24,39 @@ Supported & tested systems:
 - centOS 7
 - Arch Linux (2019.08.01)
 
-### Linux and macOS
 
-Download and run setup.sh with root privileges:
-```
-curl -sS https://git.binsky.org/uploads/-/system/personal_snippet/9/3b7b3278d37699f0a934ccb50e9ecb10/install.sh | /bin/bash
-```
+### Packages
 
-Remove with:
-```
-curl -sS https://git.binsky.org/uploads/-/system/personal_snippet/9/673752b9aaa1101df3126409cdb72e72/uninstall.sh | /bin/bash
-```
+#### Debian / Ubuntu
+
+Install: `sudo apt install ./openitcockpit-agent_*_amd64.deb`
+
+Uninstall: `sudo apt remove openitcockpit-agent`
+
+#### Arch
+
+Install: `sudo pacman -U openitcockpit-agent-*-x86_64.pkg.tar.xz`
+
+Uninstall: `sudo pacman -R openitcockpit-agent`
+
+#### RedHat / openSUSE
+
+Install:  `rpm -i openitcockpit-agent-*.x86_64.rpm`
+
+Uninstall:  `rpm -e openitcockpit-agent`
+
+#### macOS
+
+Install `sudo installer -pkg openitcockpit-agent-1.0.0.pkg -target / -verbose -dumplog`
+
+#### Windows
+
+Install with double clicking the msi installer file.
+
+Automated install:  `msiexec.exe /i openitcockpit-agent.msi INSTALLDIR="C:\Program Files\it-novum\openitcockpit-agent\" /qn`
+
+Uninstall using the windows built-in graphical package manager.
+
 
 ## Developer installation
 
