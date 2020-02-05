@@ -252,7 +252,7 @@ def print_verbose(msg, more_on_stacktrace):
     with print_lock:
         if verbose:
             print(msg)
-        if not stacktrace and more_on_stacktrace:
+        if not stacktrace and more_on_stacktrace and verbose:
             print("Enable --stacktrace to get more information.")
 def print_verbose_without_lock(msg, more_on_stacktrace):
     """Function to directly print verbose output uniformly
@@ -269,7 +269,7 @@ def print_verbose_without_lock(msg, more_on_stacktrace):
     """
     if verbose:
         print(msg)
-    if not stacktrace and more_on_stacktrace:
+    if not stacktrace and more_on_stacktrace and verbose:
         print("Enable --stacktrace to get more information.")
 
 def signal_handler(sig, frame):
@@ -1357,8 +1357,7 @@ def check_qemu_stats(timeout):
     
     if len(qemu_stats_data) > 0:
         cached_check_data['qemustats'] = qemu_stats_data
-    if verbose:
-        print('Qemu status check finished')
+    print_verbose('Qemu status check finished', False)
     del qemu_stats_data['running']
 
 def check_docker_stats(timeout):
@@ -1379,25 +1378,34 @@ def check_docker_stats(timeout):
     if verbose:
         print('Start docker status check with timeout of %ss at %s' % (str(timeout), str(round(time.time()))))
     
-    tmp_docker_stats_result = None
+    tmp_docker_stats_result = ''
     docker_stats_data['running'] = "true"
     
-    docker_command = 'docker stats --no-stream --format "{{.ID}};{{.Name}};{{.CPUPerc}};{{.MemUsage}};{{.MemPerc}};{{.NetIO}};{{.BlockIO}};{{.PIDs}}"'
+    docker_stats_command = 'docker stats --no-stream --format "stats;{{.ID}};{{.Name}};{{.CPUPerc}};{{.MemUsage}};{{.MemPerc}};{{.NetIO}};{{.BlockIO}};{{.PIDs}}"'
     if system is 'windows':
-        docker_command = 'docker stats --no-stream --format "{{.ID}};{{.Name}};{{.CPUPerc}};{{.MemUsage}};;{{.NetIO}};{{.BlockIO}};"'   #fill not existing 'MemPerc' and 'PIDs' with empty ; separated value
-    
+        docker_stats_command = 'docker stats --no-stream --format "stats;{{.ID}};{{.Name}};{{.CPUPerc}};{{.MemUsage}};;{{.NetIO}};{{.BlockIO}};"'   #fill not existing 'MemPerc' and 'PIDs' with empty ; separated value
+    docker_container_list_command = 'docker container list -a -s --format "cl;{{.ID}};{{.Status}};{{.Size}};{{.Image}};{{.RunningFor}};{{.Names}}"'
+
     try:
-        p = subprocess.Popen(docker_command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+        p = subprocess.Popen(docker_stats_command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+        p2 = subprocess.Popen(docker_container_list_command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
         
         try:
             stdout, stderr = p.communicate(timeout=int(timeout))
+            stdout2, stderr2 = p2.communicate(timeout=int(timeout))
             p.poll()
+            p2.poll()
             if stdout:
-                stdout = stdout.decode()
+                tmp_docker_stats_result = tmp_docker_stats_result + stdout.decode()
+            if stdout2:
+                tmp_docker_stats_result = tmp_docker_stats_result + stdout2.decode()
             if stderr:
                 stderr = stderr.decode()
-            tmp_docker_stats_result = str(stdout)
+            if stderr2:
+                stderr2 = stderr2.decode()
+
             docker_stats_data['error'] = None if str(stderr) == 'None' else str(stderr)
+            docker_stats_data['error'] = None if str(stderr) == 'None' and str(stderr2) == 'None' else str(stderr2)
             docker_stats_data['returncode'] = p.returncode
         except subprocess.TimeoutExpired:
             print_verbose('Docker status check timed out', False)
@@ -1411,27 +1419,52 @@ def check_docker_stats(timeout):
         if stacktrace:
             traceback.print_exc()
     
-    if tmp_docker_stats_result is not None and docker_stats_data['returncode'] is 0:
+    if tmp_docker_stats_result != '' and docker_stats_data['returncode'] is 0:
         results = tmp_docker_stats_result.split('\n')
         sorted_data = []
+        sorted_stats_data = []
+        sorted_cl_data = []
         for result in results:
             if result.strip() is not "":
                 try:
                     result_array = result.strip().split(';')
                     tmp_dict = {}
-                    tmp_dict['id'] = result_array[0]
-                    tmp_dict['name'] = result_array[1]
-                    tmp_dict['cpu_percent'] = result_array[2]
-                    tmp_dict['memory_usage'] = result_array[3]
-                    tmp_dict['memory_percent'] = result_array[4]
-                    tmp_dict['net_io'] = result_array[5]
-                    tmp_dict['block_io'] = result_array[6]
-                    tmp_dict['pids'] = result_array[7]
-                    sorted_data.append(tmp_dict)
+                    if result_array[0] == 'stats':
+                        tmp_dict['id'] = result_array[1]
+                        tmp_dict['name'] = result_array[2]
+                        tmp_dict['cpu_percent'] = result_array[3]
+                        tmp_dict['memory_usage'] = result_array[4]
+                        tmp_dict['memory_percent'] = result_array[5]
+                        tmp_dict['net_io'] = result_array[6]
+                        tmp_dict['block_io'] = result_array[7]
+                        tmp_dict['pids'] = result_array[8]
+                        sorted_stats_data.append(tmp_dict)
+                    if result_array[0] == 'cl':
+                        tmp_dict['id'] = result_array[1]
+                        tmp_dict['status'] = result_array[2]
+                        tmp_dict['size'] = result_array[3]
+                        tmp_dict['image'] = result_array[4]
+                        tmp_dict['created'] = result_array[5]
+                        tmp_dict['name'] = result_array[6]
+                        sorted_cl_data.append(tmp_dict)
                 except:
-                    print_verbose("An error occured while processing the docker check output! Seems like there are no running docker containers.", True)
+                    print_verbose("An error occured while processing the docker check output! Seems like there are no docker containers.", True)
                     if stacktrace:
                         traceback.print_exc()
+
+        for cl_data in sorted_cl_data:
+            tmp_dict = cl_data
+
+            for stats_data in sorted_stats_data:
+                if stats_data['id'] == cl_data['id']:
+                    tmp_dict['name'] = stats_data['name']
+                    tmp_dict['cpu_percent'] = stats_data['cpu_percent']
+                    tmp_dict['memory_usage'] = stats_data['memory_usage']
+                    tmp_dict['memory_percent'] = stats_data['memory_percent']
+                    tmp_dict['net_io'] = stats_data['net_io']
+                    tmp_dict['block_io'] = stats_data['block_io']
+                    tmp_dict['pids'] = stats_data['pids']
+            sorted_data.append(tmp_dict)
     
         docker_stats_data['result'] = sorted_data
         docker_stats_data['last_updated_timestamp'] = round(time.time())
@@ -1441,8 +1474,7 @@ def check_docker_stats(timeout):
     
     if len(docker_stats_data) > 0:
         cached_check_data['dockerstats'] = docker_stats_data
-    if verbose:
-        print('Docker status check finished')
+    print_verbose('Docker status check finished', False)
     del docker_stats_data['running']
 
 def collect_data_for_cache(check_interval):
