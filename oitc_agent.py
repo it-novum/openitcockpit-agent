@@ -317,11 +317,19 @@ def wrapdiff(last, curr):
 
 def build_autossl_defaults():
     """ Function to define the system depending certificate file paths
-        
+
+        Certificate file default paths:
+
+        - Windows:        C:\Program Files\openitcockpit-agent\agent.crt
+        - Linux:          /etc/openitcockpit-agent/agent.crt
+        - macOS:          /etc/openitcockpit-agent/agent.crt
+
+        Config file default paths:
+
         - Windows:        C:\Program Files\openitcockpit-agent\config.cnf
         - Linux:          /etc/openitcockpit-agent/config.cnf
         - macOS:          /Library/openitcockpit-agent/config.cnf
-    
+
     """
     etc_agent_path = '/etc/openitcockpit-agent/'
     if system is 'windows':
@@ -341,24 +349,32 @@ def run_default_checks():
     Run default checks to get following information points.
     
     
-    - disks (Speichergeräte mit Mountpoint, Dateisystem und Speicherplatzangaben)
-    - disk_io (Lese- und Schreibstatistiken der Speichergeräte)
-    - net_io (Eingabe- und Ausgabestatistiken der Netzwerkgeräte)
-    - net_stats (Netzwerkgeräte mit zur Verfügung stehender Geschwindigkeit, ...)
-    - sensors (Angeschlossene Sensoren, z.B. Temperatur der CPU, Akkustatus)
-    - cpu_total_percentage (Verwendete CPU Rechenzeit in Prozent)
-    - cpu_percentage (Verwendete CPU Rechenzeit pro Kern in Prozent)
-    - cpu_total_percentage_detailed (CPU Rechenzeit (in %) je Systemressource)
-    - cpu_percentage_detailed (CPU Rechenzeit (in %) je Systemressource pro Kern)
-    - system_load (System Load 1, 5, 15 als Array)
-    - users (Am System angemeldete Benutzer, deren Terminal (PID), Loginzeitpunkt)
-    - memory (Informationen zum Arbeitsspeicher, verwendet, aktiv, gepuffert, ...)
-    - swap (Informationen zum Auslagerungsspeicher, insgesamt, verwendet, ...)
-    - processes (Informationen zu laufenden Prozessen, CPU, Arbeitsspeicher, PID, ...)
-    - agent (Version des Agenten, Zeitpunkt des letzten Checks, Systemversion, ...)
-    - dockerstats (Aktive Docker Container, ID, CPU, Arbeitsspeicher, Block IO, PID)
-    - qemustats (Informationen zu aktiven QEMU Maschinen (auf einem Proxmox))
-    
+    - disks (Storage devices with mountpoint, filesystem and storage space definitions)
+    - disk_io (Read and write statistics of the storage devices)
+    - net_io (Input and Outputstatistics of the network devices)
+    - net_stats (Network devices including the possible speed, ...)
+    - sensors (Connected sensors, e.g. temperature of the cpu, akku state)
+    - cpu_total_percentage (Used CPU calculation time in percent)
+    - cpu_percentage (Used cpu calculation time in percent per core)
+    - cpu_total_percentage_detailed (Cpu calculation time in percent per system ressource)
+    - cpu_percentage_detailed (Cpu calculation time in percent per system ressource per core)
+    - system_load (System load 1, 5, 15 as array)
+    - users (Users logged on to the system, their terminals (pid), login time)
+    - memory (Memory information, total, used, active, buffered, ...)
+    - swap (Swap information, total, used, ...)
+    - processes (Information to running processes, cpu, memory, pid, ...)
+    - agent (Agent version, last check time, system version, ...)
+    - dockerstats (Docker containers, id, cpu, memory, block io, pid)
+    - qemustats (Information to active QEMU virtual machines)
+
+
+    Notice:
+
+    Processes with id 0 or 1 are excluded of the process parent and child id check.
+    There are the root processes on linux, macOS and windows.
+    These checks are configurable: dockerstats, qemustats, cpustats, sensorstats, processstats, netstats, diskstats, netio, diskio, winservices.
+    Average values and iops in netio and diskio checks are available after the second check goes through.
+
     
     Returns
     -------
@@ -902,6 +918,7 @@ def update_crt_files(data):
     """Function to update the certificate files
     
     Update the automatically generated agent certificate file and the ca certificate file if they are writeable.
+    Update the cached certificate checksum.
 
     Parameters
     ----------
@@ -1274,7 +1291,7 @@ class AgentWebserver(BaseHTTPRequestHandler):
 def check_qemu_stats(timeout):
     """Function that starts as a thread to run the qemu status check
     
-    Proxmox (linux) only! (beta)
+    Linux only! (beta)
     
     Function that runs a (ps) command (as python subprocess) to get a status result for each running qemu (kvm) virtual machine.
 
@@ -1410,6 +1427,7 @@ def check_docker_stats(timeout):
         except subprocess.TimeoutExpired:
             print_verbose('Docker status check timed out', False)
             p.kill()    #not needed; just to be sure
+            p2.kill()
             docker_stats_data['result'] = None
             docker_stats_data['error'] = 'Docker status check timeout after ' + str(timeout) + ' seconds'
             docker_stats_data['returncode'] = 124
@@ -1679,6 +1697,7 @@ def notify_oitc(oitc):
     """Function that starts as a thread to push check results to an openITCOCKPIT server
     
     Send a post request with a given interval to the configured openITCOCKPIT server containing the latest check results.
+    If autossl is activated, add the sha512 checksum to the request, to validate the sender of the request.
 
     Parameters
     ----------
@@ -1688,6 +1707,7 @@ def notify_oitc(oitc):
     """
     global oitc_notification_thread_running
     global cached_check_data
+    global cert_checksum
     
     time.sleep(1)
     if oitc['url'].strip() and oitc['apikey'].strip() and int(oitc['interval']):
@@ -1703,8 +1723,15 @@ def notify_oitc(oitc):
                         'checkdata': json.dumps(cached_check_data),
                         'hostuuid': oitc['hostuuid']
                     }
-                    if autossl and cert_checksum is not '':
-                        data['checksum'] = cert_checksum
+                    if autossl and file_readable(config['default']['autossl-crt-file']):
+                        if cert_checksum is not '':
+                            data['checksum'] = cert_checksum
+                        else:
+                            with open(config['default']['autossl-crt-file'], 'rb') as f:
+                                cert = f.read()
+                                sha512.update(cert)
+                                cert_checksum = sha512.hexdigest().upper()
+                                data['checksum'] = cert_checksum
                     
                     headers = {
                         'Content-Type': 'application/x-www-form-urlencoded',
@@ -1912,7 +1939,9 @@ def pull_crt_from_server(renew=False):
     Therefore the function wait_and_check_auto_certificate(600) will be called as new thread (future).
     
     If the agent is not yet trusted by the openITCOCKPIT Server a manual confirmation in the openITCOCKPIT frontend is needed!
-    
+
+    If an existing certificate expired, a sha512 checksum has to be sent with the request to the openITCOCKPIT Server.
+    With that checksum the server can validate, that the request was sent from a trusted agent (that has access to the old certificate).
 
     Returns
     -------
