@@ -49,6 +49,8 @@ Uninstall:  `rpm -e openitcockpit-agent`
 
 Install `sudo installer -pkg openitcockpit-agent-*.pkg -target / -verbose -dumplog`
 
+Uninstall `sudo installer -pkg openitcockpit-agent-uninstaller*.pkg -target / -verbose -dumplog`
+
 #### Windows
 
 Install with double clicking the msi installer file.
