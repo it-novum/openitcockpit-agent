@@ -64,16 +64,18 @@ if sys.platform == 'win32' or sys.platform == 'win64':
 if sys.platform == 'darwin' or (system == 'linux' and 'linux' not in sys.platform):
     system = 'darwin'
 
-if (sys.version_info > (3, 0)):
+if (sys.version_info >= (3, 0)):
     isPython3 = True
     import concurrent.futures as futures
     import subprocess
-    
+
     from threading import Thread, Lock
+    from _thread import start_new_thread as update_crt_files_thread
     from _thread import start_new_thread as permanent_check_thread
     from _thread import start_new_thread as permanent_webserver_thread
     from _thread import start_new_thread as oitc_notification_thread
     from _thread import start_new_thread as permanent_customchecks_check_thread
+    from socketserver import ThreadingMixIn
     from http.server import BaseHTTPRequestHandler, HTTPServer
     from subprocess import Popen, PIPE
 else:
@@ -92,10 +94,12 @@ else:
     
     from concurrent import futures
     from threading import Thread, Lock
+    from thread import start_new_thread as update_crt_files_thread
     from thread import start_new_thread as permanent_check_thread
     from thread import start_new_thread as permanent_webserver_thread
     from thread import start_new_thread as oitc_notification_thread
     from thread import start_new_thread as permanent_customchecks_check_thread
+    from SocketServer import ThreadingMixIn
     from BaseHTTPServer import BaseHTTPRequestHandler, HTTPServer
     ProcessLookupError = None
     
@@ -138,6 +142,7 @@ thread_stop_requested = False
 webserver_stop_requested = False
 wait_and_check_auto_certificate_thread_stop_requested = False
 
+update_crt_files_thread_running = False
 permanent_check_thread_running = False
 permanent_webserver_thread_running = False
 oitc_notification_thread_running = False
@@ -226,6 +231,7 @@ def reset_global_options():
     globals()['added_oitc_parameter'] = 0
     globals()['initialized'] = False
     globals()['thread_stop_requested'] = False
+    globals()['update_crt_files_thread_running'] = False
     globals()['permanent_check_thread_running'] = False
     globals()['permanent_webserver_thread_running'] = False
     globals()['oitc_notification_thread_running'] = False
@@ -336,7 +342,7 @@ def build_autossl_defaults():
         etc_agent_path = 'C:'+os.path.sep+'Program Files'+os.path.sep+'it-novum'+os.path.sep+'openitcockpit-agent'+os.path.sep
     
     if config['default']['autossl-folder'] != "":
-        etc_agent_path = config['default']['autossl-folder']
+        etc_agent_path = config['default']['autossl-folder'] + os.path.sep
     
     config['default']['autossl-csr-file'] = etc_agent_path + 'agent.csr'
     config['default']['autossl-crt-file'] = etc_agent_path + 'agent.crt'
@@ -927,24 +933,32 @@ def update_crt_files(data):
 
     """
     global cert_checksum
+    global update_crt_files_thread_running
+
+    if update_crt_files_thread_running:
+        return False
+
+    update_crt_files_thread_running = True
     
     try:
         jdata = json.loads(data.decode('utf-8'))
+        jxdata = json.loads(jdata)
         if 'signed' in jdata and 'ca' in jdata:
             with open(config['default']['autossl-crt-file'], 'w+') as f:
-                f.write(jdata['signed'])
-                sha512.update(jdata['signed'])
+                f.write(jxdata['signed'])
+                sha512.update(jxdata['signed'].encode())
                 cert_checksum = sha512.hexdigest().upper()
             with open(config['default']['autossl-ca-file'], 'w+') as f:
-                f.write(jdata['ca'])
+                f.write(jxdata['ca'])
             
-            return True
+            restart_webserver()
         
     except Exception as e:
         print_verbose("An error occured during new certificate processing", True)
         if stacktrace:
             traceback.print_exc()
             print(e)
+    update_crt_files_thread_running = False
         
 def check_update_data(data):
     """Function that starts as a thread (future) to check and update the agent configuration
@@ -1143,7 +1157,10 @@ def check_update_data(data):
         if stacktrace:
             traceback.print_exc()
             print(e)
-    
+
+class ThreadedHTTPServer(ThreadingMixIn, HTTPServer):
+    """Handle requests in a separate thread."""
+
 class AgentWebserver(BaseHTTPRequestHandler):
     """Webserver class
 
@@ -1257,10 +1274,9 @@ class AgentWebserver(BaseHTTPRequestHandler):
             returnMessage['success'] = True
         
         elif self.path == "/updateCrt" and autossl:
-            if update_crt_files(data) == True:
-                executor.submit(restart_webserver)
-                returnMessage['success'] = True
-        
+            permanent_webserver_thread(update_crt_files, (data,))
+            returnMessage['success'] = True
+
         return returnMessage
     
     def do_POST(self):
@@ -1737,7 +1753,7 @@ def notify_oitc(oitc):
                         'Content-Type': 'application/x-www-form-urlencoded',
                         'Authorization': 'X-OITC-API '+oitc['apikey'].strip(),
                     }
-                    response = requests.post(oitc['url'].strip(), data=data, headers=headers)
+                    response = requests.post(oitc['url'].strip(), data=data, headers=headers, verify=False)
                     
                     responseData = json.loads(response.content.decode('utf-8'))
                     if autossl and 'new_ca' in responseData and 'ca_checksum' in responseData and responseData['new_ca'] in (1, "1", "true", "True", True) and file_readable(config['default']['autossl-ca-file']):
@@ -1778,6 +1794,10 @@ def process_webserver(enableSSL=False):
 
     """
     global permanent_webserver_thread_running
+
+    if permanent_webserver_thread_running:
+        return False
+
     permanent_webserver_thread_running = True
     
     protocol = 'http'
@@ -1785,7 +1805,7 @@ def process_webserver(enableSSL=False):
         config['default']['address'] = "0.0.0.0"
         
     server_address = (config['default']['address'], int(config['default']['port']))
-    httpd = HTTPServer(server_address, AgentWebserver)
+    httpd = ThreadedHTTPServer(server_address, AgentWebserver)
     
     if enableSSL:
         protocol = 'https'
@@ -1795,7 +1815,7 @@ def process_webserver(enableSSL=False):
         httpd.socket = ssl.wrap_socket(httpd.socket, keyfile=config['default']['autossl-key-file'], certfile=config['default']['autossl-crt-file'], server_side=True, cert_reqs = ssl.CERT_REQUIRED, ca_certs = config['default']['autossl-ca-file'])
     
     print_verbose("Server started at %s://%s:%s with a check interval of %d seconds" % (protocol, config['default']['address'], str(config['default']['port']), int(config['default']['interval'])), False)
-    
+
     while not thread_stop_requested and not webserver_stop_requested:
         try:
             httpd.handle_request()
@@ -1973,10 +1993,19 @@ def pull_crt_from_server(renew=False):
                         cert = f.read()
                         sha512.update(cert)
                         data['checksum'] = sha512.hexdigest().upper()
-                
-                response = requests.post(config['oitc']['url'].strip() + '/agentconnector/certificate.json', data=data, headers=headers)
-                
+
+                try:
+                    requests.packages.urllib3.disable_warnings()
+                except:
+                    if stacktrace:
+                        traceback.print_exc()
+
+                response = requests.post(config['oitc']['url'].strip() + '/agentconnector/certificate.json', data=data, headers=headers, verify=False)
                 jdata = json.loads(response.content.decode('utf-8'))
+
+                if 'checksum_missing' in jdata:
+                    print_verbose('Agent certificate already generated. May be hijacked?', False)
+                    print_verbose('Add old certificate checksum to request or recreate Agent in openITCOCKPIT.', False)
 
                 if 'unknown' in jdata:
                     print_verbose('Untrusted agent! Try again in 10 minutes to get a certificate from the server.', False)
@@ -1986,7 +2015,7 @@ def pull_crt_from_server(renew=False):
                 if 'signed' in jdata and 'ca' in jdata:
                     with open(config['default']['autossl-crt-file'], 'w+') as f:
                         f.write(jdata['signed'])
-                        sha512.update(jdata['signed'])
+                        sha512.update(jdata['signed'].encode())
                         cert_checksum = sha512.hexdigest().upper()
                     with open(config['default']['autossl-ca-file'], 'w+') as f:
                         f.write(jdata['ca'])
@@ -2302,7 +2331,10 @@ def fake_webserver_request():
     if enableSSL:
         protocol = 'https'
     complete_address = protocol + '://' + config['default']['address'] + ':' + str(config['default']['port'])
-    requests.get(complete_address)
+    try:
+        requests.get(complete_address, verify=False)
+    except:
+        pass
     
 def reload_all():
     """Function to stop all thread and trigger the configuration reload
@@ -2328,7 +2360,7 @@ def reload_all():
                 traceback.print_exc()
         
         while thread_stop_requested:
-            if permanent_check_thread_running or permanent_webserver_thread_running or oitc_notification_thread_running or permanent_customchecks_check_thread_running:
+            if update_crt_files_thread_running or permanent_check_thread_running or permanent_webserver_thread_running or oitc_notification_thread_running or permanent_customchecks_check_thread_running:
                 sleep(1)
             else:
                 thread_stop_requested = False
