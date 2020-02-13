@@ -1753,7 +1753,7 @@ def notify_oitc(oitc):
                         'Content-Type': 'application/x-www-form-urlencoded',
                         'Authorization': 'X-OITC-API '+oitc['apikey'].strip(),
                     }
-                    response = requests.post(oitc['url'].strip(), data=data, headers=headers, verify=False)
+                    response = requests.post(oitc['url'].strip() + '/agentconnector/updateCheckdata.json', data=data, headers=headers, verify=False)
                     
                     responseData = json.loads(response.content.decode('utf-8'))
                     if autossl and 'new_ca' in responseData and 'ca_checksum' in responseData and responseData['new_ca'] in (1, "1", "true", "True", True) and file_readable(config['default']['autossl-ca-file']):
@@ -2008,9 +2008,9 @@ def pull_crt_from_server(renew=False):
                     print_verbose('Add old certificate checksum to request or recreate Agent in openITCOCKPIT.', False)
 
                 if 'unknown' in jdata:
-                    print_verbose('Untrusted agent! Try again in 10 minutes to get a certificate from the server.', False)
+                    print_verbose('Untrusted agent! Try again in 1 minute to get a certificate from the server.', False)
                     executor = futures.ThreadPoolExecutor(max_workers=1)
-                    executor.submit(wait_and_check_auto_certificate, 600)
+                    executor.submit(wait_and_check_auto_certificate, 60)
                     
                 if 'signed' in jdata and 'ca' in jdata:
                     with open(config['default']['autossl-crt-file'], 'w+') as f:
