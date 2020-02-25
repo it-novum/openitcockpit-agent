@@ -1244,7 +1244,6 @@ class AgentWebserver(BaseHTTPRequestHandler):
             else:
                 data['csr'] = "disabled"
             self.wfile.write(json.dumps(data).encode())
-        
     
     def do_GET(self):
         try:
@@ -1277,7 +1276,8 @@ class AgentWebserver(BaseHTTPRequestHandler):
             permanent_webserver_thread(update_crt_files, (data,))
             returnMessage['success'] = True
 
-        return returnMessage
+        self._set_headers()
+        self.wfile.write(json.dumps(returnMessage).encode())
     
     def do_POST(self):
         try:
@@ -1292,8 +1292,8 @@ class AgentWebserver(BaseHTTPRequestHandler):
                     self.wfile.write(self.headers.get('Authorization').encode())
                     self.wfile.write('not authenticated'.encode())
             else:
-                retrn = self._process_post_data(data=self.rfile.read(int(self.headers['Content-Length'])))
-                self.wfile.write(json.dumps(retrn).encode())
+                self._process_post_data(data=self.rfile.read(int(self.headers['Content-Length'])))
+
         except:
             print_verbose('Caught something in do_POST', True)
             if stacktrace:
@@ -1731,8 +1731,14 @@ def notify_oitc(oitc):
         noty_interval = int(oitc['interval'])
         if noty_interval <= 0:
             noty_interval = 5
+        sleptSeconds = noty_interval - 4
         while not thread_stop_requested:
-            time.sleep(noty_interval)
+            if sleptSeconds < noty_interval:
+                time.sleep(1)
+                sleptSeconds = sleptSeconds + 1
+                continue
+
+            sleptSeconds = 0
             if len(cached_check_data) > 0:
                 try:
                     data = {
@@ -1753,19 +1759,27 @@ def notify_oitc(oitc):
                         'Content-Type': 'application/x-www-form-urlencoded',
                         'Authorization': 'X-OITC-API '+oitc['apikey'].strip(),
                     }
+
+                    try:
+                        requests.packages.urllib3.disable_warnings(requests.packages.urllib3.exceptions.InsecureRequestWarning)
+                    except:
+                        if stacktrace:
+                            traceback.print_exc()
+
                     response = requests.post(oitc['url'].strip() + '/agentconnector/updateCheckdata.json', data=data, headers=headers, verify=False)
-                    
-                    responseData = json.loads(response.content.decode('utf-8'))
-                    if autossl and 'new_ca' in responseData and 'ca_checksum' in responseData and responseData['new_ca'] in (1, "1", "true", "True", True) and file_readable(config['default']['autossl-ca-file']):
-                        
-                        with open(config['default']['autossl-ca-file'], 'rb') as f:
-                            ca = f.read()
-                            sha512.update(ca)
-                            ca_checksum = sha512.hexdigest().upper()
-                        
-                            if responseData['new_ca'] is ca_checksum:   # validates, that new ca request comes from old ca server
-                                doNotWaitForReturnExecutor = futures.ThreadPoolExecutor(max_workers=1)
-                                doNotWaitForReturnExecutor.submit(pull_crt_from_server, True)
+
+                    if response.content.decode('utf-8').strip() is not '':
+                        responseData = json.loads(response.content.decode('utf-8'))
+                        if autossl and 'new_ca' in responseData and 'ca_checksum' in responseData and responseData['new_ca'] in (1, "1", "true", "True", True) and file_readable(config['default']['autossl-ca-file']):
+
+                            with open(config['default']['autossl-ca-file'], 'rb') as f:
+                                ca = f.read()
+                                sha512.update(ca)
+                                ca_checksum = sha512.hexdigest().upper()
+
+                                if responseData['new_ca'] is ca_checksum:   # validates, that new ca request comes from old ca server
+                                    doNotWaitForReturnExecutor = futures.ThreadPoolExecutor(max_workers=1)
+                                    doNotWaitForReturnExecutor.submit(pull_crt_from_server, True)
                     
                     #if verbose:
                     #    print(response.status_code)
