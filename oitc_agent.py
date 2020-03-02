@@ -2015,29 +2015,30 @@ def pull_crt_from_server(renew=False):
                         traceback.print_exc()
 
                 response = requests.post(config['oitc']['url'].strip() + '/agentconnector/certificate.json', data=data, headers=headers, verify=False)
-                jdata = json.loads(response.content.decode('utf-8'))
+                if response.content.decode('utf-8').strip() is not '':
+                    jdata = json.loads(response.content.decode('utf-8'))
 
-                if 'checksum_missing' in jdata:
-                    print_verbose('Agent certificate already generated. May be hijacked?', False)
-                    print_verbose('Add old certificate checksum to request or recreate Agent in openITCOCKPIT.', False)
+                    if 'checksum_missing' in jdata:
+                        print_verbose('Agent certificate already generated. May be hijacked?', False)
+                        print_verbose('Add old certificate checksum to request or recreate Agent in openITCOCKPIT.', False)
 
-                if 'unknown' in jdata:
-                    print_verbose('Untrusted agent! Try again in 1 minute to get a certificate from the server.', False)
-                    executor = futures.ThreadPoolExecutor(max_workers=1)
-                    executor.submit(wait_and_check_auto_certificate, 60)
-                    
-                if 'signed' in jdata and 'ca' in jdata:
-                    with open(config['default']['autossl-crt-file'], 'w+') as f:
-                        f.write(jdata['signed'])
-                        sha512.update(jdata['signed'].encode())
-                        cert_checksum = sha512.hexdigest().upper()
-                    with open(config['default']['autossl-ca-file'], 'w+') as f:
-                        f.write(jdata['ca'])
-                
-                    restart_webserver()
+                    if 'unknown' in jdata:
+                        print_verbose('Untrusted agent! Try again in 1 minute to get a certificate from the server.', False)
+                        executor = futures.ThreadPoolExecutor(max_workers=1)
+                        executor.submit(wait_and_check_auto_certificate, 60)
 
-                    print_verbose('Signed certificate updated successfully', False)
-                    return True
+                    if 'signed' in jdata and 'ca' in jdata:
+                        with open(config['default']['autossl-crt-file'], 'w+') as f:
+                            f.write(jdata['signed'])
+                            sha512.update(jdata['signed'].encode())
+                            cert_checksum = sha512.hexdigest().upper()
+                        with open(config['default']['autossl-ca-file'], 'w+') as f:
+                            f.write(jdata['ca'])
+
+                        restart_webserver()
+
+                        print_verbose('Signed certificate updated successfully', False)
+                        return True
             except:
                 print_verbose('An error occurred during autossl certificate renew process', True)
                 if stacktrace:
