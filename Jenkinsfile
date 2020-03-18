@@ -28,6 +28,9 @@ pipeline {
                 sh './packages/scripts/build_linux_ci.sh'
                 sh 'mv openitcockpit-agent*.{deb,rpm,pkg.tar.xz} ./release'
                 archiveArtifacts artifacts: 'release/**', fingerprint: true
+                script {
+                    stash includes: 'release/**', name: 'release'
+                }
             }
         }
         stage('Publish linux packages to repository server') {
