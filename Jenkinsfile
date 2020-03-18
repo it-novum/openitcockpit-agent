@@ -51,7 +51,9 @@ pipeline {
                 script {
                     unstash 'release'
                 }
-                sh 'rsync -avz -e "ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -i $SSH_KEY" --progress release/* remotejenkins@172.17.0.1:/home/remotejenkins/agent'
+                sh 'ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -i $SSH_KEY root@172.17.0.1 "mkdir -p /tmp/agent; rm -r /tmp/agent/*"'
+                sh 'rsync -avz -e "ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -i $SSH_KEY" --progress release/* root@172.17.0.1:/tmp/agent'
+                sh 'ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -i $SSH_KEY root@172.17.0.1 "cd /root/openITCOCKPIT-build; ./aptly.sh repo add -force-replace buster-agent-nightly /tmp/agent/openitcockpit-agent_*amd64.deb; ./aptly.sh repo add -force-replace stretch-agent-nightly /tmp/agent/openitcockpit-agent_*amd64.deb"; ./aptly.sh repo add -force-replace bionic-agent-nightly /tmp/agent/openitcockpit-agent_*amd64.deb; ./aptly.sh repo add -force-replace xenial-agent-nightly /tmp/agent/openitcockpit-agent_*amd64.deb'
             }
         }
         stage('Build agent windows packages') {
