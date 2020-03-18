@@ -53,10 +53,10 @@ pipeline {
                 }
                 sh 'ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -i $SSH_KEY root@172.17.0.1 "mkdir -p /tmp/agent/test; rm -r /tmp/agent/*"'
                 sh 'rsync -avz -e "ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -i $SSH_KEY" --progress release/* root@172.17.0.1:/tmp/agent'
-                sh 'ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -i $SSH_KEY root@172.17.0.1 "cd /root/openITCOCKPIT-build; ./aptly.sh repo add -force-replace buster-agent-nightly /tmp/agent/openitcockpit-agent_1.0.0_amd64.deb; ./aptly.sh repo add -force-replace stretch-agent-nightly /tmp/agent/openitcockpit-agent_1.0.0_amd64.deb; ./aptly.sh repo add -force-replace bionic-agent-nightly /tmp/agent/openitcockpit-agent_1.0.0_amd64.deb; ./aptly.sh repo add -force-replace xenial-agent-nightly /tmp/agent/openitcockpit-agent_1.0.0_amd64.deb"'
+                sh 'ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -i $SSH_KEY root@172.17.0.1 "cd /root/openITCOCKPIT-build; ./aptly.sh repo add -force-replace buster-agent-nightly /tmp/agent/openitcockpit-agent_*amd64.deb; ./aptly.sh repo add -force-replace stretch-agent-nightly /tmp/agent/openitcockpit-agent_*amd64.deb; ./aptly.sh repo add -force-replace bionic-agent-nightly /tmp/agent/openitcockpit-agent_*amd64.deb; ./aptly.sh repo add -force-replace xenial-agent-nightly /tmp/agent/openitcockpit-agent_*amd64.deb"'
                 sh 'ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -i $SSH_KEY oitc@172.16.101.32 "mkdir -p /var/www/openitcockpit_io/files/openitcockpit-agent"'
                 sh 'rsync -avz -e "ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -i $SSH_KEY" --progress release/* oitc@172.16.101.32:/var/www/openitcockpit_io/files/openitcockpit-agent'
-                sh 'ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -i $SSH_KEY oitc@172.16.101.113 "mkdir -p /var/repositories/openitcockpit-agent"'
+                sh 'ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -i $SSH_KEY root@172.16.101.113 "mkdir -p /var/repositories/openitcockpit-agent"'
                 sh 'rsync -avu -e "ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -i $SSH_KEY" --delete --progress release/* root@172.16.101.113:/var/repositories/openitcockpit-agent'
             }
         }
@@ -83,6 +83,33 @@ pipeline {
                 sh 'scp -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -i $SSH_KEY kress@172.16.166.223:openitcockpit-agent/msi/openitcockpit-agent.msi ./release'
                 sh 'ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -i $SSH_KEY kress@172.16.166.223 powershell "rm -r -fo openitcockpit-agent"'
                 archiveArtifacts artifacts: 'release/openitcockpit-agent.msi', fingerprint: true
+                script {
+                    stash includes: 'release/**', name: 'windowsrelease'
+                }
+            }
+        }
+        stage('Publish windows package') {
+            when {
+                beforeAgent true
+                branch 'master'
+            }
+            agent {
+                docker { 
+                    image 'srvitsmdrone01.master.dns:5000/alpine-rsync'
+                    registryUrl 'http://srvitsmdrone01.master.dns:5000'
+                }
+            }
+            environment {
+                SSH_KEY = credentials('JENKINS_SSH_KEY')
+            }
+            steps {
+                script {
+                    unstash 'windowsrelease'
+                }
+                sh 'ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -i $SSH_KEY oitc@172.16.101.32 "mkdir -p /var/www/openitcockpit_io/files/openitcockpit-agent"'
+                sh 'rsync -avz -e "ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -i $SSH_KEY" --progress release/* oitc@172.16.101.32:/var/www/openitcockpit_io/files/openitcockpit-agent'
+                sh 'ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -i $SSH_KEY root@172.16.101.113 "mkdir -p /var/repositories/openitcockpit-agent"'
+                sh 'rsync -avu -e "ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -i $SSH_KEY" --progress release/* root@172.16.101.113:/var/repositories/openitcockpit-agent'
             }
         }
         stage('Nothing done') {
