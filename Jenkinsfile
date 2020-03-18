@@ -45,7 +45,7 @@ pipeline {
             }
             steps {
                 script {
-                    unstash 'public/packages'
+                    unstash 'public'
                 }
                 sh 'rsync -avz -e "ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -i $SSH_KEY" --progress public/packages/* remotejenkins@172.17.0.1:/home/remotejenkins/agent'
             }
