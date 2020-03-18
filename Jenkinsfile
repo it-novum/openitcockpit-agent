@@ -29,6 +29,27 @@ pipeline {
                 archiveArtifacts artifacts: 'public/packages/**', fingerprint: true
             }
         }
+        stage('Publish linux packages to repository server') {
+            when {
+                beforeAgent true
+                branch 'master'
+            }
+            agent {
+                docker { 
+                    image 'srvitsmdrone01.master.dns:5000/alpine-rsync'
+                    registryUrl 'http://srvitsmdrone01.master.dns:5000'
+                }
+            }
+            environment {
+                SSH_KEY = credentials('JENKINS_SSH_KEY')
+            }
+            steps {
+                script {
+                    unstash 'public/packages'
+                }
+                sh 'rsync -avz -e "ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -i $SSH_KEY" --progress public/packages/* remotejenkins@172.17.0.1:/home/remotejenkins/agent'
+            }
+        }
         stage('Build agent windows packages') {
             when {
                 beforeAgent true
