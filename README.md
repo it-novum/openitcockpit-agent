@@ -537,7 +537,7 @@ cp /usr/local/bin/python3 ./python3-macos-env/bin
 ./python3-macos-env/bin/python3 ./python3-macos-env/bin/pyinstaller oitc_agent.py --onefile
 deactivate
 mv ./dist/oitc_agent ./executables/openitcockpit-agent-python3.macos.bin
-chmod +x ./executables/openitcockpit-agent-python3.macos
+chmod +x ./executables/openitcockpit-agent-python3.macos.bin
 rm -r ./python3-macos-env ./dist ./build ./__pycache__ oitc_agent.spec
 cd ..
 ./openitcockpit-agent/packages/scripts/build_macos.sh
