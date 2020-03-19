@@ -47,9 +47,9 @@ Uninstall:  `rpm -e openitcockpit-agent`
 
 #### macOS
 
-Install `sudo installer -pkg openitcockpit-agent-*.pkg -target / -verbose -dumplog`
+Install `sudo installer -pkg openitcockpit-agent-1.*.pkg -target / -verbose`
 
-Uninstall `sudo installer -pkg openitcockpit-agent-uninstaller*.pkg -target / -verbose -dumplog`
+Uninstall `sudo installer -pkg openitcockpit-agent-uninstaller*.pkg -target / -verbose`
 
 #### Windows
 
@@ -519,6 +519,13 @@ chmod +x ./executables/openitcockpit-agent-python3.macos
 rm -rf python3-macos-env
 ```
 
+#### Test packages
+
+```
+sudo installer -pkg openitcockpit-agent-*.pkg -target / -verbose -dumplog
+sudo installer -pkg openitcockpit-agent-uninstaller*.pkg -target / -verbose -dumplog
+```
+
 #### Complete package build script
 
 ```
@@ -534,6 +541,7 @@ chmod +x ./executables/openitcockpit-agent-python3.macos
 rm -r ./python3-macos-env ./dist ./build ./__pycache__ oitc_agent.spec
 cd ..
 ./openitcockpit-agent/packages/scripts/build_macos.sh
+rm -r package_osx package_osx_uninstaller
 ```
 
 
