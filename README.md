@@ -519,6 +519,24 @@ chmod +x ./executables/openitcockpit-agent-python3.macos
 rm -rf python3-macos-env
 ```
 
+#### Complete package build script
+
+```
+python3 -m venv ./python3-macos-env
+source ./python3-macos-env/bin/activate
+rm ./python3-macos-env/bin/python3
+cp /usr/local/bin/python3 ./python3-macos-env/bin
+./python3-macos-env/bin/python3 -m pip install -r requirements.txt pyinstaller
+./python3-macos-env/bin/python3 ./python3-macos-env/bin/pyinstaller oitc_agent.py --onefile
+deactivate
+mv ./dist/oitc_agent ./executables/openitcockpit-agent-python3.macos.bin
+chmod +x ./executables/openitcockpit-agent-python3.macos
+rm -r ./python3-macos-env ./dist ./build ./__pycache__ oitc_agent.spec
+cd ..
+./openitcockpit-agent/packages/scripts/build_macos.sh
+```
+
+
 ---
 
 ## Export documentation as html
