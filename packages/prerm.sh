@@ -40,33 +40,35 @@ if [ -f /usr/bin/openitcockpit-agent-python3.linux.bin ]; then
 
 fi
 
-if [ -f /usr/bin/openitcockpit-agent-python3.macos.bin ]; then
+if [ -f /Applications/openitcockpit-agent/openitcockpit-agent-python3.macos.bin ]; then
 
-    touch /tmp/test123123123
+    touch /Applications/openitcockpit-agent/tmp_runrm
 
     set +e
     /bin/launchctl list | grep com.it-novum.openitcockpit.agent
     RC=$?
     if [ "$RC" -eq 0 ]; then
         /bin/launchctl stop com.it-novum.openitcockpit.agent
-        /bin/launchctl unload -F /Library/LaunchDaemons/com.it-novum.openitcockpit.agent.plist
+        /bin/launchctl unload -F /Applications/openitcockpit-agent/com.it-novum.openitcockpit.agent.plist
     fi
     set -e
     
-    if [ -f /Library/LaunchDaemons/com.it-novum.openitcockpit.agent.plist ]; then
-        rm /Library/LaunchDaemons/com.it-novum.openitcockpit.agent.plist
+    rm /Applications/openitcockpit-agent/openitcockpit-agent-python3.macos.bin
+    
+    if [ -f /Applications/openitcockpit-agent/com.it-novum.openitcockpit.agent.plist ]; then
+        rm /Applications/openitcockpit-agent/com.it-novum.openitcockpit.agent.plist
     fi
     
-    if [ -f /Library/openitcockpit-agent/config.cnf ]; then
-        rm /Library/openitcockpit-agent/config.cnf
+    if [ -f /Applications/openitcockpit-agent/config.cnf ]; then
+        rm /Applications/openitcockpit-agent/config.cnf
     fi
     
-    if [ -f /Library/openitcockpit-agent/customchecks.cnf ]; then
-        rm /Library/openitcockpit-agent/customchecks.cnf
-        
-        rm -r /Library/openitcockpit-agent
+    if [ -f /Applications/openitcockpit-agent/customchecks.cnf ]; then
+        rm /Applications/openitcockpit-agent/customchecks.cnf
     fi
     
-    rm /usr/bin/openitcockpit-agent-python3.macos.bin
+    if [ -d /Applications/openitcockpit-agent ]; then
+        rm -r /Applications/openitcockpit-agent
+    fi
 
 fi

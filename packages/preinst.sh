@@ -19,11 +19,11 @@ if [ -f /usr/bin/openitcockpit-agent-python3.linux.bin ]; then
 
 fi
 
-if [ -f /usr/bin/openitcockpit-agent-python3.macos.bin ]; then
+if [ -f /Applications/openitcockpit-agent/openitcockpit-agent-python3.macos.bin ]; then
 
-    if [ -f /Library/LaunchDaemons/com.it-novum.openitcockpit.agent.plist ]; then
+    if [ -f /Applications/openitcockpit-agent/com.it-novum.openitcockpit.agent.plist ]; then
         /bin/launchctl stop com.it-novum.openitcockpit.agent
-        /bin/launchctl unload -F /Library/LaunchDaemons/com.it-novum.openitcockpit.agent.plist
+        /bin/launchctl unload -F /Applications/openitcockpit-agent/com.it-novum.openitcockpit.agent.plist
     fi
     
 fi
