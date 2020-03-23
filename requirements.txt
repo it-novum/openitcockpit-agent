@@ -4,3 +4,4 @@ pycryptodome
 pyopenssl
 requests==2.8.1
 pyinstaller
+jmxquery

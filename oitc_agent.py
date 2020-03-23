@@ -58,6 +58,7 @@ from OpenSSL.crypto import (dump_certificate_request, dump_privatekey, load_cert
 
 isPython3 = False
 system = 'linux'
+jmx_import_successfull = False
 
 if sys.platform == 'win32' or sys.platform == 'win64':
     system = 'windows'
@@ -119,6 +120,16 @@ except ImportError:
     else:
         print('Install Python psutil: pip install psutil==5.5.0')
     sys.exit(1)
+    
+try:
+    from jmxquery import JMXConnection, JMXQuery, JMXConnection
+    jmx_import_successfull = True
+except:
+    print('jmxquery not found!')
+    if isPython3:
+        print('If you want to use the alfresco stats check try: pip3 install jmxquery')
+    else:
+        print('If you want to use the alfresco stats check try: pip install jmxquery')
 
 agentVersion = "1.0.0"
 days_until_cert_warning = 120
@@ -184,6 +195,15 @@ sample_config = """
   netio = true
   diskio = true
   winservices = true
+  
+  alfrescostats = false
+  alfresco-jmxuser = monitorRole
+  alfresco-jmxpassword = change_asap
+  alfresco-jmxaddress = 0.0.0.0
+  alfresco-jmxport = 50500
+  alfresco-jmxpath = /alfresco/jmxrmi
+  alfresco-jmxquery = 
+  alfresco-javapath = /usr/bin/java
 
 [oitc]
   hostuuid = 
@@ -806,6 +826,40 @@ def run_default_checks():
             print_verbose_without_lock("An error occured during process check!", True)
             if stacktrace:
                 traceback.print_exc()
+                
+    alfrescostats = []
+    if jmx_import_successfull and 'alfrescostats' in config['default'] and config['default']['alfrescostats'] in (1, "1", "true", "True", True):
+        if file_readable(config['default']['alfresco-javapath']):
+            try:
+                uri = ("%s:%s%s" % (config['default']['alfresco-jmxaddress'], config['default']['alfresco-jmxport'], config['default']['alfresco-jmxpath']))
+                alfresco_jmxConnection = JMXConnection("service:jmx:rmi:///jndi/rmi://" + uri, config['default']['alfresco-jmxuser'], config['default']['alfresco-jmxpassword'], config['default']['alfresco-javapath'])
+                alfresco_jmxQueryString = "java.lang:type=Memory/HeapMemoryUsage/used;java.lang:type=OperatingSystem/SystemLoadAverage;java.lang:type=Threading/ThreadCount;Alfresco:Name=Runtime/TotalMemory;Alfresco:Name=Runtime/FreeMemory;Alfresco:Name=Runtime/MaxMemory;Alfresco:Name=WorkflowInformation/NumberOfActivitiWorkflowInstances;Alfresco:Name=WorkflowInformation/NumberOfActivitiTaskInstances;Alfresco:Name=Authority/NumberOfGroups;Alfresco:Name=Authority/NumberOfUsers;Alfresco:Name=RepoServerMgmt/UserCountNonExpired;Alfresco:Name=ConnectionPool/NumActive;Alfresco:Name=License/RemainingDays;Alfresco:Name=License/CurrentUsers;Alfresco:Name=License/MaxUsers"
+                
+                if 'alfresco-jmxquery' in config and config['default']['alfresco-jmxquery'] is not "":
+                    print("customquerx")
+                    alfresco_jmxQueryString = config['default']['alfresco-jmxquery']
+                
+                alfresco_jmxQuery = [JMXQuery(alfresco_jmxQueryString)]
+                alfresco_metrics = alfresco_jmxConnection.query(alfresco_jmxQuery)
+                
+                for metric in alfresco_metrics:
+                    alfrescostats.append({
+                        'name': metric.to_query_string(),
+                        'value': str(metric.value),
+                        'value_type': str(metric.value_type)
+                    })
+                
+            except subprocess.CalledProcessError as e:
+                print_verbose_without_lock("An error occured during alfresco stats check while connecting to jmx!", True)
+                if stacktrace:
+                    traceback.print_exc()
+            except:
+                print_verbose_without_lock("An error occured during alfresco stats check!", True)
+                if stacktrace:
+                    traceback.print_exc()
+            
+        else:
+            alfrescostats = 'JAVA instance not found! (' + config['default']['alfresco-javapath'] + ')';
     
     if system is 'windows' and config['default']['winservices'] in (1, "1", "true", "True"):
         for win_process in psutil.win_service_iter():
@@ -890,6 +944,9 @@ def run_default_checks():
         
     if len(qemu_stats_data) > 0:
         out['qemustats'] = qemu_stats_data
+        
+    if jmx_import_successfull and 'alfrescostats' in config['default'] and config['default']['alfrescostats'] in (1, "1", "true", "True", True):
+        out['alfrescostats'] = alfrescostats
     
     if verbose:
         print_lock.release()
@@ -1081,6 +1138,27 @@ def check_update_data(data):
                         newconfig['default']['winservices'] = "true"
                     else:
                         newconfig['default']['winservices'] = "false"
+                
+                if 'alfrescostats' in jdata[key]:
+                    if jdata[key]['alfrescostats'] in (1, "1", "true", "True"):
+                        newconfig['default']['alfrescostats'] = "true"
+                    else:
+                        newconfig['default']['alfrescostats'] = "false"
+                if 'alfresco-jmxuser' in jdata[key]:
+                    newconfig['default']['alfresco-jmxuser'] = str(jdata[key]['alfresco-jmxuser'])
+                if 'alfresco-jmxpassword' in jdata[key]:
+                    newconfig['default']['alfresco-jmxpassword'] = str(jdata[key]['alfresco-jmxpassword'])
+                if 'alfresco-jmxaddress' in jdata[key]:
+                    newconfig['default']['alfresco-jmxaddress'] = str(jdata[key]['alfresco-jmxaddress'])
+                if 'alfresco-jmxport' in jdata[key]:
+                    newconfig['default']['alfresco-jmxport'] = str(jdata[key]['alfresco-jmxport'])
+                if 'alfresco-jmxpath' in jdata[key]:
+                    newconfig['default']['alfresco-jmxpath'] = str(jdata[key]['alfresco-jmxpath'])
+                if 'alfresco-jmxquery' in jdata[key]:
+                    newconfig['default']['alfresco-jmxquery'] = str(jdata[key]['alfresco-jmxquery'])
+                if 'alfresco-javapath' in jdata[key]:
+                    newconfig['default']['alfresco-javapath'] = str(jdata[key]['alfresco-javapath'])
+                
                 if 'customchecks' in jdata[key]:
                     newconfig['default']['customchecks'] = str(jdata[key]['customchecks'])
                 if 'temperature-fahrenheit' in jdata[key]:

@@ -88,6 +88,30 @@ diskio = true
 # Enable default windows services status check
 winservices = true
 
+# If you have an Alfresco enterprise instance, JMX is configured and java installed, you can enable alfrescostats
+alfrescostats = false
+
+# Set your Alfresco JMX username
+alfresco-jmxuser = monitorRole
+
+# Set your Alfresco JMX password
+alfresco-jmxpassword = change_asap
+
+# Set your Alfresco host address
+alfresco-jmxaddress = 0.0.0.0
+
+# Set your Alfresco JMX port
+alfresco-jmxport = 50500
+
+# Set your Alfresco JMX path (path behind the JMX address "service:jmx:rmi:///jndi/rmi://0.0.0.0:50500")
+alfresco-jmxpath = /alfresco/jmxrmi
+
+# Set you custom Alfresco JMX query. Leave empty to use the default.
+alfresco-jmxquery = 
+
+# Path to the java binary (java need to be installed on agent host system in case you want to use alfrescostats)
+alfresco-javapath = /usr/bin/java
+
 
 # By default openITCOCKPIT will pull check results from the openITCOCKPIT Agent.
 # In a Cloud environments or behind a NAT network it could become handy
