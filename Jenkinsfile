@@ -48,7 +48,7 @@ pipeline {
                 SSH_KEY = credentials('JENKINS_SSH_KEY')
                 VERSION = """${sh(
                     returnStdout: true,
-                    script: 'cat version | xargs | tr -d \'\\n\''
+                    script: 'cat version | xargs | tr -d \'\n\''
                 )}"""
             }
             steps {
@@ -79,7 +79,7 @@ pipeline {
                 SSH_KEY = credentials('JENKINS_SSH_KEY')
                 VERSION = """${sh(
                     returnStdout: true,
-                    script: 'cat version | xargs | tr -d \'\\n\''
+                    script: 'cat version | xargs | tr -d \'\n\''
                 )}"""
             }
             steps {
@@ -112,7 +112,7 @@ pipeline {
                 SSH_KEY = credentials('JENKINS_SSH_KEY')
                 VERSION = """${sh(
                     returnStdout: true,
-                    script: 'cat version | xargs | tr -d \'\\n\''
+                    script: 'cat version | xargs | tr -d \'\n\''
                 )}"""
             }
             steps {
