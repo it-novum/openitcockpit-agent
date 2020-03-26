@@ -46,6 +46,10 @@ pipeline {
             }
             environment {
                 SSH_KEY = credentials('JENKINS_SSH_KEY')
+                VERSION = """${sh(
+                    returnStdout: true,
+                    script: 'cat version | xargs | sed -e \'s/^[ \t]*//\''
+                )}"""
             }
             steps {
                 script {
@@ -75,7 +79,7 @@ pipeline {
                 SSH_KEY = credentials('JENKINS_SSH_KEY')
                 VERSION = """${sh(
                     returnStdout: true,
-                    script: 'cat version | xargs'
+                    script: 'cat version | xargs | sed -e \'s/^[ \t]*//\''
                 )}"""
             }
             steps {
@@ -106,6 +110,10 @@ pipeline {
             }
             environment {
                 SSH_KEY = credentials('JENKINS_SSH_KEY')
+                VERSION = """${sh(
+                    returnStdout: true,
+                    script: 'cat version | xargs | sed -e \'s/^[ \t]*//\''
+                )}"""
             }
             steps {
                 script {
