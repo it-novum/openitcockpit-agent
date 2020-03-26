@@ -73,6 +73,10 @@ pipeline {
             }
             environment {
                 SSH_KEY = credentials('JENKINS_SSH_KEY')
+                VERSION = """${sh(
+                    returnStdout: true,
+                    script: 'cat version | xargs'
+                )}"""
             }
             steps {
                 sh 'scp -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -i $SSH_KEY -r ./ kress@172.16.166.223:openitcockpit-agent'
@@ -82,6 +86,7 @@ pipeline {
                 sh 'mkdir -p ./release'
                 sh 'scp -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -i $SSH_KEY kress@172.16.166.223:openitcockpit-agent/msi/openitcockpit-agent.msi ./release'
                 sh 'ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -i $SSH_KEY kress@172.16.166.223 powershell "rm -r -fo openitcockpit-agent"'
+                sh 'mv release/openitcockpit-agent.msi release/openitcockpit-agent-${VERSION}.msi'
                 archiveArtifacts artifacts: 'release/openitcockpit-agent.msi', fingerprint: true
                 script {
                     stash includes: 'release/**', name: 'windowsrelease'
