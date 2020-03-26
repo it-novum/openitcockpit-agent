@@ -12,7 +12,7 @@ if [ -f /usr/bin/openitcockpit-agent-python3.linux.bin ]; then
 
     set +e
     if [ -x "$(command -v systemctl)" ]; then
-        /bin/systemctl -a | grep openitcockpit-agent
+        /bin/systemctl -a | grep openitcockpit-agent >/dev/null
         RC=$?
         if [ "$RC" -eq 0 ]; then
             /bin/systemctl stop openitcockpit-agent
@@ -45,7 +45,7 @@ if [ -f /Applications/openitcockpit-agent/openitcockpit-agent-python3.macos.bin 
     touch /Applications/openitcockpit-agent/tmp_runrm
 
     set +e
-    /bin/launchctl list | grep com.it-novum.openitcockpit.agent
+    /bin/launchctl list | grep com.it-novum.openitcockpit.agent >/dev/null
     RC=$?
     if [ "$RC" -eq 0 ]; then
         /bin/launchctl stop com.it-novum.openitcockpit.agent
