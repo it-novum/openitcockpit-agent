@@ -10,10 +10,16 @@ set -u
 if [ -f /usr/bin/openitcockpit-agent-python3.linux.bin ]; then
 
     if [ -x "$(command -v systemctl)" ]; then
-        systemctl stop openitcockpit-agent
+        systemctl is-active --quiet openitcockpit-agent
+        if [ $? = 0 ]; then
+            systemctl stop openitcockpit-agent
+        fi
         systemctl disable openitcockpit-agent
     else
-        invoke-rc.d openitcockpit-agent stop
+        ps auxw | grep -P '/usr/bin/openitcockpit-agent-python3.linux.bin' | grep -v grep >/dev/null
+        if [ $? = 0 ]; then
+            invoke-rc.d openitcockpit-agent stop
+        fi
         update-rc.d -f openitcockpit-agent remove
     fi
 
