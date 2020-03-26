@@ -91,7 +91,7 @@ pipeline {
                 sh 'mkdir -p ./release'
                 sh 'scp -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -i $SSH_KEY kress@172.16.166.223:openitcockpit-agent/msi/openitcockpit-agent-${VERSION}.msi ./release'
                 sh 'ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -i $SSH_KEY kress@172.16.166.223 powershell "rm -r -fo openitcockpit-agent"'
-                archiveArtifacts artifacts: 'release/openitcockpit-agent-${VERSION}.msi', fingerprint: true
+                archiveArtifacts artifacts: 'release/**', fingerprint: true
                 script {
                     stash includes: 'release/**', name: 'windowsrelease'
                 }
