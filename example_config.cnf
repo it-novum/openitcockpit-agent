@@ -88,6 +88,9 @@ diskio = true
 # Enable default windows services status check
 winservices = true
 
+# Enable default systemd services status check
+systemdservices = true
+
 # If you have an Alfresco enterprise instance, JMX is configured and java installed, you can enable alfrescostats
 alfrescostats = false
 

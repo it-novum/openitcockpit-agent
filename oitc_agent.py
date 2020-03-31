@@ -140,6 +140,8 @@ cached_check_data = {}
 cached_customchecks_check_data = {}
 docker_stats_data = {}
 qemu_stats_data = {}
+alfresco_stats_data = {}
+systemd_services_data = {}
 cached_diskIO = {}
 cached_netIO = {}
 configpath = ""
@@ -195,6 +197,7 @@ sample_config = """
   netio = true
   diskio = true
   winservices = true
+  systemdservices = true
   
   alfrescostats = false
   alfresco-jmxuser = monitorRole
@@ -245,6 +248,8 @@ def reset_global_options():
     globals()['cached_customchecks_check_data'] = {}
     globals()['docker_stats_data'] = {}
     globals()['qemu_stats_data'] = {}
+    globals()['alfresco_stats_data'] = {}
+    globals()['systemd_services_data'] = {}
     globals()['configpath'] = ""
     globals()['verbose'] = False
     globals()['stacktrace'] = False
@@ -636,6 +641,7 @@ def run_default_checks():
         print_verbose_without_lock("Could not get users, connected to the system!", True)
         if stacktrace:
             traceback.print_exc()
+        
 
     #processes = [ psutil.Process(pid).as_dict() for pid in pids ]
     windows_services = []
@@ -826,40 +832,6 @@ def run_default_checks():
             print_verbose_without_lock("An error occured during process check!", True)
             if stacktrace:
                 traceback.print_exc()
-                
-    alfrescostats = []
-    if jmx_import_successfull and 'alfrescostats' in config['default'] and config['default']['alfrescostats'] in (1, "1", "true", "True", True):
-        if file_readable(config['default']['alfresco-javapath']):
-            try:
-                uri = ("%s:%s%s" % (config['default']['alfresco-jmxaddress'], config['default']['alfresco-jmxport'], config['default']['alfresco-jmxpath']))
-                alfresco_jmxConnection = JMXConnection("service:jmx:rmi:///jndi/rmi://" + uri, config['default']['alfresco-jmxuser'], config['default']['alfresco-jmxpassword'], config['default']['alfresco-javapath'])
-                alfresco_jmxQueryString = "java.lang:type=Memory/HeapMemoryUsage/used;java.lang:type=OperatingSystem/SystemLoadAverage;java.lang:type=Threading/ThreadCount;Alfresco:Name=Runtime/TotalMemory;Alfresco:Name=Runtime/FreeMemory;Alfresco:Name=Runtime/MaxMemory;Alfresco:Name=WorkflowInformation/NumberOfActivitiWorkflowInstances;Alfresco:Name=WorkflowInformation/NumberOfActivitiTaskInstances;Alfresco:Name=Authority/NumberOfGroups;Alfresco:Name=Authority/NumberOfUsers;Alfresco:Name=RepoServerMgmt/UserCountNonExpired;Alfresco:Name=ConnectionPool/NumActive;Alfresco:Name=License/RemainingDays;Alfresco:Name=License/CurrentUsers;Alfresco:Name=License/MaxUsers"
-                
-                if 'alfresco-jmxquery' in config and config['default']['alfresco-jmxquery'] is not "":
-                    print("customquerx")
-                    alfresco_jmxQueryString = config['default']['alfresco-jmxquery']
-                
-                alfresco_jmxQuery = [JMXQuery(alfresco_jmxQueryString)]
-                alfresco_metrics = alfresco_jmxConnection.query(alfresco_jmxQuery)
-                
-                for metric in alfresco_metrics:
-                    alfrescostats.append({
-                        'name': metric.to_query_string(),
-                        'value': str(metric.value),
-                        'value_type': str(metric.value_type)
-                    })
-                
-            except subprocess.CalledProcessError as e:
-                print_verbose_without_lock("An error occured during alfresco stats check while connecting to jmx!", True)
-                if stacktrace:
-                    traceback.print_exc()
-            except:
-                print_verbose_without_lock("An error occured during alfresco stats check!", True)
-                if stacktrace:
-                    traceback.print_exc()
-            
-        else:
-            alfrescostats = 'JAVA instance not found! (' + config['default']['alfresco-javapath'] + ')';
     
     if system is 'windows' and config['default']['winservices'] in (1, "1", "true", "True"):
         for win_process in psutil.win_service_iter():
@@ -936,6 +908,9 @@ def run_default_checks():
     if system is 'windows' and config['default']['winservices'] in (1, "1", "true", "True"):
         out['windows_services'] = windows_services
         
+    if len(systemd_services_data) > 0:
+        out['systemd_services'] = systemd_services_data
+        
     if len(cached_customchecks_check_data) > 0:
         out['customchecks'] = cached_customchecks_check_data
         
@@ -945,8 +920,11 @@ def run_default_checks():
     if len(qemu_stats_data) > 0:
         out['qemustats'] = qemu_stats_data
         
-    if jmx_import_successfull and 'alfrescostats' in config['default'] and config['default']['alfrescostats'] in (1, "1", "true", "True", True):
-        out['alfrescostats'] = alfrescostats
+    if 'result' in alfresco_stats_data and config['default']['alfrescostats'] in (1, "1", "true", "True"):
+        out['alfrescostats'] = alfresco_stats_data['result']
+        
+    #if jmx_import_successfull and 'alfrescostats' in config['default'] and config['default']['alfrescostats'] in (1, "1", "true", "True", True):
+    #    out['alfrescostats'] = alfrescostats
     
     if verbose:
         print_lock.release()
@@ -1138,6 +1116,11 @@ def check_update_data(data):
                         newconfig['default']['winservices'] = "true"
                     else:
                         newconfig['default']['winservices'] = "false"
+                if 'systemdservices' in jdata[key]:
+                    if jdata[key]['systemdservices'] in (1, "1", "true", "True"):
+                        newconfig['default']['systemdservices'] = "true"
+                    else:
+                        newconfig['default']['systemdservices'] = "false"
                 
                 if 'alfrescostats' in jdata[key]:
                     if jdata[key]['alfrescostats'] in (1, "1", "true", "True"):
@@ -1382,6 +1365,153 @@ class AgentWebserver(BaseHTTPRequestHandler):
             print("%s - - [%s] %s" % (self.address_string(),self.log_date_time_string(),format%args))
         return
 
+def check_systemd_services(timeout):
+    """Function that starts as a thread to run the systemd services check
+    
+    Linux only! (beta)
+    
+    Function that runs a (systemctl) command (as python subprocess) to get a status result for each registered systemd service.
+
+    Parameters
+    ----------
+    timeout
+        Command timeout in seconds
+
+    """
+    global systemd_services_data
+    global cached_check_data
+    
+    if verbose:
+        print('Start systemd services check with timeout of %ss at %s' % (str(timeout), str(round(time.time()))))
+    
+    systemd_services_data['running'] = "true"
+    
+    systemd_services = []
+    if system is 'linux' and config['default']['systemdservices'] in (1, "1", "true", "True"):
+        systemd_stats_command = "systemctl list-units --type=service --all --no-legend --no-pager --no-ask-password"
+        try:
+            tmp_systemd_stats_result = ''
+            p = subprocess.Popen(systemd_stats_command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+            
+            try:
+                stdout, stderr = p.communicate(timeout=3)
+                p.poll()
+                if stdout:
+                    tmp_systemd_stats_result = tmp_systemd_stats_result + stdout.decode()
+                if stderr:
+                    stderr = stderr.decode()
+
+                systemd_services_data['error'] = None if str(stderr) == 'None' else str(stderr)
+                systemd_services_data['returncode'] = p.returncode
+            except subprocess.TimeoutExpired:
+                print_verbose('systemd status check timed out', False)
+                p.kill()    #not needed; just to be sure
+                systemd_services_data['result'] = None
+                systemd_services_data['error'] = 'systemd status check timeout after 3 seconds'
+                systemd_services_data['returncode'] = 124
+        
+            if tmp_systemd_stats_result != '' and systemd_services_data['returncode'] is 0:
+                results = tmp_systemd_stats_result.split('\n')
+                for result in results:
+                    if result.strip() is not "":
+                        try:
+                            result_array_unsorted = result.strip().split(' ')
+                            result_array_tmp = []
+                            result_array = []
+                            for i in range(len(result_array_unsorted)):
+                                if str(result_array_unsorted[i]) is not "":
+                                    result_array_tmp.append(result_array_unsorted[i])
+                                
+                            for i in range(4):
+                                result_array.append(result_array_tmp[0])
+                                del result_array_tmp[0]
+                                
+                            service_description = ''
+                            for i in range(len(result_array_tmp)):
+                                service_description = service_description + result_array_tmp[i] + ' '
+                            
+                            tmp_dict = {}
+                            tmp_dict['unit'] = result_array[0]
+                            tmp_dict['load'] = result_array[1]
+                            tmp_dict['active'] = result_array[2]
+                            tmp_dict['sub'] = result_array[3]
+                            tmp_dict['desc'] = service_description.strip()
+                            systemd_services.append(tmp_dict)
+                        except:
+                            print_verbose("An error occured while processing the systemd check output!", True)
+                            if stacktrace:
+                                traceback.print_exc()
+                
+                systemd_services_data['result'] = systemd_services
+                systemd_services_data['last_updated_timestamp'] = round(time.time())
+                systemd_services_data['last_updated'] = time.ctime()
+            
+        except:
+            print_verbose('An error occured while running the systemd status check!', True)
+            if stacktrace:
+                traceback.print_exc()
+    
+    del systemd_services_data['running']
+    if len(systemd_services_data) > 0:
+        cached_check_data['systemd_services'] = systemd_services_data
+    print_verbose('Systemd services check finished', False)
+    
+def check_alfresco_stats():
+    """Function that starts as a thread to run the alfresco stats check
+        
+    Function that a jmx query to get a status result for a configured alfresco enterprise instance.
+
+    """
+    global alfresco_stats_data
+    global cached_check_data
+    
+    if verbose:
+        print('Start alfresco stats check at %s' % (str(round(time.time()))))
+    
+    alfresco_stats_data['running'] = "true"
+    
+    
+    alfrescostats = []
+    if jmx_import_successfull and 'alfrescostats' in config['default'] and config['default']['alfrescostats'] in (1, "1", "true", "True", True):
+        if file_readable(config['default']['alfresco-javapath']):
+            try:
+                uri = ("%s:%s%s" % (config['default']['alfresco-jmxaddress'], config['default']['alfresco-jmxport'], config['default']['alfresco-jmxpath']))
+                alfresco_jmxConnection = JMXConnection("service:jmx:rmi:///jndi/rmi://" + uri, config['default']['alfresco-jmxuser'], config['default']['alfresco-jmxpassword'], config['default']['alfresco-javapath'])
+                alfresco_jmxQueryString = "java.lang:type=Memory/HeapMemoryUsage/used;java.lang:type=OperatingSystem/SystemLoadAverage;java.lang:type=Threading/ThreadCount;Alfresco:Name=Runtime/TotalMemory;Alfresco:Name=Runtime/FreeMemory;Alfresco:Name=Runtime/MaxMemory;Alfresco:Name=WorkflowInformation/NumberOfActivitiWorkflowInstances;Alfresco:Name=WorkflowInformation/NumberOfActivitiTaskInstances;Alfresco:Name=Authority/NumberOfGroups;Alfresco:Name=Authority/NumberOfUsers;Alfresco:Name=RepoServerMgmt/UserCountNonExpired;Alfresco:Name=ConnectionPool/NumActive;Alfresco:Name=License/RemainingDays;Alfresco:Name=License/CurrentUsers;Alfresco:Name=License/MaxUsers"
+                
+                if 'alfresco-jmxquery' in config and config['default']['alfresco-jmxquery'] is not "":
+                    print("customquerx")
+                    alfresco_jmxQueryString = config['default']['alfresco-jmxquery']
+                
+                alfresco_jmxQuery = [JMXQuery(alfresco_jmxQueryString)]
+                alfresco_metrics = alfresco_jmxConnection.query(alfresco_jmxQuery)
+                
+                for metric in alfresco_metrics:
+                    alfrescostats.append({
+                        'name': metric.to_query_string(),
+                        'value': str(metric.value),
+                        'value_type': str(metric.value_type)
+                    })
+                
+            except subprocess.CalledProcessError as e:
+                alfrescostats = "An error occured during alfresco stats check while connecting to jmx!"
+                print_verbose(alfrescostats, True)
+                if stacktrace:
+                    traceback.print_exc()
+            except:
+                alfrescostats = "An error occured during alfresco stats check!"
+                print_verbose(alfrescostats, True)
+                if stacktrace:
+                    traceback.print_exc()
+            
+        else:
+            alfrescostats = 'JAVA instance not found! (' + config['default']['alfresco-javapath'] + ')';
+    
+    alfresco_stats_data['result'] = alfrescostats
+    cached_check_data['alfrescostats'] = alfrescostats
+    print_verbose('Alfresco stats check finished', False)
+    del alfresco_stats_data['running']
+
 def check_qemu_stats(timeout):
     """Function that starts as a thread to run the qemu status check
     
@@ -1396,6 +1526,7 @@ def check_qemu_stats(timeout):
 
     """
     global qemu_stats_data
+    global cached_check_data
     
     if verbose:
         print('Start qemu status check with timeout of %ss at %s' % (str(timeout), str(round(time.time()))))
@@ -1485,6 +1616,7 @@ def check_docker_stats(timeout):
 
     """
     global docker_stats_data
+    global cached_check_data
     
     if verbose:
         print('Start docker status check with timeout of %ss at %s' % (str(timeout), str(round(time.time()))))
@@ -1630,9 +1762,16 @@ def collect_data_for_cache(check_interval):
                     thread = Thread(target = check_docker_stats, args = (check_interval, ))
                     thread.start()
                     #thread.join()
-                if system is 'linux' and config['default']['qemustats'] in (1, "1", "true", "True") and 'running' not in qemu_stats_data:
-                    thread = Thread(target = check_qemu_stats, args = (check_interval, ))
+                if jmx_import_successfull and 'alfrescostats' in config['default'] and config['default']['alfrescostats'] in (1, "1", "true", "True", True):
+                    thread = Thread(target = check_alfresco_stats)
                     thread.start()
+                if system is 'linux':
+                    if config['default']['qemustats'] in (1, "1", "true", "True") and 'running' not in qemu_stats_data:
+                        thread = Thread(target = check_qemu_stats, args = (check_interval, ))
+                        thread.start()
+                    if config['default']['systemdservices'] in (1, "1", "true", "True") and 'running' not in systemd_services_data:
+                        thread = Thread(target = check_systemd_services, args = (check_interval, ))
+                        thread.start()
                 
                 cached_check_data = run_default_checks()
             except:

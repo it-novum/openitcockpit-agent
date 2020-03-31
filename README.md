@@ -233,6 +233,16 @@ Sample config file (with default script values):
   netio = true
   diskio = true
   winservices = true
+  systemdservices = true
+  
+  alfrescostats = false
+  alfresco-jmxuser = monitorRole
+  alfresco-jmxpassword = change_asap
+  alfresco-jmxaddress = 0.0.0.0
+  alfresco-jmxport = 50500
+  alfresco-jmxpath = /alfresco/jmxrmi
+  alfresco-jmxquery = 
+  alfresco-javapath = /usr/bin/java
 
 [oitc]
   hostuuid = 
