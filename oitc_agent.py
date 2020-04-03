@@ -807,6 +807,9 @@ def run_default_checks():
                 if stacktrace:
                     traceback.print_exc()
 
+            name = name[:1000]
+            exe = exe[:1000]
+            cmdline = cmdline[:1000]
                 
             process = {
                 'name': name,
