@@ -3,7 +3,7 @@
 # Determines in seconds how often the agent will schedule all internal checks
 interval = 30
 
-# Port of the Agents buil-in web server
+# Port of the Agents build-in web server
 port = 3333
 
 # Bind address of the build-in web server
@@ -130,7 +130,7 @@ enabled = false
 hostuuid =
 
 # Address of your openITCOCKPIT Server
-# Example: https://openitcockpit.io/receiver
+# Example: https://openitcockpit.io
 url = 
 
 # API-Key of your openITCOCKPIT Server
