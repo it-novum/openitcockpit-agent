@@ -1,5 +1,5 @@
 <?xml version='1.0' encoding='UTF-8'?>
-<Wix xmlns='http://schemas.microsoft.com/wix/2006/wi'>
+<Wix xmlns='http://schemas.microsoft.com/wix/2006/wi' xmlns:netfx="http://schemas.microsoft.com/wix/NetFxExtension">
 
   <!--
     Many thanks to:
@@ -83,6 +83,9 @@
       <RegistrySearch Id="DetermineInstallLocation" Type="raw" Root="HKLM" Key="Software\!(loc.ManufacturerName)\InstalledProducts\!(loc.ApplicationName)" Name="InstallLocation" />
     </Property>
 
+    <PropertyRef Id="NETFRAMEWORK35"/>
+    <PropertyRef Id="WIX_IS_NETFRAMEWORK_45_OR_LATER_INSTALLED"/>
+
     <Media Id="1" Cabinet="Sample.cab" EmbedCab="yes" />
         
     <Directory Id="TARGETDIR" Name="SourceDir">
@@ -105,11 +108,22 @@
             </Component>
 
             <Component Id="ServiceComp" Guid="CA7377FB-31D3-40F7-9B74-68490D7285DA">
+              <Condition><![CDATA[(NETFRAMEWORK35 AND NOT WIX_IS_NETFRAMEWORK_45_OR_LATER_INSTALLED)]]></Condition>
               <File Id="OitcAgentSvcExe"    Name="OitcAgentSvc.exe" Source="..\executables\OitcAgentSvc.exe" KeyPath="yes"  />
 
               <ServiceInstall Id="ServiceInstaller" Account="LocalSystem" Description="!(loc.ServiceDescription)" DisplayName="oitcAgentSvc" ErrorControl="normal"
                 LoadOrderGroup="NetworkProvider" Name="oitcAgentSvc" Start="auto" Type="ownProcess" Vital="yes" />
               <ServiceControl Id="ServiceControl" Name="oitcAgentSvc" Start="install" Stop="both" Remove="uninstall" Wait="yes" />
+
+            </Component>
+
+            <Component Id="ServiceComp4.5" Guid="6E1EEDCF-EC3E-41F9-9AEF-62D68B7F5E86">
+              <Condition><![CDATA[WIX_IS_NETFRAMEWORK_45_OR_LATER_INSTALLED]]></Condition>
+              <File Id="OitcAgentSvcExe4.5"    Name="OitcAgentSvc_4.5.exe" Source="..\executables\OitcAgentSvc_4.5.exe" KeyPath="yes"  />
+
+              <ServiceInstall Id="ServiceInstaller4.5" Account="LocalSystem" Description="!(loc.ServiceDescription)" DisplayName="oitcAgentSvc" ErrorControl="normal"
+                LoadOrderGroup="NetworkProvider" Name="oitcAgentSvc" Start="auto" Type="ownProcess" Vital="yes" />
+              <ServiceControl Id="ServiceControl4.5" Name="oitcAgentSvc" Start="install" Stop="both" Remove="uninstall" Wait="yes" />
 
             </Component>
 
@@ -136,6 +150,7 @@
       <ComponentRef Id='ExampleConfig' />
 
       <ComponentRef Id='ServiceComp' />
+      <ComponentRef Id='ServiceComp4.5' />
 
       <ComponentRef Id="RegValInstallLocation_comp" />
     </Feature>
