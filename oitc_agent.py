@@ -1,34 +1,8 @@
 #!/usr/bin/python
 
-# supports python2.7 and python3.7
+# supports python2.7 and python3.7 (recommended)
 #
-#
-# start with parameters:    ./oitc_agent.py -i 30 -p 3333 -a 0.0.0.0
-#
-# Download & install python
-#
-# Windows:
-#   Download & install current python version from https://www.python.org/downloads/windows/
-#   open cmd and execute:   python.exe -m pip install configparser pycryptodome pyopenssl requests psutil --user
-#
-# Debian:       
-#       Python3:
-#               apt-get install python3 python3-pip
-#               pip3 install configparser pycryptodome pyopenssl requests psutil
-#       or
-#       Python2:
-#               apt-get install python2
-#               pip install configparser futures subprocess32 requests psutil
-# Ubuntu:
-#       Python 3:
-#               apt-get install python3 python3-pip
-#               pip3 install configparser pycryptodome pyopenssl requests psutil
-#
-# Darwin:
-#               brew install python3
-#               pip3 install configparser pycryptodome pyopenssl requests psutil
-#
-
+# current psutil>=5.5.0,<=5.6.2 limitation due to https://github.com/giampaolo/psutil/issues/1723
 
 
 import sys
@@ -576,7 +550,7 @@ def run_default_checks():
     sensors = {}
     if config['default']['sensorstats'] in (1, "1", "true", "True"):
         try:
-            if hasattr(psutil, "sensors_temperatures"):
+            if hasattr(psutil, "sensors_temperatures") and system != 'windows':
                 sensors['temperatures'] = {}
                 for device,data in psutil.sensors_temperatures(fahrenheit=temperatureIsFahrenheit).items():
                     sensors['temperatures'][device] = []
@@ -590,7 +564,7 @@ def run_default_checks():
                 traceback.print_exc()
         
         try:
-            if hasattr(psutil, "sensors_fans"):
+            if hasattr(psutil, "sensors_fans") and system != 'windows':
                 sensors['fans'] = {}
                 for device,data in psutil.sensors_fans().items():
                     sensors['fans'][device] = []
