@@ -3,6 +3,12 @@
   # but consider: each thread needs (a bit) memory
   max_worker_threads = 8
 
+[check_whoami]
+  command = whoami
+  interval = 60
+  timeout = 5
+  enabled = false
+
 #[check_users]
 #  command = /usr/lib/nagios/plugins/check_users -w 5 -c 10
 #  interval = 30

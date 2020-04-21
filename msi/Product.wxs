@@ -108,6 +108,9 @@
             <Component Id="ExampleConfig" Guid="D2C72D55-FA35-4A53-9EC3-55EEE9FD5A5A" KeyPath="yes">
               <File Id="exampleAgentConfig" Name="config.cnf" Source="..\example_config.cnf" />
             </Component>
+            <Component Id="ExampleCustomchecksConfig" Guid="5A4D7815-3952-4437-8AC0-CF8022704653" KeyPath="yes">
+              <File Id="exampleAgentCustomchecksConfig" Name="customchecks.cnf" Source="..\example_customchecks.cnf" />
+            </Component>
 
             <Component Id="ServiceComp" Guid="CA7377FB-31D3-40F7-9B74-68490D7285DA">
               <Condition><![CDATA[(NETFRAMEWORK35 AND NOT WIX_IS_NETFRAMEWORK_45_OR_LATER_INSTALLED)]]></Condition>
@@ -150,6 +153,7 @@
       <ComponentRef Id='MainExecutable' />
 
       <ComponentRef Id='ExampleConfig' />
+      <ComponentRef Id='ExampleCustomchecksConfig' />
 
       <ComponentRef Id='ServiceComp' />
       <ComponentRef Id='ServiceComp4.5' />
