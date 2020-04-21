@@ -5,7 +5,10 @@ pipeline {
         stage('Build agent linux packages') {
             when {
                 beforeAgent true
-                branch 'master'
+                anyOf{
+                    changeRequest target: 'master'
+                    branch 'master'
+                }
             }
             agent {
                 docker { 
@@ -67,7 +70,10 @@ pipeline {
         stage('Build agent windows packages') {
             when {
                 beforeAgent true
-                branch 'master'
+                anyOf{
+                    changeRequest target: 'master'
+                    branch 'master'
+                }
             }
             agent {
                 docker { 
@@ -133,6 +139,9 @@ pipeline {
                 beforeAgent true
                 not {
                     branch 'master'
+                }
+                not {
+                    changeRequest target: 'master'
                 }
             }
             steps {
