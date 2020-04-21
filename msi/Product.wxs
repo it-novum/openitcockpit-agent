@@ -105,10 +105,10 @@
               </File>
             </Component>
 
-            <Component Id="ExampleConfig" Guid="D2C72D55-FA35-4A53-9EC3-55EEE9FD5A5A" KeyPath="yes">
-              <File Id="exampleAgentConfig" Name="config.cnf" Source="..\example_config.cnf" />
+            <Component Id="ExampleConfig" Guid="D2C72D55-FA35-4A53-9EC3-55EEE9FD5A5A" KeyPath="yes" NeverOverwrite="yes">
+              <File Id="exampleAgentConfig" Name="config.cnf" Source="..\example_config.cnf" Vital="yes" />
             </Component>
-            <Component Id="ExampleCustomchecksConfig" Guid="5A4D7815-3952-4437-8AC0-CF8022704653" KeyPath="yes">
+            <Component Id="ExampleCustomchecksConfig" Guid="5A4D7815-3952-4437-8AC0-CF8022704653" KeyPath="yes" NeverOverwrite="yes">
               <File Id="exampleAgentCustomchecksConfig" Name="customchecks.cnf" Source="..\example_customchecks.cnf" />
             </Component>
 
