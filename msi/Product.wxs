@@ -1,5 +1,5 @@
 <?xml version='1.0' encoding='UTF-8'?>
-<Wix xmlns='http://schemas.microsoft.com/wix/2006/wi' xmlns:netfx="http://schemas.microsoft.com/wix/NetFxExtension">
+<Wix xmlns='http://schemas.microsoft.com/wix/2006/wi' xmlns:netfx="http://schemas.microsoft.com/wix/NetFxExtension" xmlns:fire="http://schemas.microsoft.com/wix/FirewallExtension">
 
   <!--
     Many thanks to:
@@ -100,7 +100,9 @@
             </Component>
 
             <Component Id="MainExecutable" Guid="EDD45F38-6647-4132-818F-D4D4C6F5535F" KeyPath="yes">
-              <File Id="oitcAgentExe"       Name="openitcockpit-agent-python3.exe" Source="..\executables\openitcockpit-agent-python3.exe"/>
+              <File Id="oitcAgentExe"       Name="openitcockpit-agent-python3.exe" Source="..\executables\openitcockpit-agent-python3.exe">
+                <fire:FirewallException Id="FWX1" Name="openITCOCKPIT Agent" Scope="localSubnet"/>
+              </File>
             </Component>
 
             <Component Id="ExampleConfig" Guid="D2C72D55-FA35-4A53-9EC3-55EEE9FD5A5A" KeyPath="yes">
