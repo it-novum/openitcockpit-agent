@@ -31,6 +31,7 @@
     <Property Id="ARPHELPLINK" Value="$(var.InfoURL)" />
     <Property Id="ARPNOREPAIR" Value="yes" Secure="yes" />      <!-- Remove repair -->
     <Property Id="ARPNOMODIFY" Value="yes" Secure="yes" />      <!-- Remove modify -->
+    <Property Id="MYREMOVEINSTALLDIR" Value="1" Secure="yes" />
 
     <!-- Upgrade logic -->
     <!-- AllowSameVersionUpgrades -> Always upgrade, never allow two versions to be installed next to each other -->
@@ -97,6 +98,10 @@
             <Component Id="INSTALLDIR_comp" Guid="EBF690DB-93C8-41E4-A40B-A4CE0DFDA3AD" KeyPath="yes">
               <CreateFolder />
               <!--<RemoveFile Id="RemoveFilesFromAppDirectory" Name="*.*" On="uninstall" />-->
+            </Component>
+
+            <Component Id="RemoveInstalldirFiles" Guid="CC37ACD0-09B1-4DD6-B376-7EB5559E5DB8" KeyPath="yes">
+              <RemoveFile Id="RemoveFilesFromAppDirectory" Name="*.*" On="uninstall" />
             </Component>
 
             <Component Id="MainExecutable" Guid="EDD45F38-6647-4132-818F-D4D4C6F5535F" KeyPath="yes">
@@ -167,6 +172,11 @@
       <ComponentRef Id='ServiceComp4.5' />
 
       <ComponentRef Id="RegValInstallLocation_comp" />
+    </Feature>
+
+    <Feature Id='Cleanup' Level='1'>
+      <ComponentRef Id='RemoveInstalldirFiles' />
+      <Condition Level="0">MYREMOVEINSTALLDIR = 1</Condition>
     </Feature>
 
     
