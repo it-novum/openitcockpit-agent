@@ -172,6 +172,13 @@ You can create a self signed certificate and key file with this command
 openssl req -nodes -new -x509 -keyout server.key -out server.cert
 ```
 
+Create a .p12 file to import as certificate in your web browser (like Firefox) to be able to browse to the encrypted agent webserver
+```
+openssl req -nodes -new -x509 -keyout server.key -out server.cert
+cat server.cert server.key > both.pem
+openssl pkcs12 -export -in both.pem -out both.p12
+```
+
 #### Push mode (send data as post request to a url endpoint)
 
 Add there parameters (all required) to enable transfer of check results to a openITCOCKPIT server:
