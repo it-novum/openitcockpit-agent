@@ -80,24 +80,23 @@ Uninstall using the windows built-in graphical package manager.
 
 ### Windows
 - Download & install latest python version (3.x) from https://www.python.org/downloads/windows/
-- Open cmd and install dependencies: ```python.exe -m pip install psutil configparser pycryptodome pyopenssl```
+- Open cmd and install dependencies: ```python.exe -m pip install -r requirements.txt servicemanager pywin32```
 
 ### macOS (Darwin)
 - Open console and install latest python version (3.x): ```brew install python3```
-- Install dependencies: ```pip3 install psutil configparser pycryptodome pyopenssl```
+- Install dependencies: ```pip3 install -r requirements.txt```
 
 ### Linux (Debian / Ubuntu)
 - glibc >= 2.28
 
 #### python3
-- Install latest python version (3.x) and psutil >= 5.5.0: ```apt-get install python3 python3-psutil```
-- Uninstall psutil pip package if version < 5.5.0: ```pip3 uninstall psutil```
-- Install configparser dependency: ```pip3 install configparser pycryptodome pyopenssl```
+- Install latest python version (3.x) and psutil >= 5.5.0: ```apt-get install python3```
+- Install dependencies: ```pip3 install -r requirements.txt```
 
 #### python2
 - Install python version (2.x) and psutil: ```apt-get install python python-psutil```
 - Uninstall psutil pip package to use the newer apt package version: ```pip uninstall psutil```
-- Install dependencies: ```pip install configparser futures subprocess32 pycryptodome pyopenssl```
+- Install dependencies: ```pip install -r requirements_python2.txt```
 
 
 ---
