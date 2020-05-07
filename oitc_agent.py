@@ -854,11 +854,11 @@ def run_default_checks():
                     logTypes = ['System', 'Application', 'Security', 'openITCOCKPIT Agent']
 
                 evt_dict={
-                    win32con.EVENTLOG_AUDIT_FAILURE:'EVENTLOG_AUDIT_FAILURE',
-                    win32con.EVENTLOG_AUDIT_SUCCESS:'EVENTLOG_AUDIT_SUCCESS',
-                    win32con.EVENTLOG_INFORMATION_TYPE:'EVENTLOG_INFORMATION_TYPE',
-                    win32con.EVENTLOG_WARNING_TYPE:'EVENTLOG_WARNING_TYPE',
-                    win32con.EVENTLOG_ERROR_TYPE:'EVENTLOG_ERROR_TYPE'
+                    win32con.EVENTLOG_AUDIT_FAILURE:'EVENTLOG_AUDIT_FAILURE',           # 16 -> critical
+                    win32con.EVENTLOG_AUDIT_SUCCESS:'EVENTLOG_AUDIT_SUCCESS',           # 8  -> ok
+                    win32con.EVENTLOG_INFORMATION_TYPE:'EVENTLOG_INFORMATION_TYPE',     # 4  -> ok
+                    win32con.EVENTLOG_WARNING_TYPE:'EVENTLOG_WARNING_TYPE',             # 2  -> warning
+                    win32con.EVENTLOG_ERROR_TYPE:'EVENTLOG_ERROR_TYPE'                  # 1  -> critical
                 }
 
                 for logType in logTypes:
