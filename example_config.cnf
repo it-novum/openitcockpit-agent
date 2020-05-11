@@ -91,6 +91,12 @@ winservices = true
 # Enable default systemd services status check
 systemdservices = true
 
+# Enable default windows event log check
+wineventlog = true
+
+# Define comma separated windows event log log types
+wineventlog-logtypes = System, Application, Security, openITCOCKPIT Agent
+
 # If you have an Alfresco enterprise instance, JMX is configured and java installed, you can enable alfrescostats
 alfrescostats = false
 

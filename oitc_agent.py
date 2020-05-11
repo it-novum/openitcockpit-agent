@@ -36,6 +36,10 @@ jmx_import_successfull = False
 
 if sys.platform == 'win32' or sys.platform == 'win64':
     system = 'windows'
+    import win32evtlog
+    import win32evtlogutil
+    import win32con
+    import win32security # To translate NT Sids to account names.
 if sys.platform == 'darwin' or (system == 'linux' and 'linux' not in sys.platform):
     system = 'darwin'
 
@@ -105,7 +109,7 @@ except:
     else:
         print('If you want to use the alfresco stats check try: pip install jmxquery')
 
-agentVersion = "1.0.1"
+agentVersion = "1.0.2"
 days_until_cert_warning = 120
 days_until_ca_warning = 30
 enableSSL = False
@@ -172,6 +176,8 @@ sample_config = """
   diskio = true
   winservices = true
   systemdservices = true
+  wineventlog = true
+  wineventlog-logtypes = System, Application, Security, openITCOCKPIT Agent
   
   alfrescostats = false
   alfresco-jmxuser = monitorRole
@@ -634,7 +640,6 @@ def run_default_checks():
         
 
     #processes = [ psutil.Process(pid).as_dict() for pid in pids ]
-    windows_services = []
     processes = []
     customchecks = {}
     
@@ -825,11 +830,81 @@ def run_default_checks():
             print_verbose_without_lock("An error occured during process check!", True)
             if stacktrace:
                 traceback.print_exc()
-    
-    if system is 'windows' and config['default']['winservices'] in (1, "1", "true", "True"):
-        for win_process in psutil.win_service_iter():
-            windows_services.append(win_process.as_dict())
-            
+
+    windows_services = []
+    windows_eventlog = {}
+    if system is 'windows':
+        if config['default']['winservices'] in (1, "1", "true", "True"):
+            try:
+                for win_process in psutil.win_service_iter():
+                    windows_services.append(win_process.as_dict())
+            except:
+                print_verbose_without_lock("An error occured during windows services check!", True)
+                if stacktrace:
+                    traceback.print_exc()
+        if config['default']['wineventlog'] in (1, "1", "true", "True"):
+            try:
+                server = 'localhost'    # name of the target computer to get event logs
+                logTypes = []
+                if config['default']['wineventlog-logtypes'] != "":
+                    for logtype in config['default']['wineventlog-logtypes'].split(','):
+                        if logtype.strip() != '':
+                            logTypes.append(logtype.strip())
+                else:
+                    logTypes = ['System', 'Application', 'Security', 'openITCOCKPIT Agent']
+
+                evt_dict={
+                    win32con.EVENTLOG_AUDIT_FAILURE:'EVENTLOG_AUDIT_FAILURE',           # 16 -> critical
+                    win32con.EVENTLOG_AUDIT_SUCCESS:'EVENTLOG_AUDIT_SUCCESS',           # 8  -> ok
+                    win32con.EVENTLOG_INFORMATION_TYPE:'EVENTLOG_INFORMATION_TYPE',     # 4  -> ok
+                    win32con.EVENTLOG_WARNING_TYPE:'EVENTLOG_WARNING_TYPE',             # 2  -> warning
+                    win32con.EVENTLOG_ERROR_TYPE:'EVENTLOG_ERROR_TYPE'                  # 1  -> critical
+                }
+
+                for logType in logTypes:
+                    try:
+                        if logType not in windows_eventlog:
+                            windows_eventlog[logType] = []
+                        hand = win32evtlog.OpenEventLog(server,logType)
+                        flags = win32evtlog.EVENTLOG_BACKWARDS_READ|win32evtlog.EVENTLOG_SEQUENTIAL_READ
+                        total = win32evtlog.GetNumberOfEventLogRecords(hand)
+                        events = win32evtlog.ReadEventLog(hand, flags, 0)
+                        if events:
+                            for event in events:
+                                msg = win32evtlogutil.SafeFormatMessage(event, logType)
+                                sidDesc = None
+                                if event.Sid is not None:
+                                    try:
+                                        domain, user, typ = win32security.LookupAccountSid(server, event.Sid)
+                                        sidDesc = "%s/%s" % (domain, user)
+                                    except win32security.error:
+                                        sidDesc = str(event.Sid)
+
+                                evt_type = "unknown"
+                                if event.EventType in evt_dict.keys():
+                                    evt_type = str(evt_dict[event.EventType])
+
+                                tmp_evt = {
+                                    'event_category': event.EventCategory,
+                                    'time_generated': str(event.TimeGenerated),
+                                    'source_name': event.SourceName,
+                                    'associated_user': sidDesc,
+                                    'event_id': event.EventID,
+                                    'event_type': evt_type,
+                                    'event_type_id': event.EventType,
+                                    'event_msg': msg,
+                                    'event_data': [ data for data in event.StringInserts ] if event.StringInserts else ''
+                                }
+                                windows_eventlog[logType].append(tmp_evt)
+                    except:
+                        print_verbose_without_lock("An error occured during windows eventlog check with log type %s!" % (logType), True)
+                        if stacktrace:
+                            traceback.print_exc()
+            except:
+                print_verbose_without_lock("An error occured during windows eventlog check!", True)
+                if stacktrace:
+                    traceback.print_exc()
+
     try:
         agent = {
             'last_updated': time.ctime(),
@@ -898,8 +973,11 @@ def run_default_checks():
     if config['default']['processstats'] in (1, "1", "true", "True"):
         out['processes'] = processes
     
-    if system is 'windows' and config['default']['winservices'] in (1, "1", "true", "True"):
-        out['windows_services'] = windows_services
+    if system is 'windows':
+        if config['default']['winservices'] in (1, "1", "true", "True"):
+            out['windows_services'] = windows_services
+        if config['default']['wineventlog'] in (1, "1", "true", "True"):
+            out['windows_eventlog'] = windows_eventlog
         
     if len(systemd_services_data) > 0:
         out['systemd_services'] = systemd_services_data
@@ -1114,6 +1192,13 @@ def check_update_data(data):
                         newconfig['default']['systemdservices'] = "true"
                     else:
                         newconfig['default']['systemdservices'] = "false"
+                if 'wineventlog' in jdata[key]:
+                    if jdata[key]['wineventlog'] in (1, "1", "true", "True"):
+                        newconfig['default']['wineventlog'] = "true"
+                    else:
+                        newconfig['default']['wineventlog'] = "false"
+                if 'wineventlog-logtypes' in jdata[key]:
+                    newconfig['default']['wineventlog-logtypes'] = str(jdata[key]['wineventlog-logtypes'])
                 
                 if 'alfrescostats' in jdata[key]:
                     if jdata[key]['alfrescostats'] in (1, "1", "true", "True"):
