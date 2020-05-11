@@ -62,7 +62,7 @@ pipeline {
                 sh 'rsync -avz -e "ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -i $SSH_KEY" --progress release/* root@172.17.0.1:/tmp/agent'
                 sh 'ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -i $SSH_KEY root@172.17.0.1 "cd /root/openITCOCKPIT-build; ./aptly.sh repo add -force-replace buster-agent-unstable /tmp/agent/openitcockpit-agent_*amd64.deb; ./aptly.sh repo add -force-replace stretch-agent-unstable /tmp/agent/openitcockpit-agent_*amd64.deb; ./aptly.sh repo add -force-replace bionic-agent-unstable /tmp/agent/openitcockpit-agent_*amd64.deb; ./aptly.sh repo add -force-replace xenial-agent-unstable /tmp/agent/openitcockpit-agent_*amd64.deb"'
                 sh 'ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -i $SSH_KEY oitc@172.16.101.32 "mkdir -p /var/www/openitcockpit_io/files/openitcockpit-agent"'
-                sh 'rsync -avz -e "ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -i $SSH_KEY" --progress release/* oitc@172.16.101.32:/var/www/openitcockpit_io/files/openitcockpit-agent'
+                sh 'rsync -avz -e "ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -i $SSH_KEY" --delete --progress release/* oitc@172.16.101.32:/var/www/openitcockpit_io/files/openitcockpit-agent'
                 sh 'ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -i $SSH_KEY root@172.16.101.113 "mkdir -p /var/repositories/openitcockpit-agent/${VERSION}"'
                 sh 'rsync -avu -e "ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -i $SSH_KEY" --delete --progress release/* root@172.16.101.113:/var/repositories/openitcockpit-agent/${VERSION}'
             }
