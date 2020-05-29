@@ -10,6 +10,10 @@ Monitoring agent for openITCOCKPIT
 
 ---
 
+Customer documentation: [https://docs.it-novum.com/display/ODE/openITCOCKPIT+Agent](https://docs.it-novum.com/display/ODE/openITCOCKPIT+Agent)
+
+---
+
 ## Installation
 
 ## Productive installation
