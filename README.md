@@ -398,6 +398,22 @@ sudo chmod +x ./executables/openitcockpit-agent-python3.run
 sudo rm -rf python3-linux-env
 ```
 
+### Python 3 - Linux ARM64 on Debian 9
+
+```
+apt-get install python3-pip python3-venv build-essential libssl-dev libffi-dev python-dev zlib1g-dev
+python3 -m venv ./python3-linux-env
+
+source ./python3-linux-env/bin/activate
+./python3-linux-env/bin/pip install wheel
+./python3-linux-env/bin/pip install -r requirements.txt cryptography
+sudo ./python3-linux-env/bin/python3 ./python3-linux-env/bin/pyinstaller oitc_agent.py --onefile
+deactivate
+sudo mv ./dist/oitc_agent ./executables/openitcockpit-agent-python3-arm64.run
+sudo rm -r ./dist ./build ./__pycache__ oitc_agent.spec
+sudo chmod +x ./executables/openitcockpit-agent-python3-arm64.run
+```
+
 ### Python 2.7 - Linux
 
 #### Create python virtual environment
