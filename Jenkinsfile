@@ -18,7 +18,7 @@ pipeline {
             }
             steps {
                 sh 'yum -y install python36-devel python36-pip libffi-devel gcc glibc ruby-devel make rpm-build rubygems rpm bsdtar'
-                sh 'gem install --no-ri --no-rdoc fpm'
+                sh 'gem install --no-document fpm'
                 sh 'mkdir -p ./public/{packages,binaries}'
                 sh 'mkdir -p ./release'
                 
