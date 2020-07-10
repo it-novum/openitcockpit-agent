@@ -1234,7 +1234,8 @@ def check_update_data(data):
                     newconfig['default']['alfresco-javapath'] = str(jdata[key]['alfresco-javapath'])
                 
                 if 'customchecks' in jdata[key]:
-                    newconfig['default']['customchecks'] = str(jdata[key]['customchecks'])
+                    if jdata[key]['customchecks'] not in (1, "1", "true", "True", 0, "0", "false", "False"):
+                        newconfig['default']['customchecks'] = str(jdata[key]['customchecks'])
                 if 'temperature-fahrenheit' in jdata[key]:
                     if jdata[key]['temperature-fahrenheit'] in (1, "1", "true", "True"):
                         newconfig['default']['temperature-fahrenheit'] = "true"
