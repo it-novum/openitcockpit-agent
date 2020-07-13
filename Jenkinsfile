@@ -18,7 +18,7 @@ pipeline {
             }
             steps {
                 sh 'yum -y install python36-devel python36-pip libffi-devel gcc glibc ruby-devel make rpm-build rubygems rpm bsdtar'
-                sh 'gem install --no-ri --no-rdoc fpm'
+                sh '/bin/bash -c "source /etc/profile.d/rvm.sh && rvm use 2.7 --default && gem install --no-document fpm"'
                 sh 'mkdir -p ./public/{packages,binaries}'
                 sh 'mkdir -p ./release'
                 
@@ -28,7 +28,7 @@ pipeline {
                 sh 'mv ./dist/oitc_agent ./public/binaries/openitcockpit-agent-python3.linux.bin'
                 sh 'chmod +x ./public/binaries/openitcockpit-agent-python3.linux.bin'
                 sh '/bin/cp -f ./public/binaries/openitcockpit-agent-python3.linux.bin executables'
-                sh './packages/scripts/build_linux_ci.sh'
+                sh '/bin/bash -c "source /etc/profile.d/rvm.sh && rvm use 2.7 --default && ./packages/scripts/build_linux_ci.sh"'
                 sh 'mv openitcockpit-agent*.{deb,rpm,pkg.tar.xz} ./release'
                 archiveArtifacts artifacts: 'release/**', fingerprint: true
                 script {
