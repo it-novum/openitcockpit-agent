@@ -22,7 +22,7 @@ Require glibc >= 2.17
 
 Supported & tested systems:
 - macOS 10.12 (Sierra), 10.13 (High Sierra), 10.14 (Mojave)
-- Ubuntu 14, 16, 18
+- Ubuntu 14, 16, 18, 20
 - Debian 8, 9, 10
 - openSUSE Leap 42.3
 - centOS 7
