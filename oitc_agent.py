@@ -122,7 +122,7 @@ except:
     else:
         print('If you want to use the alfresco stats check try: pip install jmxquery')
 
-agentVersion = "1.0.3"
+agentVersion = "1.0.4"
 days_until_cert_warning = 120
 days_until_ca_warning = 30
 enableSSL = False
@@ -458,7 +458,7 @@ def run_default_checks():
                 disks.append(dict(
                     disk = disk._asdict(),
                     usage = psutil.disk_usage(disk.mountpoint)._asdict()
-                ))
+                    ))
         except:
             print_verbose_without_lock("Could not get system disks!", True)
             if stacktrace:
