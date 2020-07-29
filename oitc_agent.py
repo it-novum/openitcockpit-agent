@@ -448,10 +448,17 @@ def run_default_checks():
         # DISKS #
         disks = []
         try:
-            disks = [dict(
-                disk = disk._asdict(),
-                usage = psutil.disk_usage(disk.mountpoint)._asdict()
-                ) for disk in psutil.disk_partitions() ]
+            for disk in psutil.disk_partitions():
+                if os.name == 'nt':
+                    if 'cdrom' in disk.opts or disk.fstype == '':
+                        # skip cd-rom drives with no disk in it; they may raise
+                        # ENOENT, pop-up a Windows GUI error for a non-ready
+                        # partition or just hang.
+                        continue
+                disks.append(dict(
+                    disk = disk._asdict(),
+                    usage = psutil.disk_usage(disk.mountpoint)._asdict()
+                ))
         except:
             print_verbose_without_lock("Could not get system disks!", True)
             if stacktrace:
