@@ -46,6 +46,7 @@ pipeline {
                 docker { 
                     image 'srvitsmdrone01.master.dns:5000/alpine-rsync'
                     registryUrl 'http://srvitsmdrone01.master.dns:5000'
+                    args '-u root --privileged'
                 }
             }
             environment {
@@ -82,6 +83,7 @@ pipeline {
                 docker { 
                     image 'srvitsmdrone01.master.dns:5000/alpine-rsync'
                     registryUrl 'http://srvitsmdrone01.master.dns:5000'
+                    args '-u root --privileged'
                 }
             }
             environment {
@@ -118,6 +120,7 @@ pipeline {
                 docker { 
                     image 'srvitsmdrone01.master.dns:5000/alpine-rsync'
                     registryUrl 'http://srvitsmdrone01.master.dns:5000'
+                    args '-u root --privileged'
                 }
             }
             environment {
