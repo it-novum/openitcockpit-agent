@@ -14,6 +14,7 @@ pipeline {
                 docker { 
                     image 'srvitsmdrone01.master.dns:5000/openitcockpit-agent-centos7:latest'
                     registryUrl 'http://srvitsmdrone01.master.dns:5000'
+                    args '-u root --privileged'
                 }
             }
             steps {
