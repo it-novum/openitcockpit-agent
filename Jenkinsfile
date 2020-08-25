@@ -31,7 +31,7 @@ pipeline {
                 sh '/bin/cp -f ./public/binaries/openitcockpit-agent-python3.linux.bin executables'
                 sh '/bin/bash -c "source /etc/profile.d/rvm.sh && rvm use 2.7 --default && ./packages/scripts/build_linux_ci.sh"'
                 sh 'mv openitcockpit-agent*.{deb,rpm,pkg.tar.xz} ./release'
-                sh 'chown 111:116 * -R'
+                sh 'chown 111:116 . -R'
                 archiveArtifacts artifacts: 'release/**', fingerprint: true
                 script {
                     stash includes: 'release/**', name: 'release'
