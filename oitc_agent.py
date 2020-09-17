@@ -43,18 +43,26 @@ from time import sleep
 from contextlib import contextmanager
 from OpenSSL.SSL import FILETYPE_PEM
 from OpenSSL.crypto import (dump_certificate_request, dump_privatekey, load_certificate, PKey, TYPE_RSA, X509Req)
+from logging.handlers import RotatingFileHandler
 
 isPython3 = False
 system = 'linux'
 jmx_import_successfull = False
 
-logging.basicConfig(filename='agent.log', 
-level=logging.DEBUG, 
-format='%(asctime)s.%(msecs)03d;%(levelname)s;%(message)s', 
-datefmt='%d/%m/%Y %I:%M:%S'
-)
 
-logging.info('Agent started')
+log_formatter = logging.Formatter('%(asctime)s.%(msecs)03d;%(levelname)s;%(message)s')
+logfile = 'agent.log'
+
+logfile_handler = RotatingFileHandler(logfile, mode='a', maxBytes=10*1024*1024, backupCount=2, encoding=None, delay=0)
+logfile_handler.setFormatter(log_formatter)
+logfile_handler.setLevel(logging.DEBUG)
+
+agent_log = logging.getLogger('root')
+agent_log.setLevel(logging.DEBUG)
+
+agent_log.addHandler(logfile_handler)
+
+agent_log.info('Agent started')
 
 if sys.platform == 'win32' or sys.platform == 'win64':
     system = 'windows'
@@ -90,7 +98,7 @@ else:
     print('# Update your system to Python 3!                       #')
     print('#########################################################')
     print('')
-    logging.warning('Python 2 is End Of Life and will not be maintained past  January 1, 2020! Update your system to Python 3!')
+    agent_log.warning('Python 2 is End Of Life and will not be maintained past  January 1, 2020! Update your system to Python 3!')
     
     import subprocess32 as subprocess
     
@@ -109,7 +117,7 @@ try:
     import psutil
     if isPython3 and psutil.version_info < (5, 5, 0):
         print('psutil >= 5.5.0 required!')
-        logging.error('psutil >= 5.5.0 required!')
+        agent_log.error('psutil >= 5.5.0 required!')
         raise ImportError('psutil version too old!')
         
 except ImportError:
@@ -128,13 +136,13 @@ try:
     jmx_import_successfull = True
 except:
     print('jmxquery not found!')
-    logging.info('jmxquery not found!')
+    agent_log.info('jmxquery not found!')
     if isPython3:
         print('If you want to use the alfresco stats check try: pip3 install jmxquery')
-        logging.info('If you want to use the alfresco stats check try: pip3 install jmxquery')
+        agent_log.info('If you want to use the alfresco stats check try: pip3 install jmxquery')
     else:
         print('If you want to use the alfresco stats check try: pip install jmxquery')
-        logging.info('If you want to use the alfresco stats check try: pip install jmxquery')
+        agent_log.info('If you want to use the alfresco stats check try: pip install jmxquery')
 
 agentVersion = "1.0.4"
 days_until_cert_warning = 120
@@ -290,10 +298,10 @@ def print_verbose(msg, more_on_stacktrace):
     with print_lock:
         if verbose:
             print(msg)
-            logging.info(msg)
+            agent_log.info(msg)
         if not stacktrace and more_on_stacktrace and verbose:
             print("Enable --stacktrace to get more information.")
-            logging.info(msg)
+            agent_log.info(msg)
 def print_verbose_without_lock(msg, more_on_stacktrace):
     """Function to directly print verbose output uniformly
     
@@ -309,10 +317,10 @@ def print_verbose_without_lock(msg, more_on_stacktrace):
     """
     if verbose:
         print(msg)
-        logging.info(msg)
+        agent_log.info(msg)
     if not stacktrace and more_on_stacktrace and verbose:
         print("Enable --stacktrace to get more information.")
-        logging.info(msg)
+        agent_log.info(msg)
 
 def signal_handler(sig, frame):
     """A custom signal handler to stop the agent if it is called"""
@@ -325,7 +333,7 @@ def signal_handler(sig, frame):
     wait_and_check_auto_certificate_thread_stop_requested = True
     if verbose:
         print("... see you ...\n")
-        logging.info("... see you ...")
+        agent_log.info("... see you ...")
     sys.exit(0)
 
 @contextmanager
@@ -482,7 +490,7 @@ def run_default_checks():
             print_verbose_without_lock("Could not get system disks!", True)
             if stacktrace:
                 traceback.print_exc()
-                logging.error(traceback.print_exc())
+                agent_log.error(traceback.print_exc())
     
     diskIO = None
     if hasattr(psutil, "disk_io_counters") and config['default']['diskio'] in (1, "1", "true", "True"):
@@ -536,7 +544,7 @@ def run_default_checks():
             print_verbose_without_lock("Could not get disk io stats!", True)
             if stacktrace:
                 traceback.print_exc()
-                logging.error(traceback.print_exc())
+                agent_log.error(traceback.print_exc())
     
     netIO = None
     if hasattr(psutil, "net_io_counters") and config['default']['netio'] in (1, "1", "true", "True"):
@@ -600,7 +608,7 @@ def run_default_checks():
             print_verbose_without_lock("Could not get network io stats!", True)
             if stacktrace:
                 traceback.print_exc()
-                logging.error(traceback.print_exc())
+                agent_log.error(traceback.print_exc())
     
     net_stats = None
     if hasattr(psutil, "net_if_stats") and config['default']['netstats'] in (1, "1", "true", "True"):
@@ -610,7 +618,7 @@ def run_default_checks():
             print_verbose_without_lock("Could not get network device stats!", True)
             if stacktrace:
                 traceback.print_exc()
-                logging.error(traceback.print_exc())
+                agent_log.error(traceback.print_exc())
 
     sensors = {}
     if config['default']['sensorstats'] in (1, "1", "true", "True"):
@@ -627,7 +635,7 @@ def run_default_checks():
             print_verbose_without_lock("Could not get temperature sensor data!", True)
             if stacktrace:
                 traceback.print_exc()
-                logging.error(traceback.print_exc())
+                agent_log.error(traceback.print_exc())
         
         try:
             if hasattr(psutil, "sensors_fans") and system != 'windows':
@@ -642,7 +650,7 @@ def run_default_checks():
             print_verbose_without_lock("Could not get fans sensor data!", True)
             if stacktrace:
                 traceback.print_exc()
-                logging.error(traceback.print_exc())
+                agent_log.error(traceback.print_exc())
         
         try:
             if hasattr(psutil, "sensors_battery"):
@@ -657,7 +665,7 @@ def run_default_checks():
             print_verbose_without_lock("Could not get battery sensor data!", True)
             if stacktrace:
                 traceback.print_exc()
-                logging.error(traceback.print_exc())
+                agent_log.error(traceback.print_exc())
     
     if hasattr(psutil, "pids"):
         pids = psutil.pids()
@@ -674,7 +682,7 @@ def run_default_checks():
         print_verbose_without_lock("Could not get average system load!", True)
         if stacktrace:
             traceback.print_exc()
-            logging.error(traceback.print_exc())
+            agent_log.error(traceback.print_exc())
             
     users = []
     try:
@@ -684,7 +692,7 @@ def run_default_checks():
         print_verbose_without_lock("Could not get users, connected to the system!", True)
         if stacktrace:
             traceback.print_exc()
-            logging.error(traceback.print_exc())
+            agent_log.error(traceback.print_exc())
         
 
     #processes = [ psutil.Process(pid).as_dict() for pid in pids ]
@@ -709,7 +717,7 @@ def run_default_checks():
                     print_verbose_without_lock("'%s' Process is not allowing us to get the CPU usage!" % (name if name != "" else str(pid)), True)
                     if stacktrace:
                         traceback.print_exc()
-                        logging.error(traceback.print_exc())
+                        agent_log.error(traceback.print_exc())
             
             except psutil.NoSuchProcess:
                 continue
@@ -717,7 +725,7 @@ def run_default_checks():
                 print_verbose_without_lock("An error occured during process check!", True)
                 if stacktrace:
                     traceback.print_exc()
-                    logging.error(traceback.print_exc())
+                    agent_log.error(traceback.print_exc())
     
     for p in tmpProcessList:
         try:
@@ -749,7 +757,7 @@ def run_default_checks():
                     print_verbose_without_lock("'%s' Process is not allowing us to get the parent process id!" % (str(pid)), True)
                     if stacktrace:
                         traceback.print_exc()
-                        logging.error(traceback.print_exc())
+                        agent_log.error(traceback.print_exc())
                 
                 if config['default']['processstats-including-child-ids'] in (1, "1", "true", "True"):
                     try:
@@ -761,7 +769,7 @@ def run_default_checks():
                         print_verbose_without_lock("'%s' Process is not allowing us to get the child process ids!" % (str(pid)), True)
                         if stacktrace:
                             traceback.print_exc()
-                            logging.error(traceback.print_exc())
+                            agent_log.error(traceback.print_exc())
             
             
             try:
@@ -772,7 +780,7 @@ def run_default_checks():
                 print_verbose_without_lock("'%s' Process is not allowing us to get the nice option!" % (name if name != "" else str(pid)), True)
                 if stacktrace:
                     traceback.print_exc()
-                    logging.error(traceback.print_exc())
+                    agent_log.error(traceback.print_exc())
         
             try:
                 name = p.name()
@@ -782,7 +790,7 @@ def run_default_checks():
                 print_verbose_without_lock("'%s' Process is not allowing us to get the name option!" % (name if name != "" else str(pid)), True)
                 if stacktrace:
                     traceback.print_exc()
-                    logging.error(traceback.print_exc())
+                    agent_log.error(traceback.print_exc())
         
             try:
                 exe = p.exe()
@@ -792,7 +800,7 @@ def run_default_checks():
                 print_verbose_without_lock("'%s' Process is not allowing us to get the exec option!" % (name if name != "" else str(pid)), True)
                 if stacktrace:
                     traceback.print_exc()
-                    logging.error(traceback.print_exc())
+                    agent_log.error(traceback.print_exc())
             
             try:
                 cmdline = p.cmdline()
@@ -802,7 +810,7 @@ def run_default_checks():
                 print_verbose_without_lock("'%s' Process is not allowing us to get the cmdline option!" % (name if name != "" else str(pid)), True)
                 if stacktrace:
                     traceback.print_exc()
-                    logging.error(traceback.print_exc())
+                    agent_log.error(traceback.print_exc())
                 
             try:
                 cpu_percent = p.cpu_percent(interval=None)
@@ -812,7 +820,7 @@ def run_default_checks():
                 print_verbose_without_lock("'%s' Process is not allowing us to get the CPU usage!" % (name if name != "" else str(pid)), True)
                 if stacktrace:
                     traceback.print_exc()
-                    logging.error(traceback.print_exc())
+                    agent_log.error(traceback.print_exc())
                 
             try:
                 memory_info = p.memory_info()._asdict()
@@ -822,7 +830,7 @@ def run_default_checks():
                 print_verbose_without_lock("'%s' Process is not allowing us to get memory usage information!" % (name if name != "" else str(pid)), True)
                 if stacktrace:
                     traceback.print_exc()
-                    logging.error(traceback.print_exc())
+                    agent_log.error(traceback.print_exc())
                 
             try:
                 memory_percent = p.memory_percent()
@@ -832,7 +840,7 @@ def run_default_checks():
                 print_verbose_without_lock("'%s' Process is not allowing us to get the percent of memory usage!" % (name if name != "" else str(pid)), True)
                 if stacktrace:
                     traceback.print_exc()
-                    logging.error(traceback.print_exc())
+                    agent_log.error(traceback.print_exc())
                 
             try:
                 num_fds = p.num_fds()
@@ -842,7 +850,7 @@ def run_default_checks():
                 print_verbose_without_lock("'%s' Process is not allowing us to get the num_fds option!" % (name if name != "" else str(pid)), True)
                 if stacktrace:
                     traceback.print_exc()
-                    logging.error(traceback.print_exc())
+                    agent_log.error(traceback.print_exc())
             
             try:
                 io_counters = p.io_counters.__dict__
@@ -852,7 +860,7 @@ def run_default_checks():
                 print_verbose_without_lock("'%s' Process is not allowing us to get the IO counters!" % (name if name != "" else str(pid)), True)
                 if stacktrace:
                     traceback.print_exc()
-                    logging.error(traceback.print_exc())
+                    agent_log.error(traceback.print_exc())
             
             try:
                 open_files = p.open_files()
@@ -862,7 +870,7 @@ def run_default_checks():
                 print_verbose_without_lock("'%s' Process is not allowing us to get the open_files option!" % (name if name != "" else str(pid)), True)
                 if stacktrace:
                     traceback.print_exc()
-                    logging.error(traceback.print_exc())
+                    agent_log.error(traceback.print_exc())
 
             name = name[:1000]
             exe = exe[:1000]
@@ -892,7 +900,7 @@ def run_default_checks():
             print_verbose_without_lock("An error occured during process check!", True)
             if stacktrace:
                 traceback.print_exc()
-                logging.error(traceback.print_exc())
+                agent_log.error(traceback.print_exc())
 
     windows_services = []
     windows_eventlog = {}
@@ -905,7 +913,7 @@ def run_default_checks():
                 print_verbose_without_lock("An error occured during windows services check!", True)
                 if stacktrace:
                     traceback.print_exc()
-                    logging.error(traceback.print_exc())
+                    agent_log.error(traceback.print_exc())
         if config['default']['wineventlog'] in (1, "1", "true", "True"):
             try:
                 server = 'localhost'    # name of the target computer to get event logs
@@ -964,12 +972,12 @@ def run_default_checks():
                         print_verbose_without_lock("An error occured during windows eventlog check with log type %s!" % (logType), True)
                         if stacktrace:
                             traceback.print_exc()
-                            logging.error(traceback.print_exc())
+                            agent_log.error(traceback.print_exc())
             except:
                 print_verbose_without_lock("An error occured during windows eventlog check!", True)
                 if stacktrace:
                     traceback.print_exc()
-                    logging.error(traceback.print_exc())
+                    agent_log.error(traceback.print_exc())
 
     try:
         agent = {
@@ -1065,7 +1073,7 @@ def run_default_checks():
     
     if verbose:
         print_lock.release()
-        logging.info(print_lock.release())
+        agent_log.info(print_lock.release())
     return out
 
 def file_readable(path):
@@ -1131,8 +1139,8 @@ def update_crt_files(data):
         if stacktrace:
             traceback.print_exc()
             print(e)
-            logging.error(e)
-            logging.error(traceback.print_exc())
+            agent_log.error(e)
+            agent_log.error(traceback.print_exc())
     update_crt_files_thread_running = False
         
 def check_update_data(data):
@@ -1366,8 +1374,8 @@ def check_update_data(data):
         if stacktrace:
             traceback.print_exc()
             print(e)
-            logging.error(e)
-            logging.error(traceback.print_exc())
+            agent_log.error(e)
+            agent_log.error(traceback.print_exc())
 
 class ThreadedHTTPServer(ThreadingMixIn, HTTPServer):
     """Handle requests in a separate thread."""
@@ -1473,7 +1481,7 @@ class AgentWebserver(BaseHTTPRequestHandler):
         except:
             if stacktrace:
                 traceback.print_exc()
-                logging.error(traceback.print_exc())
+                agent_log.error(traceback.print_exc())
                 
     def _process_post_data(self, data):
         executor = futures.ThreadPoolExecutor(max_workers=1)
@@ -1510,12 +1518,12 @@ class AgentWebserver(BaseHTTPRequestHandler):
             print_verbose('Caught something in do_POST', True)
             if stacktrace:
                 traceback.print_exc()
-                logging.error(traceback.print_exc())
+                agent_log.error(traceback.print_exc())
 
     def log_message(self, format, *args):
         if verbose:
             print("%s - - [%s] %s" % (self.address_string(),self.log_date_time_string(),format%args))
-            logging.info("%s - - [%s] %s" % (self.address_string(),self.log_date_time_string(),format%args))
+            agent_log.info("%s - - [%s] %s" % (self.address_string(),self.log_date_time_string(),format%args))
         return
 
 def check_systemd_services(timeout):
@@ -1536,7 +1544,7 @@ def check_systemd_services(timeout):
     
     if verbose:
         print('Start systemd services check with timeout of %ss at %s' % (str(timeout), str(round(time.time()))))
-        logging.info('Start systemd services check with timeout of %ss at %s' % (str(timeout), str(round(time.time()))))
+        agent_log.info('Start systemd services check with timeout of %ss at %s' % (str(timeout), str(round(time.time()))))
     
     systemd_services_data['running'] = "true"
     
@@ -1595,7 +1603,7 @@ def check_systemd_services(timeout):
                             print_verbose("An error occured while processing the systemd check output!", True)
                             if stacktrace:
                                 traceback.print_exc()
-                                logging.error(traceback.print_exc())
+                                agent_log.error(traceback.print_exc())
                 
                 systemd_services_data['result'] = systemd_services
                 systemd_services_data['last_updated_timestamp'] = round(time.time())
@@ -1605,7 +1613,7 @@ def check_systemd_services(timeout):
             print_verbose('An error occured while running the systemd status check!', True)
             if stacktrace:
                 traceback.print_exc()
-                logging.error(traceback.print_exc())
+                agent_log.error(traceback.print_exc())
     
     del systemd_services_data['running']
     if len(systemd_services_data) > 0:
@@ -1623,7 +1631,7 @@ def check_alfresco_stats():
     
     if verbose:
         print('Start alfresco stats check at %s' % (str(round(time.time()))))
-        logging.info('Start alfresco stats check at %s' % (str(round(time.time()))))
+        agent_log.info('Start alfresco stats check at %s' % (str(round(time.time()))))
     
     alfresco_stats_data['running'] = "true"
     
@@ -1638,7 +1646,7 @@ def check_alfresco_stats():
                 
                 if 'alfresco-jmxquery' in config and config['default']['alfresco-jmxquery'] is not "":
                     print("customquerx")
-                    logging.info("customquerx")
+                    agent_log.info("customquerx")
                     alfresco_jmxQueryString = config['default']['alfresco-jmxquery']
                 
                 alfresco_jmxQuery = [JMXQuery(alfresco_jmxQueryString)]
@@ -1656,13 +1664,13 @@ def check_alfresco_stats():
                 print_verbose(alfrescostats, True)
                 if stacktrace:
                     traceback.print_exc()
-                    logging.error(traceback.print_exc())
+                    agent_log.error(traceback.print_exc())
             except:
                 alfrescostats = "An error occured during alfresco stats check!"
                 print_verbose(alfrescostats, True)
                 if stacktrace:
                     traceback.print_exc()
-                    logging.error(traceback.print_exc())
+                    agent_log.error(traceback.print_exc())
             
         else:
             alfrescostats = 'JAVA instance not found! (' + config['default']['alfresco-javapath'] + ')';
@@ -1690,7 +1698,7 @@ def check_qemu_stats(timeout):
     
     if verbose:
         print('Start qemu status check with timeout of %ss at %s' % (str(timeout), str(round(time.time()))))
-        logging.info('Start qemu status check with timeout of %ss at %s' % (str(timeout), str(round(time.time()))))
+        agent_log.info('Start qemu status check with timeout of %ss at %s' % (str(timeout), str(round(time.time()))))
     
     tmp_qemu_stats_result = None
     qemu_stats_data['running'] = "true"
@@ -1723,7 +1731,7 @@ def check_qemu_stats(timeout):
         print_verbose('An error occured while running the qemu status check!', True)
         if stacktrace:
             traceback.print_exc()
-            logging.error(traceback.print_exc())
+            agent_log.error(traceback.print_exc())
     
     if tmp_qemu_stats_result is not None and qemu_stats_data['returncode'] is 0:
         ordered_results = []
@@ -1782,7 +1790,7 @@ def check_docker_stats(timeout):
     
     if verbose:
         print('Start docker status check with timeout of %ss at %s' % (str(timeout), str(round(time.time()))))
-        logging.info('Start docker status check with timeout of %ss at %s' % (str(timeout), str(round(time.time()))))
+        agent_log.info('Start docker status check with timeout of %ss at %s' % (str(timeout), str(round(time.time()))))
     
     tmp_docker_stats_result = ''
     docker_stats_data['running'] = "true"
@@ -1825,7 +1833,7 @@ def check_docker_stats(timeout):
         print_verbose('An error occured while running the docker status check!', True)
         if stacktrace:
             traceback.print_exc()
-            logging.error(traceback.print_exc())
+            agent_log.error(traceback.print_exc())
     
     if tmp_docker_stats_result != '' and docker_stats_data['returncode'] is 0:
         results = tmp_docker_stats_result.split('\n')
@@ -1920,7 +1928,7 @@ def collect_data_for_cache(check_interval):
                 print_verbose_without_lock("Error while starting the regularly certificate expiration check!", True)
                 if stacktrace:
                     traceback.print_exc()
-                    logging.error(traceback.print_exc())
+                    agent_log.error(traceback.print_exc())
             
             try:
                 if config['default']['dockerstats'] in (1, "1", "true", "True") and 'running' not in docker_stats_data:
@@ -1943,7 +1951,7 @@ def collect_data_for_cache(check_interval):
                 print_verbose_without_lock("Could not run default checks!", True)
                 if stacktrace:
                     traceback.print_exc()
-                    logging.error(traceback.print_exc())
+                    agent_log.error(traceback.print_exc())
             check_interval_counter = 0
         time.sleep(1)
         check_interval_counter += 1
@@ -1994,7 +2002,7 @@ def run_customcheck_command(check):
         print_verbose('An error occured while running the custom check "%s"!' % (check['name']), True)
         if stacktrace:
             traceback.print_exc()
-            logging.error(traceback.print_exc())
+            agent_log.error(traceback.print_exc())
     
     cached_customchecks_check_data[check['name']]['last_updated_timestamp'] = round(time.time())
     cached_customchecks_check_data[check['name']]['last_updated'] = time.ctime()
@@ -2023,7 +2031,7 @@ def process_customcheck_results(future_checks):
             print_verbose('An error occured while checking custom check "%s" alive!' % (check['name']), True)
             if stacktrace:
                 traceback.print_exc()
-                logging.error(traceback.print_exc())
+                agent_log.error(traceback.print_exc())
     
     if len(cached_customchecks_check_data) > 0:
         cached_check_data['customchecks'] = cached_customchecks_check_data
@@ -2150,7 +2158,7 @@ def notify_oitc(oitc):
                     except:
                         if stacktrace:
                             traceback.print_exc()
-                            logging.error(traceback.print_exc())
+                            agent_log.error(traceback.print_exc())
 
                     response = requests.post(oitc['url'].strip() + '/agentconnector/updateCheckdata.json', data=data, headers=headers, verify=False)
 
@@ -2175,7 +2183,7 @@ def notify_oitc(oitc):
                     print_verbose('An error occured while trying to notify your configured openITCOCKPIT instance!', True)
                     if stacktrace:
                         traceback.print_exc()
-                        logging.error(traceback.print_exc())
+                        agent_log.error(traceback.print_exc())
     oitc_notification_thread_running = False
     print_verbose('Stopped oitc_notification_thread', False)
 
@@ -2251,7 +2259,7 @@ def restart_webserver():
         except:
             if stacktrace:
                 traceback.print_exc()
-                logging.error(traceback.print_exc())
+                agent_log.error(traceback.print_exc())
         
         while webserver_stop_requested:
             if permanent_webserver_thread_running:
@@ -2347,7 +2355,7 @@ def create_new_csr():
         print_verbose('An error occured while creating a new certificate request (csr)', True)
         if stacktrace:
             traceback.print_exc()
-            logging.error(traceback.print_exc())
+            agent_log.error(traceback.print_exc())
     
     return csr
 
@@ -2402,7 +2410,7 @@ def pull_crt_from_server(renew=False):
                 except:
                     if stacktrace:
                         traceback.print_exc()
-                        logging.error(traceback.print_exc())
+                        agent_log.error(traceback.print_exc())
 
                 response = requests.post(config['oitc']['url'].strip() + '/agentconnector/certificate.json', data=data, headers=headers, verify=False)
                 if response.content.decode('utf-8').strip() is not '':
@@ -2433,7 +2441,7 @@ def pull_crt_from_server(renew=False):
                 print_verbose('An error occurred during autossl certificate renew process', True)
                 if stacktrace:
                     traceback.print_exc()
-                    logging.error(traceback.print_exc())
+                    agent_log.error(traceback.print_exc())
     
     return False
 
@@ -2721,7 +2729,7 @@ def load_configuration():
                 enableSSL = True
             elif verbose:
                 print("Could not read certfile or keyfile\nFall back to default http server")
-                logging.error("Could not read certfile or keyfile\nFall back to default http server")
+                agent_log.error("Could not read certfile or keyfile\nFall back to default http server")
             
         except IOError:
             print_verbose("Could not read certfile or keyfile\nFall back to default http server", False)
@@ -2765,7 +2773,7 @@ def reload_all():
         except:
             if stacktrace:
                 traceback.print_exc()
-                logging.error(traceback.print_exc())
+                agent_log.error(traceback.print_exc())
         
         while thread_stop_requested:
             if update_crt_files_thread_running or permanent_check_thread_running or permanent_webserver_thread_running or oitc_notification_thread_running or permanent_customchecks_check_thread_running:
