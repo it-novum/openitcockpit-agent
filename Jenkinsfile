@@ -165,6 +165,12 @@ pipeline {
                 not {
                     changeRequest target: 'master'
                 }
+                not {
+                    branch 'development'
+                }
+                not {
+                    changeRequest target: 'development'
+                }
             }
             steps {
                 echo 'Nothing done'
