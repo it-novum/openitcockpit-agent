@@ -8,6 +8,8 @@ pipeline {
                 anyOf{
                     changeRequest target: 'master'
                     branch 'master'
+                    changeRequest target: 'development'
+                    branch 'development'
                 }
             }
             agent {
@@ -38,7 +40,7 @@ pipeline {
                 }
             }
         }
-        stage('Publish linux packages') {
+        stage('Publish linux packages - Stable') {
             when {
                 beforeAgent true
                 branch 'master'
@@ -55,13 +57,31 @@ pipeline {
                 }
                 sh 'mkdir -p /tmp/agent/test; rm -r /tmp/agent/*'
                 sh 'rsync -avz --progress release/* /tmp/agent'
-                sh '/var/lib/jenkins/openITCOCKPIT-build/aptly.sh repo add -force-replace buster-agent-unstable /tmp/agent/openitcockpit-agent_*amd64.deb; /var/lib/jenkins/openITCOCKPIT-build/aptly.sh repo add -force-replace focal-agent-unstable /tmp/agent/openitcockpit-agent_*amd64.deb; /var/lib/jenkins/openITCOCKPIT-build/aptly.sh repo add -force-replace bionic-agent-unstable /tmp/agent/openitcockpit-agent_*amd64.deb'
-                sh '/var/lib/jenkins/openITCOCKPIT-build/aptly.sh repo add -force-replace buster-agent-nightly /tmp/agent/openitcockpit-agent_*amd64.deb; /var/lib/jenkins/openITCOCKPIT-build/aptly.sh repo add -force-replace focal-agent-nightly /tmp/agent/openitcockpit-agent_*amd64.deb; /var/lib/jenkins/openITCOCKPIT-build/aptly.sh repo add -force-replace bionic-agent-nightly /tmp/agent/openitcockpit-agent_*amd64.deb'
                 sh '/var/lib/jenkins/openITCOCKPIT-build/aptly.sh repo add -force-replace buster-agent-stable /tmp/agent/openitcockpit-agent_*amd64.deb; /var/lib/jenkins/openITCOCKPIT-build/aptly.sh repo add -force-replace focal-agent-stable /tmp/agent/openitcockpit-agent_*amd64.deb; /var/lib/jenkins/openITCOCKPIT-build/aptly.sh repo add -force-replace bionic-agent-stable /tmp/agent/openitcockpit-agent_*amd64.deb'
                 sh 'ssh -o StrictHostKeyChecking=no -i /var/lib/jenkins/.ssh/id_rsa oitc@172.16.101.32 "mkdir -p /var/www/openitcockpit_io/files/openitcockpit-agent"'
                 sh 'rsync -avz -e "ssh -o StrictHostKeyChecking=no -i /var/lib/jenkins/.ssh/id_rsa" --delete --progress release/* oitc@172.16.101.32:/var/www/openitcockpit_io/files/openitcockpit-agent'
-                sh 'ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -i /var/lib/jenkins/.ssh/id_rsa root@172.16.101.113 "mkdir -p /var/repositories/openitcockpit-agent/${VERSION}"'
-                sh 'rsync -avu -e "ssh -o StrictHostKeyChecking=no -i /var/lib/jenkins/.ssh/id_rsa" --delete --progress release/* root@172.16.101.113:/var/repositories/openitcockpit-agent/${VERSION}'
+            }
+        }
+        stage('Publish linux packages - Nightly') {
+            when {
+                beforeAgent true
+                branch 'development'
+            }
+            environment {
+                VERSION = """${sh(
+                    returnStdout: true,
+                    script: 'cat version | xargs | tr -d \'\n\''
+                )}"""
+            }
+            steps {
+                script {
+                    unstash 'release'
+                }
+                sh 'mkdir -p /tmp/agent/test; rm -r /tmp/agent/*'
+                sh 'rsync -avz --progress release/* /tmp/agent'
+                sh '/var/lib/jenkins/openITCOCKPIT-build/aptly.sh repo add -force-replace buster-agent-nightly /tmp/agent/openitcockpit-agent_*amd64.deb; /var/lib/jenkins/openITCOCKPIT-build/aptly.sh repo add -force-replace focal-agent-nightly /tmp/agent/openitcockpit-agent_*amd64.deb; /var/lib/jenkins/openITCOCKPIT-build/aptly.sh repo add -force-replace bionic-agent-nightly /tmp/agent/openitcockpit-agent_*amd64.deb'
+                sh 'ssh -o StrictHostKeyChecking=no -i /var/lib/jenkins/.ssh/id_rsa oitc@172.16.101.32 "mkdir -p /var/www/openitcockpit_io/files/openitcockpit-agent-nightly"'
+                sh 'rsync -avz -e "ssh -o StrictHostKeyChecking=no -i /var/lib/jenkins/.ssh/id_rsa" --delete --progress release/* oitc@172.16.101.32:/var/www/openitcockpit_io/files/openitcockpit-agent-nightly'
             }
         }
         stage('Build agent windows packages') {
@@ -70,6 +90,8 @@ pipeline {
                 anyOf{
                     changeRequest target: 'master'
                     branch 'master'
+                    changeRequest target: 'development'
+                    branch 'development'
                 }
             }
             environment {
@@ -96,7 +118,7 @@ pipeline {
                 }
             }
         }
-        stage('Publish windows package') {
+        stage('Publish windows package - Stable') {
             when {
                 beforeAgent true
                 branch 'master'
@@ -113,8 +135,25 @@ pipeline {
                 }
                 sh 'ssh -o StrictHostKeyChecking=no -i /var/lib/jenkins/.ssh/id_rsa oitc@172.16.101.32 "mkdir -p /var/www/openitcockpit_io/files/openitcockpit-agent"'
                 sh 'rsync -avz -e "ssh -o StrictHostKeyChecking=no -i /var/lib/jenkins/.ssh/id_rsa" --progress release/* oitc@172.16.101.32:/var/www/openitcockpit_io/files/openitcockpit-agent'
-                sh 'ssh -o StrictHostKeyChecking=no -i /var/lib/jenkins/.ssh/id_rsa root@172.16.101.113 "mkdir -p /var/repositories/openitcockpit-agent/${VERSION}"'
-                sh 'rsync -avu -e "ssh -o StrictHostKeyChecking=no -i /var/lib/jenkins/.ssh/id_rsa" --progress release/* root@172.16.101.113:/var/repositories/openitcockpit-agent/${VERSION}'
+            }
+        }
+        stage('Publish windows package - Nightly') {
+            when {
+                beforeAgent true
+                branch 'development'
+            }
+            environment {
+                VERSION = """${sh(
+                    returnStdout: true,
+                    script: 'cat version | xargs | tr -d \'\n\''
+                )}"""
+            }
+            steps {
+                script {
+                    unstash 'windowsrelease'
+                }
+                sh 'ssh -o StrictHostKeyChecking=no -i /var/lib/jenkins/.ssh/id_rsa oitc@172.16.101.32 "mkdir -p /var/www/openitcockpit_io/files/openitcockpit-agent-nightly"'
+                sh 'rsync -avz -e "ssh -o StrictHostKeyChecking=no -i /var/lib/jenkins/.ssh/id_rsa" --progress release/* oitc@172.16.101.32:/var/www/openitcockpit_io/files/openitcockpit-agent-nightly'
             }
         }
         stage('Nothing done') {
