@@ -1,6 +1,6 @@
 This is a (multiple allowed):
 
-* [ ] bug
+* [x] bug
 * [ ] enhancement
 * [ ] feature-request
 
@@ -21,6 +21,9 @@ EXPLAIN WHAT IS ACTUALLY HAPPENING, HERE.
 
 ### What you expected to happen
 EXPLAIN WHAT IS TO BE EXPECTED, HERE.
+
+---
+REMOVE EVERYTHING BELOW BEFORE CREATING THE ISSUE
 
 P.S. Remember, an issue is not the place to ask questions. You can join the #openitcockpit channel on irc.freenode.net, where we will be more
 than happy to help answer your questions.
