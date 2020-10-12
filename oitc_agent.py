@@ -37,8 +37,6 @@ import ssl
 import requests
 import hashlib
 import logging
-#need to be removed for production
-import tracemalloc
 
 from os import access, R_OK, devnull
 from os.path import isfile
@@ -1192,6 +1190,7 @@ def update_crt_files(data):
         Object containing 'signed'(certificate file) and 'ca'(ca certificate) contents.
 
     """
+    agent_log.info('update crt files')
     global cert_checksum
     global update_crt_files_thread_running
 
@@ -2315,6 +2314,7 @@ def notify_oitc(oitc):
                             traceback.print_exc()
                             
                     agent_log.info('Handing over check results')
+                    agent_log.info(oitc['url'].strip())
                     response = requests.post(oitc['url'].strip() + '/agentconnector/updateCheckdata.json', data=data, headers=headers, verify=False)
                     agent_log.info(response)
 
@@ -2362,10 +2362,6 @@ def process_webserver(enableSSL=False):
         Boolean to specify if ssl with a custom certificate will be used or not
 
     """
-
-    
-    tracemalloc.start()
-
     global permanent_webserver_thread_running
 
     if permanent_webserver_thread_running:
@@ -2479,7 +2475,8 @@ def create_new_csr():
         # pubdict['_only_public'] = publicKey
         # req.sign(publicKey, 'sha384')
         
-        
+        agent_log.info('Creating new csr')
+
         # create public/private key
         key = PKey()
         key.generate_key(TYPE_RSA, 4096)
@@ -2526,6 +2523,7 @@ def create_new_csr():
             f.write(dump_privatekey(FILETYPE_PEM, key))
         ssl_csr = csr
             
+        agent_log.info('csr file written')
     except:
         print_verbose('An error occured while creating a new certificate request (csr)', True)
         agent_log.error('An error occured while creating a new certificate request (csr)')
@@ -2559,6 +2557,8 @@ def pull_crt_from_server(renew=False):
     """
     global cert_checksum
     
+    agent_log.info('Pulling csr file from Server')
+
     if certificate_check_lock.locked():
         print_verbose('Function to pull a new certificate is locked!', False)
         agent_log.warning('Function to pull a new certificate is locked!')
@@ -2666,10 +2666,13 @@ def check_auto_certificate():
     Otherwise it checks if the certificate will expire soon.
         
     """
+    agent_log.info('Check Certificate')
     requestNewCertificate = False
     if not file_readable(config['default']['autossl-crt-file']):
+        agent_log.warning('Cannot read crt file')
         pull_crt_from_server()
     if file_readable(config['default']['autossl-crt-file']):    # repeat condition because pull_crt_from_server could fail
+        agent_log.info('crt file found and readable')
         with open(config['default']['autossl-crt-file'], 'r') as f:
             cert = f.read()
             x509 = load_certificate(FILETYPE_PEM, cert)
@@ -2688,6 +2691,7 @@ def check_auto_certificate():
                 requestNewCertificate = True
     
     if file_readable(config['default']['autossl-ca-file']):
+        agent_log.info('ca file found and readable')
         with open(config['default']['autossl-ca-file'], 'r') as f:
             ca = f.read()
             x509 = load_certificate(FILETYPE_PEM, ca)
@@ -2703,6 +2707,7 @@ def check_auto_certificate():
                 requestNewCertificate = True
                     
     if requestNewCertificate:
+        agent_log.info('Try pulling new Certificate')
         if pull_crt_from_server(True) is not False:
             check_auto_certificate()
 
