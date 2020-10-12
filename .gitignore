@@ -4,3 +4,4 @@
 .vscode
 ssl
 config.cnf
+*.log
