@@ -2296,9 +2296,10 @@ def notify_oitc(oitc):
                         if cert_checksum is not '':
                             data['checksum'] = cert_checksum
                         else:
-                            with open(config['default']['autossl-crt-file'], 'rb') as f:
+                            with open(config['default']['autossl-crt-file'], 'r') as f:
                                 cert = f.read()
-                                sha512.update(cert)
+                                cert = cert.replace("\r\n", "\n")
+                                sha512.update(cert.encode())
                                 cert_checksum = sha512.hexdigest().upper()
                                 data['checksum'] = cert_checksum
                     
@@ -2322,9 +2323,10 @@ def notify_oitc(oitc):
                         responseData = json.loads(response.content.decode('utf-8'))
                         if autossl and 'new_ca' in responseData and 'ca_checksum' in responseData and responseData['new_ca'] in (1, "1", "true", "True", True) and file_readable(config['default']['autossl-ca-file']):
 
-                            with open(config['default']['autossl-ca-file'], 'rb') as f:
+                            with open(config['default']['autossl-ca-file'], 'r') as f:
                                 ca = f.read()
-                                sha512.update(ca)
+                                ca = ca.replace("\r\n", "\n")
+                                sha512.update(ca.encode())
                                 ca_checksum = sha512.hexdigest().upper()
 
                                 if responseData['new_ca'] is ca_checksum:   # validates, that new ca request comes from old ca server
@@ -2578,9 +2580,10 @@ def pull_crt_from_server(renew=False):
                     'Authorization': 'X-OITC-API '+config['oitc']['apikey'].strip(),
                 }
                 if renew:
-                    with open(config['default']['autossl-crt-file'], 'rb') as f:
+                    with open(config['default']['autossl-crt-file'], 'r') as f:
                         cert = f.read()
-                        sha512.update(cert)
+                        cert = cert.replace("\r\n", "\n")
+                        sha512.update(cert.encode())
                         data['checksum'] = sha512.hexdigest().upper()
 
                 try:
