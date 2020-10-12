@@ -149,7 +149,7 @@ except:
         print('If you want to use the alfresco stats check try: pip install jmxquery')
         agent_log.info('If you want to use the alfresco stats check try: pip install jmxquery')
 
-agentVersion = "1.0.4"
+agentVersion = "1.0.5"
 days_until_cert_warning = 120
 days_until_ca_warning = 30
 enableSSL = False
