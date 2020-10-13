@@ -1823,7 +1823,7 @@ def check_qemu_stats(timeout):
     
     # regex source: https://gist.github.com/kitschysynq/867caebec581cee4c44c764b4dd2bde7
     # qemu_command = "ps -ef | awk -e '/qemu/ && !/awk/ && !/openitcockpit-agent/' | sed -e 's/[^/]*/\n/' -e 's/ -/\n\t-/g'" # customized (without secure character escape)
-    qemu_command = "ps -ef | awk -e '/qemu/ && !/awk/ && !/openitcockpit-agent/' | sed -e 's/[^/]*/\\n/' -e 's/ -/\\n\\t-/g'" # customized
+    qemu_command = "ps -ef | gawk -e '/qemu/ && !/gawk/ && !/openitcockpit-agent/' | sed -e 's/[^/]*/\\n/' -e 's/ -/\\n\\t-/g'" # customized
     
     try:
         p = subprocess.Popen(qemu_command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
