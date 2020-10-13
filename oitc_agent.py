@@ -452,6 +452,7 @@ def run_default_checks():
         Object (dictionary) containing all the default check results
 
     """
+    agent_log.info('Running default checks')
     global cached_diskIO
     global cached_netIO
     
@@ -2383,18 +2384,20 @@ def process_webserver(enableSSL=False):
     if config['default']['address'] == "":
         config['default']['address'] = "0.0.0.0"
         
+    agent_log.info('Starting webserver ...')
     server_address = (config['default']['address'], int(config['default']['port']))
     httpd = ThreadedHTTPServer(server_address, AgentWebserver)
-    agent_log.info('Starting webserver ...')
+    
     
     if enableSSL:
+        agent_log.info('SSL Enabled')
         protocol = 'https'
         httpd.socket = ssl.wrap_socket(httpd.socket, keyfile=config['default']['keyfile'], certfile=config['default']['certfile'], server_side=True)
-        agent_log.info('SSL enabled')
     elif autossl and file_readable(config['default']['autossl-key-file']) and file_readable(config['default']['autossl-crt-file']) and file_readable(config['default']['autossl-ca-file']):
+        agent_log.info('SSL with custom certificate enabled')
         protocol = 'https'
         httpd.socket = ssl.wrap_socket(httpd.socket, keyfile=config['default']['autossl-key-file'], certfile=config['default']['autossl-crt-file'], server_side=True, cert_reqs = ssl.CERT_REQUIRED, ca_certs = config['default']['autossl-ca-file'])
-        agent_log.info('SSL with custom certificate enabled')
+        
     
     print_verbose("Server started at %s://%s:%s with a check interval of %d seconds" % (protocol, config['default']['address'], str(config['default']['port']), int(config['default']['interval'])), False)
     agent_log.info("Server started at %s://%s:%s with a check interval of %d seconds" % (protocol, config['default']['address'], str(config['default']['port']), int(config['default']['interval'])))
