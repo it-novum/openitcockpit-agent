@@ -51,8 +51,25 @@ system = 'linux'
 jmx_import_successfull = False
 
 
+
+
+if sys.platform == 'win32' or sys.platform == 'win64':
+    system = 'windows'
+    import win32evtlog
+    import win32evtlogutil
+    import win32con
+    import win32security # To translate NT Sids to account names.
+if sys.platform == 'darwin' or (system == 'linux' and 'linux' not in sys.platform):
+    system = 'darwin'
+
 log_formatter = logging.Formatter('%(asctime)s; %(levelname)s; %(lineno)d; %(message)s')
-logfile = 'agent.log'
+agent_log_path = '/etc/openitcockpit-agent/'
+if system is 'darwin':
+    agent_log_path = '/Library/openitcockpit-agent/'
+if system is 'windows':
+    agent_log_path = 'C:'+os.path.sep+'Program Files'+os.path.sep+'it-novum'+os.path.sep+'openitcockpit-agent'+os.path.sep
+
+logfile = agent_log_path + 'agent.log'
 
 logfile_handler = RotatingFileHandler(logfile, mode='a', maxBytes=10*1024*1024, backupCount=2, encoding=None, delay=0)
 logfile_handler.setFormatter(log_formatter)
@@ -64,15 +81,6 @@ agent_log.setLevel(logging.DEBUG)
 agent_log.addHandler(logfile_handler)
 
 agent_log.info('Agent started')
-
-if sys.platform == 'win32' or sys.platform == 'win64':
-    system = 'windows'
-    import win32evtlog
-    import win32evtlogutil
-    import win32con
-    import win32security # To translate NT Sids to account names.
-if sys.platform == 'darwin' or (system == 'linux' and 'linux' not in sys.platform):
-    system = 'darwin'
 
 if (sys.version_info >= (3, 0)):
     isPython3 = True
