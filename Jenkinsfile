@@ -104,6 +104,7 @@ pipeline {
                 sh """
                     sed -i -e 's|/etc/openitcockpit-agent/customchecks.cnf|C:\\\\\\Program\\ Files\\\\\\it-novum\\\\\\openitcockpit-agent\\\\\\customchecks.cnf|g' example_config.cnf
                    """
+                sh 'ssh -o StrictHostKeyChecking=no -i /var/lib/jenkins/.ssh/id_rsa kress@172.16.166.223 rmdir /Q /S openitcockpit-agent'
                 sh 'scp -o StrictHostKeyChecking=no -i /var/lib/jenkins/.ssh/id_rsa -r ./ kress@172.16.166.223:openitcockpit-agent'
                 sh 'ssh -o StrictHostKeyChecking=no -i /var/lib/jenkins/.ssh/id_rsa kress@172.16.166.223 powershell "cd openitcockpit-agent; python.exe -m venv ./python3-windows-env; ./python3-windows-env/Scripts/activate.bat; ./python3-windows-env/Scripts/pip.exe install -r requirements.txt servicemanager pywin32; ./python3-windows-env/Scripts/pyinstaller.exe oitc_agent.py --onefile; ./python3-windows-env/Scripts/deactivate.bat"'
                 sh 'ssh -o StrictHostKeyChecking=no -i /var/lib/jenkins/.ssh/id_rsa kress@172.16.166.223 powershell "cd openitcockpit-agent; mv ./dist/oitc_agent.exe executables/openitcockpit-agent-python3.exe; rm -r -fo ./dist; rm -r -fo ./build; rm -r -fo ./__pycache__; rm -r -fo ./oitc_agent.spec; rm -r -fo ./python3-windows-env"'
