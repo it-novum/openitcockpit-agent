@@ -1571,8 +1571,6 @@ class AgentWebserver(BaseHTTPRequestHandler):
         
     
     def do_GET(self):
-        with open('C:/logoutput.txt', 'w') as f:
-            f.write('call to agent\n')
         try:
             if 'auth' in config['default']:
                 if str(config['default']['auth']).strip() and self.headers.get('Authorization') == None:
@@ -1612,8 +1610,6 @@ class AgentWebserver(BaseHTTPRequestHandler):
     
     
     def do_POST(self):
-        with open('C:/logoutput.txt', 'w') as f:
-            f.write('post call to agent\n')
         try:
             if 'auth' in config['default']:
                 if str(config['default']['auth']).strip() and self.headers.get('Authorization') == None:
