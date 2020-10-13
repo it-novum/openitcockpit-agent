@@ -754,7 +754,7 @@ def run_default_checks():
                     tmpProcessList.append(p)
                 except:
                     print_verbose_without_lock("'%s' Process is not allowing us to get the CPU usage!" % (name if name != "" else str(pid)), True)
-                    agent_log.error("'%s' Process is not allowing us to get the CPU usage!" % (name if name != "" else str(pid)))
+                    #agent_log.error("'%s' Process is not allowing us to get the CPU usage!" % (name if name != "" else str(pid)))
                     
                     if stacktrace:
                         traceback.print_exc()
@@ -798,7 +798,7 @@ def run_default_checks():
                     continue
                 except AttributeError:
                     print_verbose_without_lock("'%s' Process is not allowing us to get the parent process id!" % (str(pid)), True)
-                    agent_log.error("'%s' Process is not allowing us to get the parent process id!" % (str(pid)))
+                    #agent_log.error("'%s' Process is not allowing us to get the parent process id!" % (str(pid)))
                     
                     if stacktrace:
                         traceback.print_exc()
@@ -812,7 +812,7 @@ def run_default_checks():
                                     children.append(child.pid)
                     except:
                         print_verbose_without_lock("'%s' Process is not allowing us to get the child process ids!" % (str(pid)), True)
-                        agent_log.error("'%s' Process is not allowing us to get the child process ids!" % (str(pid)))
+                        #agent_log.error("'%s' Process is not allowing us to get the child process ids!" % (str(pid)))
                         
                         if stacktrace:
                             traceback.print_exc()
@@ -825,7 +825,7 @@ def run_default_checks():
                 continue
             except:
                 print_verbose_without_lock("'%s' Process is not allowing us to get the nice option!" % (name if name != "" else str(pid)), True)
-                agent_log.error("'%s' Process is not allowing us to get the nice option!" % (name if name != "" else str(pid)))
+                #agent_log.error("'%s' Process is not allowing us to get the nice option!" % (name if name != "" else str(pid)))
                 
                 if stacktrace:
                     traceback.print_exc()
@@ -837,7 +837,7 @@ def run_default_checks():
                 continue
             except:
                 print_verbose_without_lock("'%s' Process is not allowing us to get the name option!" % (name if name != "" else str(pid)), True)
-                agent_log.error("'%s' Process is not allowing us to get the name option!" % (name if name != "" else str(pid)))
+                #agent_log.error("'%s' Process is not allowing us to get the name option!" % (name if name != "" else str(pid)))
                 
                 if stacktrace:
                     traceback.print_exc()
@@ -848,7 +848,7 @@ def run_default_checks():
                 continue
             except:
                 print_verbose_without_lock("'%s' Process is not allowing us to get the username option!" % (name if name != "" else str(pid)), True)
-                agent_log.error("'%s' Process is not allowing us to get the username option!" % (name if name != "" else str(pid)))
+                #agent_log.error("'%s' Process is not allowing us to get the username option!" % (name if name != "" else str(pid)))
                 
                 if stacktrace:
                     traceback.print_exc()
@@ -859,7 +859,7 @@ def run_default_checks():
                 continue
             except:
                 print_verbose_without_lock("'%s' Process is not allowing us to get the exec option!" % (name if name != "" else str(pid)), True)
-                agent_log.error("'%s' Process is not allowing us to get the exec option!" % (name if name != "" else str(pid)))
+                #agent_log.error("'%s' Process is not allowing us to get the exec option!" % (name if name != "" else str(pid)))
                 
                 if stacktrace:
                     traceback.print_exc()
@@ -871,7 +871,7 @@ def run_default_checks():
                 continue
             except:
                 print_verbose_without_lock("'%s' Process is not allowing us to get the cmdline option!" % (name if name != "" else str(pid)), True)
-                agent_log.error("'%s' Process is not allowing us to get the cmdline option!" % (name if name != "" else str(pid)))
+                #agent_log.error("'%s' Process is not allowing us to get the cmdline option!" % (name if name != "" else str(pid)))
                 
                 if stacktrace:
                     traceback.print_exc()
@@ -883,7 +883,7 @@ def run_default_checks():
                 continue
             except:
                 print_verbose_without_lock("'%s' Process is not allowing us to get the CPU usage!" % (name if name != "" else str(pid)), True)
-                agent_log.error("'%s' Process is not allowing us to get the CPU usage!" % (name if name != "" else str(pid)))
+                #agent_log.error("'%s' Process is not allowing us to get the CPU usage!" % (name if name != "" else str(pid)))
                 
                 if stacktrace:
                     traceback.print_exc()
@@ -895,7 +895,7 @@ def run_default_checks():
                 continue
             except:
                 print_verbose_without_lock("'%s' Process is not allowing us to get memory usage information!" % (name if name != "" else str(pid)), True)
-                agent_log.error("'%s' Process is not allowing us to get memory usage information!" % (name if name != "" else str(pid)))
+                #agent_log.error("'%s' Process is not allowing us to get memory usage information!" % (name if name != "" else str(pid)))
                 
                 if stacktrace:
                     traceback.print_exc()
@@ -907,7 +907,7 @@ def run_default_checks():
                 continue
             except:
                 print_verbose_without_lock("'%s' Process is not allowing us to get the percent of memory usage!" % (name if name != "" else str(pid)), True)
-                agent_log.error("'%s' Process is not allowing us to get the percent of memory usage!" % (name if name != "" else str(pid)))
+                #agent_log.error("'%s' Process is not allowing us to get the percent of memory usage!" % (name if name != "" else str(pid)))
                 
                 if stacktrace:
                     traceback.print_exc()
@@ -919,7 +919,7 @@ def run_default_checks():
                 continue
             except:
                 print_verbose_without_lock("'%s' Process is not allowing us to get the num_fds option!" % (name if name != "" else str(pid)), True)
-                agent_log.error("'%s' Process is not allowing us to get the num_fds option!" % (name if name != "" else str(pid)))
+                #agent_log.error("'%s' Process is not allowing us to get the num_fds option!" % (name if name != "" else str(pid)))
                 
                 if stacktrace:
                     traceback.print_exc()
@@ -931,7 +931,7 @@ def run_default_checks():
                 continue
             except:
                 print_verbose_without_lock("'%s' Process is not allowing us to get the IO counters!" % (name if name != "" else str(pid)), True)
-                agent_log.error("'%s' Process is not allowing us to get the IO counters!" % (name if name != "" else str(pid)))
+                #agent_log.error("'%s' Process is not allowing us to get the IO counters!" % (name if name != "" else str(pid)))
                 
                 if stacktrace:
                     traceback.print_exc()
@@ -943,7 +943,7 @@ def run_default_checks():
                 continue
             except psutil.AccessDenied:
                 print_verbose_without_lock("'%s' Process is not allowing us to get the open_files option!" % (name if name != "" else str(pid)), True)
-                agent_log.error("'%s' Process is not allowing us to get the open_files option!" % (name if name != "" else str(pid)))
+                #agent_log.error("'%s' Process is not allowing us to get the open_files option!" % (name if name != "" else str(pid)))
                 
                 if stacktrace:
                     traceback.print_exc()
@@ -2422,6 +2422,7 @@ def restart_webserver():
     If the web server has not been run before, it will not start!
 
     """
+    agent_log.info('Restarting webserver')
     global webserver_stop_requested
     global wait_and_check_auto_certificate_thread_stop_requested
     
@@ -2433,9 +2434,10 @@ def restart_webserver():
         wait_and_check_auto_certificate_thread_stop_requested = True
         
         try:
+            agent_log.info('Check webserver is alive')
             fake_webserver_request()
         except:
-            
+            agent_log.info('Webserver is not alive')
             if stacktrace:
                 traceback.print_exc()
                 
@@ -2448,6 +2450,7 @@ def restart_webserver():
     
     if tmp_permanent_webserver_thread_running:
         permanent_webserver_thread(process_webserver, (enableSSL,))
+        agent_log.info('Webserver thread restarted')
 
 
 def create_new_csr():
