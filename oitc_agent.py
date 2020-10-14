@@ -64,9 +64,9 @@ if sys.platform == 'darwin' or (system == 'linux' and 'linux' not in sys.platfor
 
 log_formatter = logging.Formatter('%(asctime)s; %(levelname)s; %(lineno)d; %(message)s')
 agent_log_path = '/etc/openitcockpit-agent/'
-if system is 'darwin':
+if system == 'darwin':
     agent_log_path = '/Library/openitcockpit-agent/'
-if system is 'windows':
+if system == 'windows':
     agent_log_path = 'C:'+os.path.sep+'Program Files'+os.path.sep+'it-novum'+os.path.sep+'openitcockpit-agent'+os.path.sep
 
 logfile = agent_log_path + 'agent.log'
@@ -130,13 +130,13 @@ try:
         raise ImportError('psutil version too old!')
         
 except ImportError:
-    if system is 'windows':
+    if system == 'windows':
         print('Install Python psutil: python.exe -m pip install psutil')
         agent_log.error('Install Python psutil: python.exe -m pip install psutil')
-    elif system is 'linux' and isPython3:
+    elif system == 'linux' and isPython3:
         print('Install Python psutil: pip3 install psutil or apt-get install python3-psutil')
         agent_log.error('Install Python psutil: pip3 install psutil or apt-get install python3-psutil')
-    elif system is 'linux' and not isPython3:
+    elif system == 'linux' and not isPython3:
         print('Install Python psutil: pip install psutil or apt-get install python-psutil')
         agent_log.error('Install Python psutil: pip install psutil or apt-get install python-psutil')
     else:
@@ -401,7 +401,7 @@ def build_autossl_defaults():
 
     """
     etc_agent_path = '/etc/openitcockpit-agent/'
-    if system is 'windows':
+    if system == 'windows':
         etc_agent_path = 'C:'+os.path.sep+'Program Files'+os.path.sep+'it-novum'+os.path.sep+'openitcockpit-agent'+os.path.sep
     
     if config['default']['autossl-folder'] != "":
@@ -983,7 +983,7 @@ def run_default_checks():
 
     windows_services = []
     windows_eventlog = {}
-    if system is 'windows':
+    if system == 'windows':
         if config['default']['winservices'] in (1, "1", "true", "True"):
             try:
                 for win_process in psutil.win_service_iter():
@@ -1132,7 +1132,7 @@ def run_default_checks():
     if config['default']['processstats'] in (1, "1", "true", "True"):
         out['processes'] = processes
     
-    if system is 'windows':
+    if system == 'windows':
         if config['default']['winservices'] in (1, "1", "true", "True"):
             out['windows_services'] = windows_services
         if config['default']['wineventlog'] in (1, "1", "true", "True"):
@@ -1663,7 +1663,7 @@ def check_systemd_services(timeout):
     systemd_services_data['running'] = "true"
     
     systemd_services = []
-    if system is 'linux' and config['default']['systemdservices'] in (1, "1", "true", "True"):
+    if system == 'linux' and config['default']['systemdservices'] in (1, "1", "true", "True"):
         systemd_stats_command = "systemctl list-units --type=service --all --no-legend --no-pager --no-ask-password"
         try:
             tmp_systemd_stats_result = ''
@@ -1686,16 +1686,16 @@ def check_systemd_services(timeout):
                 systemd_services_data['error'] = 'systemd status check timeout after 3 seconds'
                 systemd_services_data['returncode'] = 124
         
-            if tmp_systemd_stats_result != '' and systemd_services_data['returncode'] is 0:
+            if tmp_systemd_stats_result != '' and systemd_services_data['returncode'] == 0:
                 results = tmp_systemd_stats_result.split('\n')
                 for result in results:
-                    if result.strip() is not "":
+                    if result.strip() != "":
                         try:
                             result_array_unsorted = result.strip().split(' ')
                             result_array_tmp = []
                             result_array = []
                             for i in range(len(result_array_unsorted)):
-                                if str(result_array_unsorted[i]) is not "":
+                                if str(result_array_unsorted[i]) != "":
                                     result_array_tmp.append(result_array_unsorted[i])
                                 
                             for i in range(4):
@@ -1765,7 +1765,7 @@ def check_alfresco_stats():
                 alfresco_jmxConnection = JMXConnection("service:jmx:rmi:///jndi/rmi://" + uri, config['default']['alfresco-jmxuser'], config['default']['alfresco-jmxpassword'], config['default']['alfresco-javapath'])
                 alfresco_jmxQueryString = "java.lang:type=Memory/HeapMemoryUsage/used;java.lang:type=OperatingSystem/SystemLoadAverage;java.lang:type=Threading/ThreadCount;Alfresco:Name=Runtime/TotalMemory;Alfresco:Name=Runtime/FreeMemory;Alfresco:Name=Runtime/MaxMemory;Alfresco:Name=WorkflowInformation/NumberOfActivitiWorkflowInstances;Alfresco:Name=WorkflowInformation/NumberOfActivitiTaskInstances;Alfresco:Name=Authority/NumberOfGroups;Alfresco:Name=Authority/NumberOfUsers;Alfresco:Name=RepoServerMgmt/UserCountNonExpired;Alfresco:Name=ConnectionPool/NumActive;Alfresco:Name=License/RemainingDays;Alfresco:Name=License/CurrentUsers;Alfresco:Name=License/MaxUsers"
                 
-                if 'alfresco-jmxquery' in config and config['default']['alfresco-jmxquery'] is not "":
+                if 'alfresco-jmxquery' in config and config['default']['alfresco-jmxquery'] != "":
                     print("customquerx")
                     agent_log.info("customquerx")
                     alfresco_jmxQueryString = config['default']['alfresco-jmxquery']
@@ -1832,7 +1832,7 @@ def check_qemu_stats(timeout):
     
     # regex source: https://gist.github.com/kitschysynq/867caebec581cee4c44c764b4dd2bde7
     # qemu_command = "ps -ef | awk -e '/qemu/ && !/awk/ && !/openitcockpit-agent/' | sed -e 's/[^/]*/\n/' -e 's/ -/\n\t-/g'" # customized (without secure character escape)
-    qemu_command = "ps -ef | awk -e '/qemu/ && !/awk/ && !/openitcockpit-agent/' | sed -e 's/[^/]*/\\n/' -e 's/ -/\\n\\t-/g'" # customized
+    qemu_command = "ps -ef | gawk -e '/qemu/ && !/gawk/ && !/openitcockpit-agent/' | sed -e 's/[^/]*/\\n/' -e 's/ -/\\n\\t-/g'" # customized
     
     try:
         p = subprocess.Popen(qemu_command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
@@ -1863,7 +1863,7 @@ def check_qemu_stats(timeout):
             traceback.print_exc()
             
     
-    if tmp_qemu_stats_result is not None and qemu_stats_data['returncode'] is 0:
+    if tmp_qemu_stats_result is not None and qemu_stats_data['returncode'] == 0:
         ordered_results = []
         qemuresults = tmp_qemu_stats_result.split('\n\n')
         for machine in qemuresults:
@@ -1928,7 +1928,7 @@ def check_docker_stats(timeout):
     docker_stats_data['running'] = "true"
     
     docker_stats_command = 'docker stats --no-stream --format "stats;{{.ID}};{{.Name}};{{.CPUPerc}};{{.MemUsage}};{{.MemPerc}};{{.NetIO}};{{.BlockIO}};{{.PIDs}}"'
-    if system is 'windows':
+    if system == 'windows':
         docker_stats_command = 'docker stats --no-stream --format "stats;{{.ID}};{{.Name}};{{.CPUPerc}};{{.MemUsage}};;{{.NetIO}};{{.BlockIO}};"'   #fill not existing 'MemPerc' and 'PIDs' with empty ; separated value
     docker_container_list_command = 'docker container list -a -s --format "cl;{{.ID}};{{.Status}};{{.Size}};{{.Image}};{{.RunningFor}};{{.Names}}"'
 
@@ -1970,13 +1970,13 @@ def check_docker_stats(timeout):
             traceback.print_exc()
             
     
-    if tmp_docker_stats_result != '' and docker_stats_data['returncode'] is 0:
+    if tmp_docker_stats_result != '' and docker_stats_data['returncode'] == 0:
         results = tmp_docker_stats_result.split('\n')
         sorted_data = []
         sorted_stats_data = []
         sorted_cl_data = []
         for result in results:
-            if result.strip() is not "":
+            if result.strip() != "":
                 try:
                     result_array = result.strip().split(';')
                     tmp_dict = {}
@@ -2081,7 +2081,7 @@ def collect_data_for_cache(check_interval):
                     print('run alfrescostats')
                     thread = Thread(target = check_alfresco_stats)
                     thread.start()
-                if system is 'linux':
+                if system == 'linux':
                     if config['default']['qemustats'] in (1, "1", "true", "True") and 'running' not in qemu_stats_data:
                         print('run qemustats')
                         thread = Thread(target = check_qemu_stats, args = (check_interval, ))
@@ -2222,7 +2222,7 @@ def collect_customchecks_data_for_cache(customchecks):
     while not thread_stop_requested:
         need_to_be_checked = []
         for check_name in customchecks:
-            if check_name is not 'DEFAULT' and check_name is not 'default':
+            if check_name != 'DEFAULT' and check_name != 'default':
                 if 'command' in customchecks[check_name] and customchecks[check_name]['command'] != '' and ('enabled' not in customchecks[check_name] or customchecks[check_name]['enabled'] in (1, "1", "true", "True", True)):
                     command = customchecks[check_name]['command']
                     interval = int(config['default']['interval'])
@@ -2301,7 +2301,7 @@ def notify_oitc(oitc):
                         'hostuuid': oitc['hostuuid']
                     }
                     if autossl and file_readable(config['default']['autossl-crt-file']):
-                        if cert_checksum is not '':
+                        if cert_checksum != '':
                             data['checksum'] = cert_checksum
                         else:
                             with open(config['default']['autossl-crt-file'], 'r') as f:
@@ -2328,7 +2328,7 @@ def notify_oitc(oitc):
                     response = requests.post(oitc['url'].strip() + '/agentconnector/updateCheckdata.json', data=data, headers=headers, verify=False)
                     agent_log.info(response)
 
-                    if response.content.decode('utf-8').strip() is not '':
+                    if response.content.decode('utf-8').strip() != '':
                         responseData = json.loads(response.content.decode('utf-8'))
                         if autossl and 'new_ca' in responseData and 'ca_checksum' in responseData and responseData['new_ca'] in (1, "1", "true", "True", True) and file_readable(config['default']['autossl-ca-file']):
 
@@ -2338,7 +2338,7 @@ def notify_oitc(oitc):
                                 sha512.update(ca.encode())
                                 ca_checksum = sha512.hexdigest().upper()
 
-                                if responseData['new_ca'] is ca_checksum:   # validates, that new ca request comes from old ca server
+                                if responseData['new_ca'] == ca_checksum:   # validates, that new ca request comes from old ca server
                                     doNotWaitForReturnExecutor = futures.ThreadPoolExecutor(max_workers=1)
                                     doNotWaitForReturnExecutor.submit(pull_crt_from_server, True)
                     
@@ -2581,7 +2581,7 @@ def pull_crt_from_server(renew=False):
         return False
     
     with certificate_check_lock:
-        if config['oitc']['url'] and config['oitc']['url'] is not "" and config['oitc']['apikey'] and config['oitc']['apikey'] is not "" and config['oitc']['hostuuid'] and config['oitc']['hostuuid'] is not "":
+        if config['oitc']['url'] and config['oitc']['url'] != "" and config['oitc']['apikey'] and config['oitc']['apikey'] != "" and config['oitc']['hostuuid'] and config['oitc']['hostuuid'] != "":
             try:
                 csr = create_new_csr()
 
@@ -2609,7 +2609,7 @@ def pull_crt_from_server(renew=False):
                         
 
                 response = requests.post(config['oitc']['url'].strip() + '/agentconnector/certificate.json', data=data, headers=headers, verify=False)
-                if response.content.decode('utf-8').strip() is not '':
+                if response.content.decode('utf-8').strip() != '':
                     jdata = json.loads(response.content.decode('utf-8'))
 
                     if 'checksum_missing' in jdata:
@@ -2725,7 +2725,7 @@ def check_auto_certificate():
                     
     if requestNewCertificate:
         agent_log.info('Try pulling new Certificate')
-        if pull_crt_from_server(True) is not False:
+        if pull_crt_from_server(True):
             check_auto_certificate()
 
 
@@ -2817,7 +2817,7 @@ def load_configuration():
         elif opt in ("-s", "--stacktrace"):
             stacktrace = True
     
-    if configpath is not "":
+    if configpath != "":
         if file_readable(configpath):
             with open(configpath, 'r') as configfile:
                 print_verbose('Load agent configuration file "%s"' % (configpath), False)
