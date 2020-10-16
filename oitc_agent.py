@@ -1586,9 +1586,7 @@ class AgentWebserver(BaseHTTPRequestHandler):
             else:
                 self._process_get_data()
 
-            del cached_check_data
         except:
-            
             if stacktrace:
                 traceback.print_exc()
                 
