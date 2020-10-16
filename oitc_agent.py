@@ -65,7 +65,7 @@ if sys.platform == 'darwin' or (system == 'linux' and 'linux' not in sys.platfor
 log_formatter = logging.Formatter('%(asctime)s; %(levelname)s; %(lineno)d; %(message)s')
 agent_log_path = '/etc/openitcockpit-agent/'
 if system == 'darwin':
-    agent_log_path = '/Library/openitcockpit-agent/'
+    agent_log_path = '/Applications/openitcockpit-agent/'
 if system == 'windows':
     agent_log_path = 'C:'+os.path.sep+'Program Files'+os.path.sep+'it-novum'+os.path.sep+'openitcockpit-agent'+os.path.sep
 
