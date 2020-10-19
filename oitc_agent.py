@@ -68,6 +68,8 @@ if system == 'darwin':
     agent_log_path = '/Applications/openitcockpit-agent/'
 if system == 'windows':
     agent_log_path = 'C:'+os.path.sep+'Program Files'+os.path.sep+'it-novum'+os.path.sep+'openitcockpit-agent'+os.path.sep
+    #agent_log_path = 'C:'+os.path.sep
+
 
 logfile = agent_log_path + 'agent.log'
 
@@ -157,7 +159,7 @@ except:
         print('If you want to use the alfresco stats check try: pip install jmxquery')
         agent_log.info('If you want to use the alfresco stats check try: pip install jmxquery')
 
-agentVersion = "1.0.5"
+agentVersion = "1.0.6"
 days_until_cert_warning = 120
 days_until_ca_warning = 30
 enableSSL = False
@@ -2722,7 +2724,7 @@ def check_auto_certificate():
                     
     if requestNewCertificate:
         agent_log.info('Try pulling new Certificate')
-        if pull_crt_from_server(True):
+        if pull_crt_from_server(True) is not False:
             check_auto_certificate()
 
 
