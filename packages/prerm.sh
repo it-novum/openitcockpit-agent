@@ -59,6 +59,10 @@ if [ -f /Applications/openitcockpit-agent/openitcockpit-agent-python3.macos.bin 
         rm /Applications/openitcockpit-agent/com.it-novum.openitcockpit.agent.plist
     fi
     
+    if [ -f /Library/LaunchDaemons/com.it-novum.openitcockpit.agent.plist ]; then
+        rm /Library/LaunchDaemons/com.it-novum.openitcockpit.agent.plist
+    fi
+
     if [ -f /Applications/openitcockpit-agent/config.cnf ]; then
         rm /Applications/openitcockpit-agent/config.cnf
     fi
