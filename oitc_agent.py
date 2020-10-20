@@ -1587,7 +1587,6 @@ class AgentWebserver(BaseHTTPRequestHandler):
                     self.wfile.write('not authenticated'.encode())
             else:
                 self._process_get_data()
-
         except:
             if stacktrace:
                 traceback.print_exc()

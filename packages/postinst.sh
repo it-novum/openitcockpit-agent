@@ -42,6 +42,11 @@ if [ -f /usr/bin/openitcockpit-agent-python3.linux.bin ]; then
 fi
 
 if [ -f /Applications/openitcockpit-agent/openitcockpit-agent-python3.macos.bin ]; then
+    if [ -f /Applications/openitcockpit-agent/com.it-novum.openitcockpit.agent.plist ]; then
+        if [ -d /Library/LaunchDaemons/ ]; then
+            ln -s /Applications/openitcockpit-agent/com.it-novum.openitcockpit.agent.plist /Library/LaunchDaemons/
+        fi
+    fi
 
     enableConfig="0"
     set +e
@@ -53,7 +58,7 @@ if [ -f /Applications/openitcockpit-agent/openitcockpit-agent-python3.macos.bin 
     set -e
     
     if [ "$enableConfig" == "1" ]; then
-        /bin/launchctl load /Applications/openitcockpit-agent/com.it-novum.openitcockpit.agent.plist
+        /bin/launchctl load /Library/LaunchDaemons/com.it-novum.openitcockpit.agent.plist
     fi
     
     /bin/launchctl start com.it-novum.openitcockpit.agent
