@@ -1,3 +1,13 @@
 .DS_Store
 ._*
 .idea
+.vscode
+ssl
+config.cnf
+*.log
+__pycache__/
+build/
+dist/
+oitc_agent.spec
+python3-windows-env/
+
