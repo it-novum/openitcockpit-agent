@@ -75,4 +75,8 @@ if [ -f /Applications/openitcockpit-agent/openitcockpit-agent-python3.macos.bin 
         rm -r /Applications/openitcockpit-agent
     fi
 
+    if [ -d /private/etc/openitcockpit-agent ]; then
+        rm -r /private/etc/openitcockpit-agent
+    fi
+
 fi
