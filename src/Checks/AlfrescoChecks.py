@@ -42,6 +42,10 @@ class ClfrescoChecks(Check):
         alfresco_stats_data['running'] = "true"
 
         alfrescostats = []
+
+        # todo refactor with: self.Config.config.getboolean('default', 'cpustats') is True
+        # https://docs.python.org/3/library/configparser.html#configparser.ConfigParser.getboolean
+        # https://docs.python.org/3/library/configparser.html#configparser.ConfigParser.BOOLEAN_STATES
         if self.jmx_import_successfull and 'alfrescostats' in self.Config.config['default'] and \
                 self.Config.config['default'][
                     'alfrescostats'] in (

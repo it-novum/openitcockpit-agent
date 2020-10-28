@@ -153,28 +153,13 @@ class Config:
                 self.config['default']['try-autossl'] = "false"
                 break
 
-        if self.config['default']['verbose'] in (1, "1", "true", "True", True):
-            self.verbose = True
-        else:
-            self.verbose = False
-
-        if self.config['default']['stacktrace'] in (1, "1", "true", "True", True):
-            self.stacktrace = True
-        else:
-            self.stacktrace = False
-
-        if self.config['default']['try-autossl'] in (1, "1", "true", "True", True):
-            self.autossl = True
-        else:
-            self.autossl = False
+        self.verbose = self.config.getboolean('default', 'verbose')
+        self.stacktrace = self.config.getboolean('default', 'stacktrace')
+        self.autossl = self.config.getboolean('default', 'try-autossl')
+        self.temperatureIsFahrenheit = self.config.getboolean('default', 'temperature-fahrenheit')
 
         if self.config['default']['autossl-folder'] != "":
             self.build_autossl_defaults()
-
-        if self.config['default']['temperature-fahrenheit'] in (1, "1", "true", "True", True):
-            self.temperatureIsFahrenheit = True
-        else:
-            self.temperatureIsFahrenheit = False
 
         if 'auth' in self.config['default'] and str(self.config['default']['auth']).strip():
             if not self.is_base64(s=self.config['default']['auth']):

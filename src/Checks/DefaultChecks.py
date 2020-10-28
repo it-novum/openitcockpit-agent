@@ -23,10 +23,12 @@ class DefaultChecks(Check):
         super().__init__(config, agent_log, check_store, check_params)
         self.operating_system = OperatingSystem()
 
+        self.keyName = "default_checks"
+
         self.cached_diskIO = {}
         self.cached_netIO = {}
 
-    def run_check(self):
+    def run_check(self) -> dict:
         """Function to run the default checks
 
         Run default checks to get following information points.
@@ -70,7 +72,7 @@ class DefaultChecks(Check):
         # if verbose:
         #    print_lock.acquire()
 
-        if self.Config.config['default']['cpustats'] in (1, "1", "true", "True"):
+        if self.Config.config.getboolean('default', 'cpustats'):
             # CPU #
             cpuTotalPercentage = psutil.cpu_percent()
             cpuPercentage = psutil.cpu_percent(interval=0, percpu=True)
@@ -101,7 +103,7 @@ class DefaultChecks(Check):
         swap = psutil.swap_memory()
 
         disks = []
-        if self.Config.config['default']['diskstats'] in (1, "1", "true", "True"):
+        if self.Config.config.getboolean('default', 'diskstats'):
             # DISKS #
             try:
                 for disk in psutil.disk_partitions():
@@ -122,7 +124,7 @@ class DefaultChecks(Check):
                     traceback.print_exc()
 
         diskIO = None
-        if hasattr(psutil, "disk_io_counters") and self.Config.config['default']['diskio'] in (1, "1", "true", "True"):
+        if hasattr(psutil, "disk_io_counters") and self.Config.config.getboolean('default', 'diskio'):
             try:
                 # diskIOTotal = psutil.disk_io_counters(perdisk=False)._asdict()
                 # diskIO = psutil.disk_io_counters(perdisk=True)
@@ -183,7 +185,7 @@ class DefaultChecks(Check):
                     traceback.print_exc()
 
         netIO = None
-        if hasattr(psutil, "net_io_counters") and self.Config.config['default']['netio'] in (1, "1", "true", "True"):
+        if hasattr(psutil, "net_io_counters") and self.Config.config.getboolean('default', 'netio'):
             try:
                 netIO = {device: data._asdict() for device, data in psutil.net_io_counters(pernic=True).items()}
                 netIO['timestamp'] = time.time()
@@ -251,7 +253,7 @@ class DefaultChecks(Check):
                     traceback.print_exc()
 
         net_stats = None
-        if hasattr(psutil, "net_if_stats") and self.Config.config['default']['netstats'] in (1, "1", "true", "True"):
+        if hasattr(psutil, "net_if_stats") and self.Config.config.getboolean('default', 'netstats'):
             try:
                 net_stats = {device: data._asdict() for device, data in psutil.net_if_stats().items()}
             except:
@@ -261,7 +263,7 @@ class DefaultChecks(Check):
                     traceback.print_exc()
 
         sensors = {}
-        if self.Config.config['default']['sensorstats'] in (1, "1", "true", "True"):
+        if self.Config.config.getboolean('default', 'sensorstats'):
             try:
                 if hasattr(psutil, "sensors_temperatures") and self.operating_system.isWindows() is False:
                     sensors['temperatures'] = {}
@@ -334,11 +336,10 @@ class DefaultChecks(Check):
 
         # processes = [ psutil.Process(pid).as_dict() for pid in pids ]
         processes = []
-        customchecks = {}
 
         tmpProcessList = []
 
-        if self.Config.config['default']['processstats'] in (1, "1", "true", "True"):
+        if self.Config.config.getboolean('default', 'processstats'):
             for pid in pids:
                 try:
                     p = psutil.Process(pid)
@@ -393,7 +394,7 @@ class DefaultChecks(Check):
                         if self.Config.stacktrace:
                             traceback.print_exc()
 
-                    if self.Config.config['default']['processstats-including-child-ids'] in (1, "1", "true", "True"):
+                    if self.Config.config.getboolean('default', 'processstats-including-child-ids'):
                         try:
                             if callable(p.children):
                                 with self.suppress_stdout_stderr():
@@ -560,7 +561,7 @@ class DefaultChecks(Check):
         windows_services = []
         windows_eventlog = {}
         if self.operating_system.isWindows() is True:
-            if self.Config.config['default']['winservices'] in (1, "1", "true", "True"):
+            if self.Config.config.getboolean('default', 'winservices'):
                 try:
                     for win_process in psutil.win_service_iter():
                         windows_services.append(win_process.as_dict())
@@ -570,12 +571,12 @@ class DefaultChecks(Check):
                     if self.Config.stacktrace:
                         traceback.print_exc()
 
-            if self.Config.config['default']['wineventlog'] in (1, "1", "true", "True"):
+            if self.Config.config.getboolean('default', 'wineventlog'):
                 try:
                     server = 'localhost'  # name of the target computer to get event logs
                     logTypes = []
-                    if self.Config.config['default']['wineventlog-logtypes'] != "":
-                        for logtype in self.Config.config['default']['wineventlog-logtypes'].split(','):
+                    if self.Config.config.get('default', 'wineventlog-logtypes') != "":
+                        for logtype in self.Config.config.get('default', 'wineventlog-logtypes').split(','):
                             if logtype.strip() != '':
                                 logTypes.append(logtype.strip())
                     else:
@@ -682,49 +683,49 @@ class DefaultChecks(Check):
             # 'processes': processes
         }
 
-        if self.Config.config['default']['diskstats'] in (1, "1", "true", "True"):
+        if self.Config.config.getboolean('default', 'diskstats'):
             out['disks'] = disks
 
-        if self.Config.config['default']['diskio'] in (1, "1", "true", "True"):
+        if self.Config.config.getboolean('default', 'diskio'):
             out['disk_io'] = diskIO
 
-        if self.Config.config['default']['netstats'] in (1, "1", "true", "True"):
+        if self.Config.config.getboolean('default', 'netstats'):
             out['net_stats'] = net_stats
 
-        if self.Config.config['default']['netio'] in (1, "1", "true", "True"):
+        if self.Config.config.getboolean('default', 'netio'):
             out['net_io'] = netIO
 
-        if self.Config.config['default']['sensorstats'] in (1, "1", "true", "True"):
+        if self.Config.config.getboolean('default', 'sensorstats'):
             out['sensors'] = sensors
 
-        if self.Config.config['default']['cpustats'] in (1, "1", "true", "True"):
+        if self.Config.config.getboolean('default', 'cpustats'):
             out['cpu_total_percentage'] = cpuTotalPercentage
             out['cpu_percentage'] = cpuPercentage
             out['cpu_total_percentage_detailed'] = cpuTotalPercentageDetailed
             out['cpu_percentage_detailed'] = cpuPercentageDetailed
 
-        if self.Config.config['default']['processstats'] in (1, "1", "true", "True"):
+        if self.Config.config.getboolean('default', 'processstats'):
             out['processes'] = processes
 
         if self.operating_system.isWindows() is True:
-            if self.Config.config['default']['winservices'] in (1, "1", "true", "True"):
+            if self.Config.config.getboolean('default', 'winservices'):
                 out['windows_services'] = windows_services
-            if self.Config.config['default']['wineventlog'] in (1, "1", "true", "True"):
+            if self.Config.config.getboolean('default', 'wineventlog'):
                 out['windows_eventlog'] = windows_eventlog
 
-        #if len(systemd_services_data) > 0:
+        # if len(systemd_services_data) > 0:
         #    out['systemd_services'] = systemd_services_data
-#
-        #if len(cached_customchecks_check_data) > 0:
+        #
+        # if len(cached_customchecks_check_data) > 0:
         #    out['customchecks'] = cached_customchecks_check_data
-#
-        #if len(docker_stats_data) > 0:
+        #
+        # if len(docker_stats_data) > 0:
         #    out['dockerstats'] = docker_stats_data
-#
-        #if len(qemu_stats_data) > 0:
+        #
+        # if len(qemu_stats_data) > 0:
         #    out['qemustats'] = qemu_stats_data
-#
-        #if 'result' in alfresco_stats_data and config['default']['alfrescostats'] in (1, "1", "true", "True"):
+        #
+        # if 'result' in alfresco_stats_data and config['default']['alfrescostats'] in (1, "1", "true", "True"):
         #    out['alfrescostats'] = alfresco_stats_data['result']
 
         # if jmx_import_successfull and 'alfrescostats' in config['default'] and config['default']['alfrescostats'] in (1, "1", "true", "True", True):

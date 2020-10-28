@@ -23,6 +23,7 @@ from src.Checks.DefaultChecks import DefaultChecks
 from src.ParentProcess import ParentProcess
 from src.Config import Config
 from src.AgentLog import AgentLog
+from src.CheckResultStore import CheckResultStore
 
 if __name__ == '__main__':
 
@@ -33,7 +34,7 @@ if __name__ == '__main__':
 
     agent_log = AgentLog(Config=Config)
 
-    check_store = {}
+    check_store = CheckResultStore()
     check_params = {}
 
 
