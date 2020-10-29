@@ -3,8 +3,8 @@ import traceback
 import time
 import subprocess
 
-from src.Checks.Check import Check
-from src.OperatingSystem import OperatingSystem
+from src.checks.Check import Check
+from src.operating_system import OperatingSystem
 
 
 class DockerChecks(Check):
@@ -13,10 +13,11 @@ class DockerChecks(Check):
         super().__init__(config, agent_log, check_store, check_params)
         self.operating_system = OperatingSystem()
 
-        self.docker_stats_data = {}
-        self.cached_check_data = {}
+        self.key_name = "docker_checks"
 
-    def run_check(self):
+        self.docker_stats_data = {}
+
+    def run_check(self) -> dict:
         """Function that starts as a thread to run the docker status check
 
         Linux only!
@@ -29,7 +30,7 @@ class DockerChecks(Check):
             Command timeout in seconds
 
         """
-        
+
         print('Start docker status check with timeout of %ss at %s' % (str(timeout), str(round(time.time()))))
         if self.Config.verbose:
             self.agent_log.info(
@@ -63,7 +64,8 @@ class DockerChecks(Check):
                     stderr2 = stderr2.decode()
 
                 self.docker_stats_data['error'] = None if str(stderr) == 'None' else str(stderr)
-                self.docker_stats_data['error'] = None if str(stderr) == 'None' and str(stderr2) == 'None' else str(stderr2)
+                self.docker_stats_data['error'] = None if str(stderr) == 'None' and str(stderr2) == 'None' else str(
+                    stderr2)
                 self.docker_stats_data['returncode'] = p.returncode
             except subprocess.TimeoutExpired:
                 self.agent_log.error('Docker status check timed out')
@@ -134,7 +136,7 @@ class DockerChecks(Check):
         elif self.docker_stats_data['error'] is None and tmp_docker_stats_result != "":
             self.docker_stats_data['error'] = tmp_docker_stats_result
 
-        if len(self.docker_stats_data) > 0:
-            self.cached_check_data['dockerstats'] = self.docker_stats_data
         self.agent_log.info('Docker status check finished')
         del self.docker_stats_data['running']
+
+        return self.docker_stats_data.copy()

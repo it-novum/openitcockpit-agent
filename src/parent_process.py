@@ -1,5 +1,5 @@
-from src.Config import Config
-from src.AgentLog import AgentLog
+from src.config import Config
+from src.agent_log import AgentLog
 
 
 class ParentProcess:

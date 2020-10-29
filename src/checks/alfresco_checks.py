@@ -2,19 +2,20 @@ import time
 import traceback
 import subprocess
 
-from src.Checks.Check import Check
-from src.OperatingSystem import OperatingSystem
-from src.Filesystem import Filesystem
+from src.checks.Check import Check
+from src.operating_system import OperatingSystem
+from src.filesystem import Filesystem
 
 
-class ClfrescoChecks(Check):
+class AlfrescoChecks(Check):
 
     def __init__(self, config, agent_log, check_store, check_params):
         super().__init__(config, agent_log, check_store, check_params)
         self.operating_system = OperatingSystem()
 
+        self.key_name = "alfresco_checks"
+
         self.alfresco_stats_data = {}
-        self.cached_check_data = {}
 
         self.jmx_import_successfull = False
         try:
@@ -26,30 +27,24 @@ class ClfrescoChecks(Check):
             print('If you want to use the alfresco stats check try: pip3 install jmxquery')
             self.agent_log.error('If you want to use the alfresco stats check try: pip3 install jmxquery')
 
-    def check_alfresco_stats(self):
+    def run_check(self) -> dict:
         """Function that starts as a thread to run the alfresco stats check
 
         Function that a jmx query to get a status result for a configured alfresco enterprise instance.
 
         """
-        global alfresco_stats_data
-        global cached_check_data
-
         self.agent_log.info('Start alfresco stats check at %s' % (str(round(time.time()))))
         if self.Config.verbose:
             print('Start alfresco stats check at %s' % (str(round(time.time()))))
 
-        alfresco_stats_data['running'] = "true"
+        self.alfresco_stats_data['running'] = "true"
 
         alfrescostats = []
 
         # todo refactor with: self.Config.config.getboolean('default', 'cpustats') is True
         # https://docs.python.org/3/library/configparser.html#configparser.ConfigParser.getboolean
         # https://docs.python.org/3/library/configparser.html#configparser.ConfigParser.BOOLEAN_STATES
-        if self.jmx_import_successfull and 'alfrescostats' in self.Config.config['default'] and \
-                self.Config.config['default'][
-                    'alfrescostats'] in (
-                1, "1", "true", "True", True):
+        if self.jmx_import_successfull and self.Config.config.getboolean('default', 'alfrescostats', fallback=False):
             if Filesystem.file_readable(self.Config.config['default']['alfresco-javapath']):
                 try:
                     uri = ("%s:%s%s" % (
@@ -95,7 +90,8 @@ class ClfrescoChecks(Check):
             else:
                 alfrescostats = 'JAVA instance not found! (' + self.Config.config['default']['alfresco-javapath'] + ')'
 
-        alfresco_stats_data['result'] = alfrescostats
-        cached_check_data['alfrescostats'] = alfrescostats
         self.agent_log.info('Alfresco stats check finished')
-        del alfresco_stats_data['running']
+
+        self.alfresco_stats_data['result'] = alfrescostats
+        return alfrescostats.copy()
+

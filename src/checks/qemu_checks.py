@@ -2,8 +2,8 @@ import time
 import subprocess
 import traceback
 
-from src.Checks.Check import Check
-from src.OperatingSystem import OperatingSystem
+from src.checks.Check import Check
+from src.operating_system import OperatingSystem
 
 
 class QemuChecks(Check):
@@ -12,10 +12,11 @@ class QemuChecks(Check):
         super().__init__(config, agent_log, check_store, check_params)
         self.operating_system = OperatingSystem()
 
-        self.qemu_stats_data = {}
-        self.cached_check_data = {}
+        self.key_name = "qemu_checks"
 
-    def check_qemu_stats(self, timeout):
+        self.qemu_stats_data = {}
+
+    def run_check(self) -> dict:
         """Function that starts as a thread to run the qemu status check
 
         Linux only! (beta)
@@ -28,6 +29,8 @@ class QemuChecks(Check):
             Command timeout in seconds
 
         """
+
+        timeout = self.check_params['timeout']
 
         self.agent_log.info(
             'Start qemu status check with timeout of %ss at %s' % (str(timeout), str(round(time.time()))))
@@ -101,7 +104,7 @@ class QemuChecks(Check):
             else:
                 self.qemu_stats_data['error'] = tmp_qemu_stats_result
 
-        if len(self.qemu_stats_data) > 0:
-            self.cached_check_data['qemustats'] = self.qemu_stats_data
         self.agent_log.info('Qemu status check finished')
         del self.qemu_stats_data['running']
+
+        return self.qemu_stats_data.copy()

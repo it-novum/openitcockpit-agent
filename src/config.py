@@ -4,9 +4,9 @@ import os
 import sys
 import configparser
 
-from src.Filesystem import Filesystem
-from src.Help import Help
-from src.OperatingSystem import OperatingSystem
+from src.filesystem import Filesystem
+from src.help import Help
+from src.operating_system import OperatingSystem
 
 
 class Config:

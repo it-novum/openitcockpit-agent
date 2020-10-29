@@ -2,8 +2,8 @@ import traceback
 import time
 import subprocess
 
-from src.Checks.Check import Check
-from src.OperatingSystem import OperatingSystem
+from src.checks.Check import Check
+from src.operating_system import OperatingSystem
 
 
 class SystemdChecks(Check):
@@ -12,10 +12,11 @@ class SystemdChecks(Check):
         super().__init__(config, agent_log, check_store, check_params)
         self.operating_system = OperatingSystem()
 
-        self.systemd_services_data = {}
-        self.cached_check_data = {}
+        self.key_name = "systemd_checks"
 
-    def check_systemd_services(self, timeout):
+        self.systemd_services_data = {}
+
+    def run_check(self) -> dict:
         """Function that starts as a thread to run the systemd services check
 
         Linux only! (beta)
@@ -29,6 +30,8 @@ class SystemdChecks(Check):
 
         """
 
+        timeout = self.check_params['timeout']
+
         self.agent_log.info(
             'Start systemd services check with timeout of %ss at %s' % (str(timeout), str(round(time.time()))))
         if self.Config.verbose:
@@ -38,8 +41,8 @@ class SystemdChecks(Check):
         self.systemd_services_data['running'] = "true"
 
         systemd_services = []
-        if self.operating_system.isLinux() is True and self.Config.config['default']['systemdservices'] in (
-                1, "1", "true", "True"):
+        if self.operating_system.isLinux() is True and self.Config.config.getboolean('default',
+                                                                                     'systemdservices') is True:
             systemd_stats_command = "systemctl list-units --type=service --all --no-legend --no-pager --no-ask-password"
             try:
                 tmp_systemd_stats_result = ''
@@ -107,6 +110,6 @@ class SystemdChecks(Check):
                     traceback.print_exc()
 
         del self.systemd_services_data['running']
-        if len(self.systemd_services_data) > 0:
-            self.cached_check_data['systemd_services'] = self.systemd_services_data
         self.agent_log.info('Systemd services check finished')
+
+        return self.systemd_services_data.copy()

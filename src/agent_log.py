@@ -1,4 +1,4 @@
-from src.Config import Config
+from src.config import Config
 
 
 class AgentLog:
