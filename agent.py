@@ -18,6 +18,7 @@
 # current psutil>=5.5.0,<=5.6.2 limitation due to https://github.com/giampaolo/psutil/issues/1723
 import concurrent.futures
 import signal
+import threading
 import time
 
 from src.checks.default_checks import DefaultChecks
@@ -26,6 +27,7 @@ from src.parent_process import ParentProcess
 from src.config import Config
 from src.agent_log import AgentLog
 from src.check_result_store import CheckResultStore
+from src.http_server.webserver import Webserver
 
 if __name__ == '__main__':
 
@@ -35,8 +37,19 @@ if __name__ == '__main__':
     config.load_configuration()
 
     agent_log = AgentLog(Config=Config)
-
     check_store = CheckResultStore()
+
+    webserver = Webserver(config, agent_log, check_store)
+    webserver.start_webserver()
+
+    # Start the web server in a new thread
+    webserver_thread = threading.Thread(target=webserver.httpd.serve_forever)
+    webserver_thread.start()
+
+
+    print("after webserver")
+
+
     check_params = {
         "timeout": 5
     }
@@ -55,6 +68,7 @@ if __name__ == '__main__':
 
     check_interval = config.config.getint('default', 'interval', fallback=5)
     if(check_interval <= 0):
+        agent_log.info('check_interval <= 0. Using 5 seconds as check_interval for now.')
         check_interval = 5
 
     # Run checks on agent startup
@@ -75,6 +89,8 @@ if __name__ == '__main__':
             check_interval_counter += 1
             time.sleep(1)
 
+    # Also kill the webserver
+    webserver_thread.join()
 
     print('all done')
 
