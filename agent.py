@@ -53,13 +53,28 @@ if __name__ == '__main__':
     #    i += 1
     #    check.real_check_run()
 
+    check_interval = config.config.getint('default', 'interval', fallback=5)
+    if(check_interval <= 0):
+        check_interval = 5
+
+    # Run checks on agent startup
+    check_interval_counter = check_interval
     while True:
-        with concurrent.futures.ThreadPoolExecutor(max_workers=3) as executor:
-            i = 0
-            for check in checks:
-                print('Starting new Thread %d', i)
-                i += 1
-                executor.submit(check.real_check_run)
+        if(check_interval_counter >= check_interval):
+            #Execute checks
+            print('run checks')
+            check_interval_counter = 1
+            with concurrent.futures.ThreadPoolExecutor(max_workers=3) as executor:
+                i = 0
+                for check in checks:
+                    print('Starting new Thread %d', i)
+                    i += 1
+                    executor.submit(check.real_check_run)
+        else:
+            print('Sleep wait for next run ', check_interval_counter, '/', check_interval)
+            check_interval_counter += 1
+            time.sleep(1)
+
 
     print('all done')
 
