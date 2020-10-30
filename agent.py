@@ -30,13 +30,17 @@ from src.check_result_store import CheckResultStore
 from src.http_server.webserver import Webserver
 
 if __name__ == '__main__':
-
     agentVersion = "2.0.0"
 
     config = Config(agentVersion)
     config.load_configuration()
 
     agent_log = AgentLog(Config=Config)
+
+    parent_process = ParentProcess(config, agent_log)
+    signal.signal(signal.SIGINT, parent_process.signal_handler)
+    signal.signal(signal.SIGTERM, parent_process.signal_handler)
+
     check_store = CheckResultStore()
 
     webserver = Webserver(config, agent_log, check_store)
@@ -46,16 +50,14 @@ if __name__ == '__main__':
     webserver_thread = threading.Thread(target=webserver.httpd.serve_forever)
     webserver_thread.start()
 
-
-    print("after webserver")
-
-
     check_params = {
         "timeout": 5
     }
 
-    checks = [DefaultChecks(config, agent_log, check_store, check_params),
-              SystemdChecks(config, agent_log, check_store, check_params)]
+    checks = [
+        DefaultChecks(config, agent_log, check_store, check_params),
+        SystemdChecks(config, agent_log, check_store, check_params)
+    ]
 
     #    default_checks = default_checks(config, agent_log, check_store, check_params)
     #    default_checks.real_check_run()
@@ -67,15 +69,16 @@ if __name__ == '__main__':
     #    check.real_check_run()
 
     check_interval = config.config.getint('default', 'interval', fallback=5)
-    if(check_interval <= 0):
+    if (check_interval <= 0):
         agent_log.info('check_interval <= 0. Using 5 seconds as check_interval for now.')
         check_interval = 5
 
     # Run checks on agent startup
     check_interval_counter = check_interval
-    while True:
-        if(check_interval_counter >= check_interval):
-            #Execute checks
+    while parent_process.loop is True:
+        print(parent_process.loop)
+        if (check_interval_counter >= check_interval):
+            # Execute checks
             print('run checks')
             check_interval_counter = 1
             with concurrent.futures.ThreadPoolExecutor(max_workers=3) as executor:
@@ -89,28 +92,12 @@ if __name__ == '__main__':
             check_interval_counter += 1
             time.sleep(1)
 
+    agent_log.info("Agent is going to shut down")
+
     # Also kill the webserver
+    webserver.httpd.shutdown()
     webserver_thread.join()
+    agent_log.info("Web server stopped")
 
-    print('all done')
+    agent_log.info("Agent stopped")
 
-    result = check_store.get_store()
-
-    print(str(result))
-
-    # logging.info("Testing update. Ending value is %d.", database.value)
-
-# ParentProcess = ParentProcess()
-
-# signal.signal(signal.SIGINT, ParentProcess.signal_handler)
-# signal.signal(signal.SIGTERM, ParentProcess.signal_handler)
-
-# ParentProcess.load_main_processing()
-
-# try:
-#    while True:
-#        signal.pause()
-# except AttributeError:
-#    # signal.pause() is missing for Windows; wait 1ms and loop instead
-#    while True:
-#        time.sleep(0.1)
