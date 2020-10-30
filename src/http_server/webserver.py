@@ -4,6 +4,7 @@ from src.agent_log import AgentLog
 from src.check_result_store import CheckResultStore
 from src.http_server.daemon_threaded_http_server import DaemonThreadedHTTPServer
 from src.http_server.agent_request_handler import AgentRequestHandler
+from src.certificates import Certificates
 import ssl
 
 
@@ -14,9 +15,13 @@ class Webserver:
         self.agent_log: AgentLog = agent_log
         self.check_store: CheckResultStore = check_store
 
-        # Dependency injection
+        self.certificates = Certificates(config, agent_log)
+
+        # Dependency injection into AgentRequestHandler
         AgentRequestHandler.check_store = check_store
         AgentRequestHandler.config = config
+        AgentRequestHandler.certificates = self.certificates
+        AgentRequestHandler.agent_log = agent_log
 
         self.enable_ssl = False
         if Filesystem.file_readable(

@@ -3,12 +3,16 @@ import traceback
 from http.server import BaseHTTPRequestHandler
 from src.check_result_store import CheckResultStore
 from src.config import Config
+from src.certificates import Certificates
+from src.agent_log import AgentLog
 
 
 class AgentRequestHandler(BaseHTTPRequestHandler):
     # todo I don't like this very much
     check_store = None  # type: CheckResultStore
-    config = None # type: Config
+    config = None  # type: Config
+    certificates = None  # type: Certificates
+    agent_log = None  # type: AgentLog
 
     def _set_200_ok_headers(self):
         self.send_response(200)
@@ -22,21 +26,42 @@ class AgentRequestHandler(BaseHTTPRequestHandler):
 
         self.end_headers()
 
-    def _process_get_data(self):
+    def _process_get_request(self):
         self._set_200_ok_headers()
 
         if self.path == "/":
             check_results = self.check_store.get_store()
             self.wfile.write(json.dumps(check_results).encode())
-        elif self.path == "/config" and self.config.config.getboolean('default', 'config-update-mode', fallback=False) is True:
-            self.wfile.write(json.dumps(self.build_json_config()).encode())
+        elif self.path == "/config" and self.config.config.getboolean('default', 'config-update-mode',
+                                                                      fallback=False) is True:
+            config = self.config.get_config_as_dict()
+            self.wfile.write(json.dumps(config).encode())
         elif self.path == "/getCsr":
             data = {}
             if self.config.autossl:
-                data['csr'] = self.get_csr().decode("utf-8")
+                data['csr'] = self.certificates.get_csr().decode("utf-8")
             else:
                 data['csr'] = "disabled"
             self.wfile.write(json.dumps(data).encode())
+
+    def _process_post_request(self, data):
+        executor = futures.ThreadPoolExecutor(max_workers=1)
+
+        response = {
+            'success': False
+        }
+
+        if self.path == "/config" and self.config.config.getboolean('default', 'config-update-mode',
+                                                                    fallback=False) is True:
+            executor.submit(check_update_data, data)
+            response['success'] = True
+
+        elif self.path == "/updateCrt" and self.config.autossl:
+            permanent_webserver_thread(update_crt_files, (data,))
+            response['success'] = True
+
+        self._set_200_ok_headers()
+        self.wfile.write(json.dumps(response).encode())
 
     def do_GET(self):
         """
@@ -47,16 +72,41 @@ class AgentRequestHandler(BaseHTTPRequestHandler):
                 if str(self.config.config['default']['auth']).strip() and self.headers.get('Authorization') == None:
                     self._set_401_unauthorized_headers()
                     self.wfile.write('no auth header received'.encode())
-                elif self.headers.get('Authorization') == 'Basic ' + self.config.config['default']['auth'] or self.config.config['default']['auth'] == "":
-                    self._process_get_data()
+                elif self.headers.get('Authorization') == 'Basic ' + self.config.config['default']['auth'] or \
+                        self.config.config['default']['auth'] == "":
+                    self._process_get_request()
                 elif str(self.config.config['default']['auth']).strip():
                     self._set_401_unauthorized_headers()
                     self.wfile.write(self.headers.get('Authorization').encode())
                     self.wfile.write('not authenticated'.encode())
             else:
-                self._process_get_data()
+                self._process_get_request()
         except:
+            self.agent_log.error('Error while processing GET request')
             if self.config.stacktrace:
                 traceback.print_exc()
 
+    def do_POST(self):
+        """
+        Call back function which gets called by the webserver whenever a POST request gets received
+        """
+        try:
+            if 'auth' in self.config.config['default']:
+                if str(self.config.config['default']['auth']).strip() and self.headers.get('Authorization') == None:
+                    self._set_401_unauthorized_headers()
+                    self.wfile.write('no auth header received'.encode())
+                elif self.headers.get('Authorization') == 'Basic ' + self.config.config['default']['auth'] or \
+                        self.config.config['default']['auth'] == "":
+                    self.wfile.write(json.dumps(
+                        self._process_post_request(data=self.rfile.read(int(self.headers['Content-Length'])))).encode())
+                elif str(self.config.config['default']['auth']).strip():
+                    self._set_401_unauthorized_headers()
+                    self.wfile.write(self.headers.get('Authorization').encode())
+                    self.wfile.write('not authenticated'.encode())
+            else:
+                self._process_post_request(data=self.rfile.read(int(self.headers['Content-Length'])))
 
+        except:
+            self.agent_log.error('Error while processing POST request')
+            if self.config.stacktrace:
+                traceback.print_exc()

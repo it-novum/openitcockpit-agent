@@ -47,10 +47,11 @@ if __name__ == '__main__':
     webserver = Webserver(config, agent_log, check_store)
     webserver.start_webserver()
 
-    # Start the web server in a new thread
+    # Start the web server in a separate thread
     webserver_thread = threading.Thread(target=webserver.httpd.serve_forever)
     webserver_thread.start()
 
+    # Define all checks that should get executed by the Agent
     check_params = {
         "timeout": 5
     }
@@ -67,12 +68,16 @@ if __name__ == '__main__':
 
     # Run checks on agent startup
     check_interval_counter = check_interval
+
+    # Endless loop until we get a signal to stop caught by parent_process.signal_handler
     while parent_process.loop is True:
         print(parent_process.loop)
         if (check_interval_counter >= check_interval):
             # Execute checks
             print('run checks')
             check_interval_counter = 1
+
+            # Execute all checks in a separate thread managed by ThreadPoolExecutor
             with concurrent.futures.ThreadPoolExecutor(max_workers=3) as executor:
                 i = 0
                 for check in checks:
@@ -84,7 +89,8 @@ if __name__ == '__main__':
             check_interval_counter += 1
             time.sleep(1)
 
-    agent_log.info("Agent is going to shut down")
+    # Main thread is not in endless loop anymore - shutdown
+    agent_log.info("Agent is going to shutdown")
 
     # Also kill the webserver
     webserver.httpd.shutdown()
@@ -92,4 +98,3 @@ if __name__ == '__main__':
     agent_log.info("Web server stopped")
 
     agent_log.info("Agent stopped")
-
