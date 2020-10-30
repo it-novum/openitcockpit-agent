@@ -10,6 +10,8 @@ class ParentProcess:
         self.Config: Config = config
         self.agent_log: AgentLog = agent_log
 
+        self.spawn_threads = True
+        self.join_threads = False
         self.loop = True
 
     def signal_handler(self, sig, frame):

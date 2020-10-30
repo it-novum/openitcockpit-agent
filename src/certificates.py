@@ -282,6 +282,7 @@ class Certificates:
                             with open(self.Config.config['default']['autossl-ca-file'], 'wb+') as f:
                                 f.write(jdata['ca'])
 
+                            # Trigger an reload of all threads to enable the new certificats
                             restart_webserver()
 
                             self.agent_log.info('Signed certificate updated successfully')
