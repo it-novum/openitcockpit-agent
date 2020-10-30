@@ -5,7 +5,6 @@ from src.check_result_store import CheckResultStore
 from src.http_server.daemon_threaded_http_server import DaemonThreadedHTTPServer
 from src.http_server.agent_request_handler import AgentRequestHandler
 import ssl
-import time
 
 
 class Webserver:
@@ -15,7 +14,9 @@ class Webserver:
         self.agent_log: AgentLog = agent_log
         self.check_store: CheckResultStore = check_store
 
+        # Dependency injection
         AgentRequestHandler.check_store = check_store
+        AgentRequestHandler.config = config
 
         self.enable_ssl = False
         if Filesystem.file_readable(
@@ -30,22 +31,6 @@ class Webserver:
             self.Config.config.get('default', 'address', fallback='0.0.0.0'),
             self.Config.config.getint('default', 'port', fallback=3333)
         )
-
-    def loop(self):
-
-        webserver_stop_requested = False
-
-        while not webserver_stop_requested:
-            print("Loopy?")
-            try:
-                self.httpd.handle_request()
-            except:
-                self.agent_log.error('Webserver died, try to restart ...')
-
-            time.sleep(1)
-
-        del self.httpd
-        self.agent_log.info('Stopped permanent_webserver_thread')
 
     def start_webserver(self):
         self.agent_log.info("Starting webserver on %s:%s" % (

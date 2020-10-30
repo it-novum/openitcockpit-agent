@@ -13,9 +13,10 @@
 #    See the License for the specific language governing permissions and
 #    limitations under the License.
 
-# supports python >= 3.7
+# supports python >= 3.8
 #
 # current psutil>=5.5.0,<=5.6.2 limitation due to https://github.com/giampaolo/psutil/issues/1723
+
 import concurrent.futures
 import signal
 import threading
@@ -58,15 +59,6 @@ if __name__ == '__main__':
         DefaultChecks(config, agent_log, check_store, check_params),
         SystemdChecks(config, agent_log, check_store, check_params)
     ]
-
-    #    default_checks = default_checks(config, agent_log, check_store, check_params)
-    #    default_checks.real_check_run()
-
-    # i = 0
-    # for check in checks:
-    #    print('Starting new Thread', i)
-    #    i += 1
-    #    check.real_check_run()
 
     check_interval = config.config.getint('default', 'interval', fallback=5)
     if (check_interval <= 0):

@@ -1,11 +1,62 @@
+import json
+import traceback
 from http.server import BaseHTTPRequestHandler
 from src.check_result_store import CheckResultStore
+from src.config import Config
 
 
 class AgentRequestHandler(BaseHTTPRequestHandler):
     # todo I don't like this very much
     check_store = None  # type: CheckResultStore
+    config = None # type: Config
+
+    def _set_200_ok_headers(self):
+        self.send_response(200)
+        self.send_header('Content-type', 'application/json')
+        self.end_headers()
+
+    def _set_401_unauthorized_headers(self):
+        self.send_response(401)
+        self.send_header('WWW-Authenticate', 'Basic realm=')
+        self.send_header('Content-type', 'text/html')
+
+        self.end_headers()
+
+    def _process_get_data(self):
+        self._set_200_ok_headers()
+
+        if self.path == "/":
+            check_results = self.check_store.get_store()
+            self.wfile.write(json.dumps(check_results).encode())
+        elif self.path == "/config" and self.config.config.getboolean('default', 'config-update-mode', fallback=False) is True:
+            self.wfile.write(json.dumps(self.build_json_config()).encode())
+        elif self.path == "/getCsr":
+            data = {}
+            if self.config.autossl:
+                data['csr'] = self.get_csr().decode("utf-8")
+            else:
+                data['csr'] = "disabled"
+            self.wfile.write(json.dumps(data).encode())
 
     def do_GET(self):
-        check_results = self.check_store.get_store()
-        print('GET REQUEST BEKOMMEN', check_results['default_checks']['agent']['agent_version'])
+        """
+        Call back function which gets called by the webserver whenever a GET request gets received
+        """
+        try:
+            if 'auth' in self.config.config['default']:
+                if str(self.config.config['default']['auth']).strip() and self.headers.get('Authorization') == None:
+                    self._set_401_unauthorized_headers()
+                    self.wfile.write('no auth header received'.encode())
+                elif self.headers.get('Authorization') == 'Basic ' + self.config.config['default']['auth'] or self.config.config['default']['auth'] == "":
+                    self._process_get_data()
+                elif str(self.config.config['default']['auth']).strip():
+                    self._set_401_unauthorized_headers()
+                    self.wfile.write(self.headers.get('Authorization').encode())
+                    self.wfile.write('not authenticated'.encode())
+            else:
+                self._process_get_data()
+        except:
+            if self.config.stacktrace:
+                traceback.print_exc()
+
+
