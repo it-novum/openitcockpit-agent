@@ -54,7 +54,7 @@ if __name__ == '__main__':
             # Start the web server in a separate thread
             thread_factory.spawn_webserver_thread()
 
-            # Start checks separate thread
+            # Start checks in separate thread
             thread_factory.spawn_checks_thread()
 
             # All threads got spawned
@@ -65,7 +65,7 @@ if __name__ == '__main__':
 
             # All threads are stopped.
             # set spawn_threads back to True so that the next loop will restart all threads (reload)
-            # OR something sets parent_process.loop to false so we break the loop (stop or SIGINT)
+            # OR something sets parent_process.loop to False so we break the loop (stop or SIGINT)
             parent_process.spawn_threads = True
 
         else:
