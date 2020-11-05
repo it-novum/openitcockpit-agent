@@ -283,6 +283,7 @@ class Certificates:
                                 f.write(jdata['ca'])
 
                             # Trigger an reload of all threads to enable the new certificats
+                            # Todo fix reload !!
                             restart_webserver()
 
                             self.agent_log.info('Signed certificate updated successfully')
@@ -294,3 +295,40 @@ class Certificates:
                         traceback.print_exc()
 
         return False
+
+
+    def update_crt_files(self, data) ->bool:
+        """Function to update the certificate files
+
+        Update the automatically generated agent certificate file and the ca certificate file if they are writeable.
+        Update the cached certificate checksum.
+
+        Parameters
+        ----------
+        data
+            Object containing 'signed'(certificate file) and 'ca'(ca certificate) contents.
+
+        """
+        self.agent_log.info('Update certificate files')
+
+        try:
+            jdata = json.loads(data.decode('utf-8'))
+            jxdata = json.loads(jdata)
+            if 'signed' in jdata and 'ca' in jdata:
+                with open(self.Config.config['default']['autossl-crt-file'], 'wb+') as f:
+                    f.write(jxdata['signed'])
+                    self.sha512.update(jxdata['signed'].encode())
+                    self.cert_checksum = self.sha512.hexdigest().upper()
+                with open(self.Config.config['default']['autossl-ca-file'], 'wb+') as f:
+                    f.write(jxdata['ca'])
+
+                return True
+
+        except Exception as e:
+            self.agent_log.error("An error occured during new certificate processing")
+
+            if self.Config.stacktrace:
+                traceback.print_exc()
+                print(e)
+
+            return False

@@ -5,6 +5,7 @@ from src.check_result_store import CheckResultStore
 from src.config import Config
 from src.certificates import Certificates
 from src.agent_log import AgentLog
+from src.main_thread import MainThread
 
 
 class AgentRequestHandler(BaseHTTPRequestHandler):
@@ -13,6 +14,7 @@ class AgentRequestHandler(BaseHTTPRequestHandler):
     config = None  # type: Config
     certificates = None  # type: Certificates
     agent_log = None  # type: AgentLog
+    main_thread = None  # type: MainThread
 
     def _set_200_ok_headers(self):
         self.send_response(200)
@@ -44,21 +46,29 @@ class AgentRequestHandler(BaseHTTPRequestHandler):
                 data['csr'] = "disabled"
             self.wfile.write(json.dumps(data).encode())
 
-    def _process_post_request(self, data):
-        executor = futures.ThreadPoolExecutor(max_workers=1)
+        elif self.path == "/reload":
+            # Reload all threads to enable the new config
+            self.main_thread.trigger_reload()
 
+    def _process_post_request(self, data):
         response = {
             'success': False
         }
 
         if self.path == "/config" and self.config.config.getboolean('default', 'config-update-mode',
                                                                     fallback=False) is True:
-            executor.submit(check_update_data, data)
-            response['success'] = True
+            if self.config.set_new_config_from_dict(data) is True:
+                response['success'] = True
+                # Reload all threads to enable the new config
+                self.main_thread.trigger_reload()
+
 
         elif self.path == "/updateCrt" and self.config.autossl:
-            permanent_webserver_thread(update_crt_files, (data,))
-            response['success'] = True
+            # Save new SSL certificate
+            if self.certificates.update_crt_files(data) is True:
+                response['success'] = True
+                # Reload all threads to enable the SSL certificate
+                self.main_thread.trigger_reload()
 
         self._set_200_ok_headers()
         self.wfile.write(json.dumps(response).encode())

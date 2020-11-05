@@ -25,7 +25,7 @@ import time
 from src.checks.default_checks import DefaultChecks
 from src.checks.systemd_checks import SystemdChecks
 from src.operating_system import OperatingSystem
-from src.parent_process import ParentProcess
+from src.main_thread import MainThread
 from src.config import Config
 from src.agent_log import AgentLog
 from src.check_result_store import CheckResultStore
@@ -40,17 +40,18 @@ if __name__ == '__main__':
 
     agent_log = AgentLog(Config=Config)
 
-    parent_process = ParentProcess(config, agent_log)
-    signal.signal(signal.SIGINT, parent_process.signal_handler)  # ^C
-    signal.signal(signal.SIGTERM, parent_process.signal_handler)  # systemctl stop openitcockpit-agent
-    # signal.signal(signal.SIGHUP, parent_process.signal_handler)  # systemctl reload openitcockpit-agent
+    main_thread = MainThread(config, agent_log)
+    signal.signal(signal.SIGINT, main_thread.signal_handler)  # ^C
+    signal.signal(signal.SIGTERM, main_thread.signal_handler)  # systemctl stop openitcockpit-agent
+    signal.signal(signal.SIGHUP, main_thread.signal_handler)  # systemctl reload openitcockpit-agent
 
-    thread_factory = ThreadFactory(config, agent_log)
+    thread_factory = ThreadFactory(config, agent_log, main_thread)
     operating_system = OperatingSystem()
 
-    # Endless loop until we get a signal to stop caught by parent_process.signal_handler
-    while parent_process.loop is True:
-        if parent_process.spawn_threads is True:
+    # Endless loop until we get a signal to stop caught by main_thread.signal_handler
+    while main_thread.loop is True:
+        print('MAIN LOOP')
+        if main_thread.spawn_threads is True:
             # Start the web server in a separate thread
             thread_factory.spawn_webserver_thread()
 
@@ -58,26 +59,24 @@ if __name__ == '__main__':
             thread_factory.spawn_checks_thread()
 
             # All threads got spawned
-            parent_process.spawn_threads = False
+            main_thread.spawn_threads = False
 
-        elif parent_process.join_threads is True:
+        elif main_thread.join_threads is True:
             thread_factory.shutdown_all_threads()
+
+            # Set main_thread.join_threads back to True
+            # so we are not in an endloess loop of spawning and joining threads
+            main_thread.disable_reload_trigger()
 
             # All threads are stopped.
             # set spawn_threads back to True so that the next loop will restart all threads (reload)
-            # OR something sets parent_process.loop to False so we break the loop (stop or SIGINT)
-            parent_process.spawn_threads = True
+            # OR something sets main_thread.loop to False so we break the loop (stop or SIGINT)
+            main_thread.spawn_threads = True
 
         else:
             # Noting to do - all work is done by the created threads above
             # just hanging around and waiting for signals like SIGINT and sleep to save up CPU time
-
-            if (operating_system.isWindows() is True):
-                # Windows does not have a signal.pause() so we waste a few more cpu cycles.
-                time.sleep(0.1)
-            else:
-                # We can use signal.pause on Linux and macOS
-                signal.pause()
+            time.sleep(0.1)
 
     # Main thread is not in endless loop anymore - shutdown
     agent_log.info("Agent is going to shutdown")

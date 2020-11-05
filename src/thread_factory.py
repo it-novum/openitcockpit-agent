@@ -8,13 +8,15 @@ from src.http_server.webserver import Webserver
 from src.config import Config
 from src.agent_log import AgentLog
 from src.check_result_store import CheckResultStore
+from src.main_thread import MainThread
 
 
 class ThreadFactory:
 
-    def __init__(self, config, agent_log):
+    def __init__(self, config, agent_log, main_thread):
         self.Config: Config = config
         self.agent_log: AgentLog = agent_log
+        self.main_thread: MainThread = main_thread
 
         self.check_store = CheckResultStore()
 
@@ -26,7 +28,7 @@ class ThreadFactory:
         self.shutdown_checks_thread()
 
     def spawn_webserver_thread(self):
-        self.webserver = Webserver(self.Config, self.agent_log, self.check_store)
+        self.webserver = Webserver(self.Config, self.agent_log, self.check_store, self.main_thread)
         self.webserver.start_webserver()
 
         # Start the web server in a separate thread

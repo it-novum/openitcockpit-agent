@@ -253,7 +253,7 @@ class Config:
 
         return data
 
-    def set_new_config_from_dict(self, data):
+    def set_new_config_from_dict(self, data) -> bool:
         """Function to check and update the agent configuration
 
         The POST Data Object will be parsed as valid json object.
@@ -474,7 +474,7 @@ class Config:
                 elif key == 'customchecks' and not Filesystem.file_readable(self.config['default']['customchecks']):
                     print('ERROR: Customchecks configuration file %s is not readable' % self.configpath)
 
-            load_main_processing()
+            return True
 
         except Exception as e:
             print('ERROR: An error occurred while updateing the agent configuration')
@@ -482,6 +482,8 @@ class Config:
 
             if self.stacktrace:
                 traceback.print_exc()
+
+            return False
 
     def is_base64(self, s):
         """Function to check whether a string is base64 encoded or not

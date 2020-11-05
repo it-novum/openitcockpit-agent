@@ -5,15 +5,17 @@ from src.check_result_store import CheckResultStore
 from src.http_server.daemon_threaded_http_server import DaemonThreadedHTTPServer
 from src.http_server.agent_request_handler import AgentRequestHandler
 from src.certificates import Certificates
+from src.main_thread import MainThread
 import ssl
 
 
 class Webserver:
 
-    def __init__(self, config, agent_log, check_store):
+    def __init__(self, config, agent_log, check_store, main_thread):
         self.Config: Config = config
         self.agent_log: AgentLog = agent_log
         self.check_store: CheckResultStore = check_store
+        self.main_thread: MainThread = main_thread
 
         self.certificates = Certificates(config, agent_log)
 
@@ -22,6 +24,7 @@ class Webserver:
         AgentRequestHandler.config = config
         AgentRequestHandler.certificates = self.certificates
         AgentRequestHandler.agent_log = agent_log
+        AgentRequestHandler.main_thread = main_thread
 
         self.enable_ssl = False
         if Filesystem.file_readable(
