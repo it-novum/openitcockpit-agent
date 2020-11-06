@@ -90,13 +90,29 @@ pip install -r requirements.txt
 pip install -r requirements.txt servicemanager pywin32
 ```
 
-### Visual Studio Code recommendations
+4. Copy example config
+```
+cp example_config.cnf config.cnf
+```
 
-Plugins:
+### Visual Studio Code 
+
+Free Download: [https://code.visualstudio.com/](https://code.visualstudio.com/)
+
+#### Plugins
  - [Python extension for Visual Studio Code](https://marketplace.visualstudio.com/items?itemName=ms-python.python)
 
-Setup Debugger
+#### Setup Debugger
 ![VSCode debugger python](images/vscode_python_debugger.png)
+
+### PyCharm Community 
+
+Free Download: [https://www.jetbrains.com/pycharm/download/](https://www.jetbrains.com/pycharm/download/)
+
+#### Setup Debugger
+![Setup PyCharm debugger](images/setup_pycharm_debugger.png)
+
+![run Pycharm debugger](images/run_pycharm_debugger.png)
 
 ---
 
