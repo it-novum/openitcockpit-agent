@@ -12,7 +12,7 @@ class QemuChecks(Check):
         super().__init__(config, agent_log, check_store, check_params)
         self.operating_system = OperatingSystem()
 
-        self.key_name = "qemu_checks"
+        self.key_name = "qemustats"
 
         self.qemu_stats_data = {}
 

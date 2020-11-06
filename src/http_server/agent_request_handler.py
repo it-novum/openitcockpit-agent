@@ -32,7 +32,7 @@ class AgentRequestHandler(BaseHTTPRequestHandler):
         self._set_200_ok_headers()
 
         if self.path == "/":
-            check_results = self.check_store.get_store()
+            check_results = self.check_store.get_store_for_json_response()
             self.wfile.write(json.dumps(check_results).encode())
         elif self.path == "/config" and self.config.config.getboolean('default', 'config-update-mode',
                                                                       fallback=False) is True:
@@ -46,6 +46,7 @@ class AgentRequestHandler(BaseHTTPRequestHandler):
                 data['csr'] = "disabled"
             self.wfile.write(json.dumps(data).encode())
 
+        #Todo remove development reload
         elif self.path == "/reload":
             # Reload all threads to enable the new config
             self.main_thread.trigger_reload()

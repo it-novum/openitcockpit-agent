@@ -12,7 +12,7 @@ class SystemdChecks(Check):
         super().__init__(config, agent_log, check_store, check_params)
         self.operating_system = OperatingSystem()
 
-        self.key_name = "systemd_checks"
+        self.key_name = "systemd_services"
 
         self.systemd_services_data = {}
 

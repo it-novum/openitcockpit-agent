@@ -34,7 +34,7 @@ class Certificates:
         self.certificate_check_lock = Lock()
 
     def get_csr(self) -> FILETYPE_PEM:
-        """Function that creates a new certificate request (csr)
+        """Function that creates a new Certificate signing request (CSR)
 
         Creates a RSA (4096) certificate request.
         The hostname is config['oitc']['hostuuid'] + '.agent.oitc'.
@@ -139,11 +139,12 @@ class Certificates:
             self.agent_log.warning(
                 'Could not read certificate file %s' % self.Config.config['default']['autossl-crt-file'])
             self.pull_crt_from_server()
-        if Filesystem.file_readable(
-                self.Config.config['default'][
-                    'autossl-crt-file']):  # repeat condition because pull_crt_from_server could fail
+
+        # repeat condition because pull_crt_from_server from above could fail
+        if Filesystem.file_readable(self.Config.config['default']['autossl-crt-file']):
             self.agent_log.warning(
-                'Could not read certificate file %s' % self.Config.config['default']['autossl-crt-file'])
+                'Could not read certificate file %s' % self.Config.config['default']['autossl-crt-file']
+            )
 
             with open(self.Config.config['default']['autossl-crt-file'], 'rb') as f:
                 cert = f.read()
@@ -193,13 +194,13 @@ class Certificates:
                 self.check_auto_certificate()
 
     def pull_crt_from_server(self, renew=False):
-        """Function to pull a new certificate using a csr
+        """Function to pull a new certificate using a Certificate signing request (CSR)
 
         This function tries to pull a new certificate from the configured openITCOCKPIT Server.
-        Therefore a new certificate request (csr) is needed and get_csr() will be called.
-        The request with the csr should return the new client (and the CA) certificate.
+        Therefore a new certificate signing request (CSR) is needed and self.get_csr() will be called.
+        The request with the CSR should return the new client and CA certificate.
 
-        If the agent is not known and not yet trusted by the openITCOCKPIT Server the function will be executed again in 10 minutes.
+        If the agent is not known or not yet trusted by the openITCOCKPIT Server the function will be executed again in 10 minutes.
         Therefore the function wait_and_check_auto_certificate(600) will be called as new thread (future).
 
         If the agent is not yet trusted by the openITCOCKPIT Server a manual confirmation in the openITCOCKPIT frontend is needed!
@@ -238,7 +239,7 @@ class Certificates:
                     if renew:
                         with open(self.Config.config['default']['autossl-crt-file'], 'rb') as f:
                             cert = f.read()
-                            #cert = cert.replace("\r\n", "\n")
+                            # cert = cert.replace("\r\n", "\n")
                             self.sha512.update(cert)
                             data['checksum'] = self.sha512.hexdigest().upper()
 
@@ -266,13 +267,13 @@ class Certificates:
                             self.agent_log.error(
                                 'Agent state is untrusted! Try again in 1 minute to get a certificate from the server.')
 
-                            #print_verbose(
+                            # print_verbose(
                             #    'Untrusted agent! Try again in 1 minute to get a certificate from the server.',
                             #    False)
-                            #agent_log.warning(
+                            # agent_log.warning(
                             #    'Untrusted agent! Try again in 1 minute to get a certificate from the server.')
-                            #executor = futures.ThreadPoolExecutor(max_workers=1)
-                            #executor.submit(wait_and_check_auto_certificate, 60)
+                            # executor = futures.ThreadPoolExecutor(max_workers=1)
+                            # executor.submit(wait_and_check_auto_certificate, 60)
 
                         if 'signed' in jdata and 'ca' in jdata:
                             with open(self.Config.config['default']['autossl-crt-file'], 'wb+') as f:
@@ -296,8 +297,7 @@ class Certificates:
 
         return False
 
-
-    def update_crt_files(self, data) ->bool:
+    def update_crt_files(self, data) -> bool:
         """Function to update the certificate files
 
         Update the automatically generated agent certificate file and the ca certificate file if they are writeable.

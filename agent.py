@@ -50,7 +50,6 @@ if __name__ == '__main__':
 
     # Endless loop until we get a signal to stop caught by main_thread.signal_handler
     while main_thread.loop is True:
-        print('MAIN LOOP')
         if main_thread.spawn_threads is True:
             # Start the web server in a separate thread
             thread_factory.spawn_webserver_thread()

@@ -18,3 +18,15 @@ class CheckResultStore:
         self.lock.release()
 
         return data
+
+    def get_store_for_json_response(self) -> dict:
+        data = self.get_store()
+
+        # Add all default checks to json (base json structure)
+        response = data['default_checks']
+        for key in data.keys():
+            if (key != 'default_checks'):
+                # Add all additional checks like qemu, systemd, docker etc...
+                response[key] = data[key]
+
+        return response

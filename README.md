@@ -45,7 +45,7 @@ Install: `sudo pacman -U openitcockpit-agent-*-x86_64.pkg.tar.xz`
 
 Uninstall: `sudo pacman -R openitcockpit-agent`
 
-#### centOS / openSUSE
+#### CentOS / openSUSE
 
 Install:  `rpm -i openitcockpit-agent-*.x86_64.rpm`
 

@@ -13,7 +13,7 @@ class DockerChecks(Check):
         super().__init__(config, agent_log, check_store, check_params)
         self.operating_system = OperatingSystem()
 
-        self.key_name = "docker_checks"
+        self.key_name = "dockerstats"
 
         self.docker_stats_data = {}
 
@@ -30,6 +30,8 @@ class DockerChecks(Check):
             Command timeout in seconds
 
         """
+
+        timeout = self.check_params['timeout']
 
         print('Start docker status check with timeout of %ss at %s' % (str(timeout), str(round(time.time()))))
         if self.Config.verbose:
