@@ -1,7 +1,6 @@
 .DS_Store
 ._*
 .idea
-.vscode
 ssl
 config.cnf
 *.log

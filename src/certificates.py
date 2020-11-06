@@ -284,7 +284,7 @@ class Certificates:
 
                             # Trigger an reload of all threads to enable the new certificats
                             # Todo fix reload !!
-                            restart_webserver()
+                            # restart_webserver()
 
                             self.agent_log.info('Signed certificate updated successfully')
                             return True

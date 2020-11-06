@@ -68,8 +68,6 @@ Uninstall using the windows built-in graphical package manager.
 
 ## Developer installation
 
-### 
-
 1. Clone this repository
 ```
 git clone https://github.com/it-novum/openitcockpit-agent.git
@@ -91,6 +89,14 @@ pip install -r requirements.txt
 ```
 pip install -r requirements.txt servicemanager pywin32
 ```
+
+### Visual Studio Code recommendations
+
+Plugins:
+ - [Python extension for Visual Studio Code](https://marketplace.visualstudio.com/items?itemName=ms-python.python)
+
+Setup Debugger
+![VSCode debugger python](images/vscode_python_debugger.png)
 
 ---
 

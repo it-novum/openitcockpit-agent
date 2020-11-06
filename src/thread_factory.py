@@ -64,7 +64,7 @@ class ThreadFactory:
                 check_interval_counter = 1
 
                 # Execute all checks in a separate thread managed by ThreadPoolExecutor
-                with concurrent.futures.ThreadPoolExecutor(max_workers=3) as executor:
+                with concurrent.futures.ThreadPoolExecutor(max_workers=5) as executor:
                     i = 0
                     for check in checks:
                         print('Starting new Thread %d', i)
