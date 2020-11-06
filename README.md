@@ -1,12 +1,11 @@
-# openitcockpit-agent
-Monitoring agent for openITCOCKPIT
+# openitcockpit-agent 2.0
+Cross-Platform Monitoring Agent for openITCOCKPIT
 
 1. [Installation](#Installation)
 2. [Usage](#Usage)
 3. [Sample files](#Sample-files)
 4. [Agent build instructions](#Agent-build-instructions)
 5. [Export documentation as html](#Export-documentation-as-html)
-
 
 ---
 
@@ -21,15 +20,18 @@ Customer documentation: [https://docs.it-novum.com/display/ODE/openITCOCKPIT+Age
 Require glibc >= 2.17
 
 Supported & tested systems:
-- macOS 10.12 (Sierra), 10.13 (High Sierra), 10.14 (Mojave)
+- macOS 10.14 (Mojave), 10.15 (Catalina)
 - Ubuntu 14, 16, 18, 20
 - Debian 8, 9, 10
 - openSUSE Leap 42.3
-- centOS 7
+- CentOS 7
 - Arch Linux (2019.08.01)
+- Windows 8.1, Windows 10, Windows Server 2016, Windows Server 2019
 
 
 ### Packages
+
+Please visit the [release page](https://github.com/it-novum/openitcockpit-agent/releases) to download the latest or older versions.
 
 #### Debian / Ubuntu
 
@@ -66,48 +68,35 @@ Uninstall using the windows built-in graphical package manager.
 
 ## Developer installation
 
-#### Dependencies
+### 
 
-##### python3
-- psutil >= 5.5.0
-- configparser
-- pycryptodome
-- pyopenssl
+1. Clone this repository
+```
+git clone https://github.com/it-novum/openitcockpit-agent.git
+cd openitcockpit-agent/
+```
 
-##### python2
-- psutil
-- configparser
-- futures
-- subprocess32
-- pycryptodome
-- pyopenssl
+2. Create new Python virtual environment
+```
+python3 -m venv ./venv
+. ./venv/bin/activate
+```
 
-### Windows
-- Download & install latest python version (3.x) from https://www.python.org/downloads/windows/
-- Open cmd and install dependencies: ```python.exe -m pip install -r requirements.txt servicemanager pywin32```
+3. Install dependencies on Linux or macOS
+```
+pip install -r requirements.txt
+```
 
-### macOS (Darwin)
-- Open console and install latest python version (3.x): ```brew install python3```
-- Install dependencies: ```pip3 install -r requirements.txt```
-
-### Linux (Debian / Ubuntu)
-- glibc >= 2.28
-
-#### python3
-- Install latest python version (3.x) and psutil >= 5.5.0: ```apt-get install python3```
-- Install dependencies: ```pip3 install -r requirements.txt```
-
-#### python2
-- Install python version (2.x) and psutil: ```apt-get install python python-psutil```
-- Uninstall psutil pip package to use the newer apt package version: ```pip uninstall psutil```
-- Install dependencies: ```pip install -r requirements_python2.txt```
-
+3. Install dependencies on Windows
+```
+pip install -r requirements.txt servicemanager pywin32
+```
 
 ---
 
 ## Usage
 
-Default: ```python oitc_agent.py```
+Default: ```python agent.py```
 
 Custom: ```python oitc_agent.py -v -i <check interval seconds> -p <port number> -a <ip address> -c <config path> --certfile <certfile path> --keyfile <keyfile path> --auth <user>:<password> --oitc-url <url> --oitc-apikey <api key> --oitc-interval <seconds>```
 
