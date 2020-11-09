@@ -12,3 +12,4 @@ python3-windows-env/
 venv/
 agent.log
 agent.log.*
+certs

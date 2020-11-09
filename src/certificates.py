@@ -10,6 +10,7 @@ import ssl
 import hashlib
 import urllib3
 import requests
+from Crypto.Hash import SHA512
 
 from src.config import Config
 from src.agent_log import AgentLog
@@ -75,7 +76,7 @@ class Certificates:
 
             # Generate CSR
             req = X509Req()
-            req.get_subject().CN = self.Config.config.get('oitc' 'hostuuid') + '.agent.oitc'
+            req.get_subject().CN = self.Config.config.get('oitc', 'hostuuid') + '.agent.oitc'
 
             # Experimental; not supported by php agent csr sign method yet
             san_list = ["DNS:localhost", "DNS:127.0.0.1"]
@@ -90,7 +91,9 @@ class Certificates:
             # req.get_subject().C = 'US'
             # req.get_subject().emailAddress = 'e@example.com'
             req.set_pubkey(key)
-            req.sign(key, b'sha512')
+
+            # b'sha512' will throw an error so we pass a string even if the function docs says it wants a byte string
+            req.sign(key, 'sha512')
 
             ssl_paths = [
                 self.Config.config['default']['autossl-csr-file'],
@@ -120,6 +123,7 @@ class Certificates:
             return csr
         except:
             self.agent_log.error('An error occurred while creating a new Certificate Signing Request (CSR)')
+            traceback.print_exc()
 
             if self.Config.stacktrace:
                 traceback.print_exc()
@@ -316,19 +320,16 @@ class Certificates:
             jxdata = json.loads(jdata)
             if 'signed' in jdata and 'ca' in jdata:
                 with open(self.Config.config['default']['autossl-crt-file'], 'wb+') as f:
-                    f.write(jxdata['signed'])
+                    f.write(jxdata['signed'].encode())
                     self.sha512.update(jxdata['signed'].encode())
                     self.cert_checksum = self.sha512.hexdigest().upper()
                 with open(self.Config.config['default']['autossl-ca-file'], 'wb+') as f:
-                    f.write(jxdata['ca'])
+                    f.write(jxdata['ca'].encode())
 
                 return True
 
         except Exception as e:
             self.agent_log.error("An error occured during new certificate processing")
-
-            if self.Config.stacktrace:
-                traceback.print_exc()
-                print(e)
+            traceback.print_exc()
 
             return False

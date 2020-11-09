@@ -4,6 +4,7 @@ from src.config import Config
 class AgentLog:
     Config = None  # type: Config
 
+    # todo add log level (info, error, warning, verbose etc)
     def __init__(self, Config):
         self.Config = Config
 
@@ -59,3 +60,7 @@ class AgentLog:
 
     def debug(self, msg):
         print(msg)
+
+    def verbose(self, msg):
+        #print(msg)
+        pass

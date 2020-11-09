@@ -348,7 +348,7 @@ class DefaultChecks(Check):
 
                         tmpProcessList.append(p)
                     except:
-                        self.agent_log.error("'%s' Process is not allowing us to get the CPU usage!" % str(pid))
+                        self.agent_log.verbose("'%s' Process is not allowing us to get the CPU usage!" % str(pid))
 
                         if self.Config.stacktrace:
                             traceback.print_exc()
@@ -388,7 +388,7 @@ class DefaultChecks(Check):
                     except (psutil.NoSuchProcess, ProcessLookupError):
                         continue
                     except AttributeError:
-                        self.agent_log.error(
+                        self.agent_log.verbose(
                             "'%s' Process is not allowing us to get the parent process id!" % (str(pid)))
 
                         if self.Config.stacktrace:
@@ -401,7 +401,7 @@ class DefaultChecks(Check):
                                     for child in p.children(recursive=True):
                                         children.append(child.pid)
                         except:
-                            self.agent_log.error(
+                            self.agent_log.verbose(
                                 "'%s' Process is not allowing us to get the child process ids!" % (str(pid)))
 
                             if self.Config.stacktrace:
@@ -412,7 +412,7 @@ class DefaultChecks(Check):
                 except (psutil.NoSuchProcess, ProcessLookupError):
                     continue
                 except:
-                    self.agent_log.error(
+                    self.agent_log.verbose(
                         "'%s' Process is not allowing us to get the nice option!" % (name if name != "" else str(pid)))
 
                     if self.Config.stacktrace:
@@ -423,7 +423,7 @@ class DefaultChecks(Check):
                 except (psutil.NoSuchProcess, ProcessLookupError):
                     continue
                 except:
-                    self.agent_log.error(
+                    self.agent_log.verbose(
                         "'%s' Process is not allowing us to get the name option!" % (name if name != "" else str(pid)))
 
                     if self.Config.stacktrace:
@@ -434,7 +434,7 @@ class DefaultChecks(Check):
                 except (psutil.NoSuchProcess, ProcessLookupError):
                     continue
                 except:
-                    self.agent_log.error("'%s' Process is not allowing us to get the username option!" % (
+                    self.agent_log.verbose("'%s' Process is not allowing us to get the username option!" % (
                         name if name != "" else str(pid)))
 
                     if self.Config.stacktrace:
@@ -445,7 +445,7 @@ class DefaultChecks(Check):
                 except (psutil.NoSuchProcess, ProcessLookupError):
                     continue
                 except:
-                    self.agent_log.error(
+                    self.agent_log.verbose(
                         "'%s' Process is not allowing us to get the exec option!" % (name if name != "" else str(pid)))
 
                     if self.Config.stacktrace:
@@ -456,7 +456,7 @@ class DefaultChecks(Check):
                 except (psutil.NoSuchProcess, ProcessLookupError):
                     continue
                 except:
-                    self.agent_log.error("'%s' Process is not allowing us to get the cmdline option!" % (
+                    self.agent_log.verbose("'%s' Process is not allowing us to get the cmdline option!" % (
                         name if name != "" else str(pid)))
 
                     if self.Config.stacktrace:
@@ -467,7 +467,7 @@ class DefaultChecks(Check):
                 except (psutil.NoSuchProcess, ProcessLookupError):
                     continue
                 except:
-                    self.agent_log.error(
+                    self.agent_log.verbose(
                         "'%s' Process is not allowing us to get the CPU usage!" % (name if name != "" else str(pid)))
 
                     if self.Config.stacktrace:
@@ -478,7 +478,7 @@ class DefaultChecks(Check):
                 except (psutil.NoSuchProcess, ProcessLookupError):
                     continue
                 except:
-                    self.agent_log.error("'%s' Process is not allowing us to get memory usage information!" % (
+                    self.agent_log.verbose("'%s' Process is not allowing us to get memory usage information!" % (
                         name if name != "" else str(pid)))
 
                     if self.Config.stacktrace:
@@ -489,7 +489,7 @@ class DefaultChecks(Check):
                 except (psutil.NoSuchProcess, ProcessLookupError):
                     continue
                 except:
-                    self.agent_log.error("'%s' Process is not allowing us to get the percent of memory usage!" % (
+                    self.agent_log.verbose("'%s' Process is not allowing us to get the percent of memory usage!" % (
                         name if name != "" else str(pid)))
 
                     if self.Config.stacktrace:
@@ -500,7 +500,7 @@ class DefaultChecks(Check):
                 except (psutil.NoSuchProcess, ProcessLookupError):
                     continue
                 except:
-                    self.agent_log.error("'%s' Process is not allowing us to get the num_fds option!" % (
+                    self.agent_log.verbose("'%s' Process is not allowing us to get the num_fds option!" % (
                         name if name != "" else str(pid)))
 
                     if self.Config.stacktrace:
@@ -511,7 +511,7 @@ class DefaultChecks(Check):
                 except (psutil.NoSuchProcess, ProcessLookupError):
                     continue
                 except:
-                    self.agent_log.error(
+                    self.agent_log.verbose(
                         "'%s' Process is not allowing us to get the IO counters!" % (name if name != "" else str(pid)))
 
                     if self.Config.stacktrace:
@@ -522,7 +522,7 @@ class DefaultChecks(Check):
                 except (psutil.NoSuchProcess, ProcessLookupError):
                     continue
                 except psutil.AccessDenied:
-                    self.agent_log.error("'%s' Process is not allowing us to get the open_files option!" % (
+                    self.agent_log.verbose("'%s' Process is not allowing us to get the open_files option!" % (
                         name if name != "" else str(pid)))
 
                     if self.Config.stacktrace:

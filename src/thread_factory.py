@@ -68,18 +68,18 @@ class ThreadFactory:
         while self.loop_checks_thread is True:
             if (check_interval_counter >= check_interval):
                 # Execute checks
-                print('run checks')
+                #print('run checks')
                 check_interval_counter = 1
 
                 # Execute all checks in a separate thread managed by ThreadPoolExecutor
                 with concurrent.futures.ThreadPoolExecutor(max_workers=5) as executor:
                     i = 0
                     for check in checks:
-                        print('Starting new Thread %d', i)
+                        print('Starting new Thread %d' % i)
                         i += 1
                         executor.submit(check.real_check_run)
             else:
-                print('Sleep wait for next run ', check_interval_counter, '/', check_interval)
+                #print('Sleep wait for next run ', check_interval_counter, '/', check_interval)
                 check_interval_counter += 1
                 time.sleep(1)
 
@@ -115,7 +115,7 @@ class ThreadFactory:
         while self.loop_autossl_thread is True:
             if (check_interval_counter >= check_interval):
                 # Execute checks
-                print('run checks')
+                #print('run checks')
                 check_interval_counter = 1
 
                 # Execute all checks in a separate thread managed by ThreadPoolExecutor
@@ -126,7 +126,7 @@ class ThreadFactory:
                         i += 1
                         executor.submit(check.real_check_run)
             else:
-                print('Sleep wait for next run ', check_interval_counter, '/', check_interval)
+                #print('Sleep wait for next run ', check_interval_counter, '/', check_interval)
                 check_interval_counter += 1
                 time.sleep(1)
 
