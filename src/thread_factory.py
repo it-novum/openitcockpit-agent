@@ -2,9 +2,11 @@ import concurrent.futures
 import threading
 import time
 
+from src.checks.alfresco_checks import AlfrescoChecks
 from src.checks.default_checks import DefaultChecks
 from src.checks.systemd_checks import SystemdChecks
 from src.checks.docker_checks import DockerChecks
+from src.checks.qemu_checks import QemuChecks
 from src.http_server.webserver import Webserver
 from src.config import Config
 from src.agent_log import AgentLog
@@ -48,15 +50,34 @@ class ThreadFactory:
     def _loop_checks_thread(self):
         # Define all checks that should get executed by the Agent
         check_params = {
-            "timeout": 5
+            "timeout": 10
         }
 
-        # todo implment configuration to disable checks
+        # Add new checks to the checks array
+        # This is the only place where new checks needs to be added
         checks = [
             DefaultChecks(self.Config, self.agent_log, self.check_store, check_params),
-            SystemdChecks(self.Config, self.agent_log, self.check_store, check_params),
-            DockerChecks(self.Config, self.agent_log, self.check_store, check_params)
         ]
+
+        if(self.Config.config.getboolean('default', 'dockerstats')):
+            checks.append(
+                DockerChecks(self.Config, self.agent_log, self.check_store, check_params)
+            )
+
+        if(self.Config.config.getboolean('default', 'qemustats')):
+            checks.append(
+                QemuChecks(self.Config, self.agent_log, self.check_store, check_params)
+            )
+
+        if(self.Config.config.getboolean('default', 'systemdservices')):
+            checks.append(
+                SystemdChecks(self.Config, self.agent_log, self.check_store, check_params),
+            )
+
+        if(self.Config.config.getboolean('default', 'alfrescostats')):
+            checks.append(
+                AlfrescoChecks(self.Config, self.agent_log, self.check_store, check_params),
+            )
 
         check_interval = self.Config.config.getint('default', 'interval', fallback=5)
         if (check_interval <= 0):

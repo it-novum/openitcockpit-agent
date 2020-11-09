@@ -46,11 +46,6 @@ class AgentRequestHandler(BaseHTTPRequestHandler):
                 data['csr'] = "disabled"
             self.wfile.write(json.dumps(data).encode())
 
-        #Todo remove development reload
-        elif self.path == "/reload":
-            # Reload all threads to enable the new config
-            self.main_thread.trigger_reload()
-
     def _process_post_request(self, data):
         response = {
             'success': False

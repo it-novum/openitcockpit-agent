@@ -32,10 +32,10 @@ class QemuChecks(Check):
 
         timeout = self.check_params['timeout']
 
-        self.agent_log.info(
-            'Start qemu status check with timeout of %ss at %s' % (str(timeout), str(round(time.time()))))
         if self.Config.verbose:
-            print('Start qemu status check with timeout of %ss at %s' % (str(timeout), str(round(time.time()))))
+            self.agent_log.verbose(
+                'Start qemu status check with timeout of %ss' % (str(timeout))
+            )
 
         tmp_qemu_stats_result = None
         self.qemu_stats_data['running'] = "true"

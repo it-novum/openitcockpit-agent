@@ -33,17 +33,13 @@ class AlfrescoChecks(Check):
         Function that a jmx query to get a status result for a configured alfresco enterprise instance.
 
         """
-        self.agent_log.info('Start alfresco stats check at %s' % (str(round(time.time()))))
         if self.Config.verbose:
-            print('Start alfresco stats check at %s' % (str(round(time.time()))))
+            self.agent_log.verbose('Start alfresco stats check')
 
         self.alfresco_stats_data['running'] = "true"
 
         alfrescostats = []
 
-        # todo refactor with: self.Config.config.getboolean('default', 'cpustats') is True
-        # https://docs.python.org/3/library/configparser.html#configparser.ConfigParser.getboolean
-        # https://docs.python.org/3/library/configparser.html#configparser.ConfigParser.BOOLEAN_STATES
         if self.jmx_import_successfull and self.Config.config.getboolean('default', 'alfrescostats', fallback=False):
             if Filesystem.file_readable(self.Config.config['default']['alfresco-javapath']):
                 try:
@@ -93,5 +89,4 @@ class AlfrescoChecks(Check):
         self.agent_log.info('Alfresco stats check finished')
 
         self.alfresco_stats_data['result'] = alfrescostats
-        return alfrescostats.copy()
-
+        return self.alfresco_stats_data.copy()
