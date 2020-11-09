@@ -104,7 +104,7 @@ class QemuChecks(Check):
             else:
                 self.qemu_stats_data['error'] = tmp_qemu_stats_result
 
-        self.agent_log.info('Qemu status check finished')
+        self.agent_log.verbose('Qemu status check finished')
         del self.qemu_stats_data['running']
 
         return self.qemu_stats_data.copy()

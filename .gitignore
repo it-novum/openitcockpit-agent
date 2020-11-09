@@ -3,6 +3,7 @@
 .idea
 ssl
 config.cnf
+customchecks.cnf
 *.log
 __pycache__/
 build/

@@ -24,7 +24,7 @@ class ThreadFactory:
         self.check_store = CheckResultStore()
 
         self.loop_checks_thread = True
-        self.loop_custm_checks_thread = True
+        self.loop_custom_checks_thread = True
         self.loop_autossl_thread = True
 
         if(self.Config.autossl is False):
@@ -96,7 +96,7 @@ class ThreadFactory:
                 with concurrent.futures.ThreadPoolExecutor(max_workers=5) as executor:
                     i = 0
                     for check in checks:
-                        print('Starting new Thread %d' % i)
+                        self.agent_log.debug('Starting new Default Checks Thread %d' % i)
                         i += 1
                         executor.submit(check.real_check_run)
             else:
@@ -111,7 +111,45 @@ class ThreadFactory:
 
     def shutdown_checks_thread(self):
         self.loop_checks_thread = False
-        self.webserver_thread.join()
+        self.checks_thread.join()
+
+    def _loop_custom_checks_thread(self):
+        # thread Pool to execute Custom Check Commands
+        check_params = {
+            "timeout": 10
+        }
+
+        custom_checks = []
+
+        # Run checks on agent startup
+        check_interval_counter = check_interval
+        while self.loop_checks_thread is True:
+            if (check_interval_counter >= check_interval):
+                # Execute checks
+                #print('run checks')
+                check_interval_counter = 1
+
+                # Execute all checks in a separate thread managed by ThreadPoolExecutor
+                with concurrent.futures.ThreadPoolExecutor(max_workers=5) as executor:
+                    i = 0
+                    for check in checks:
+                        self.agent_log.debug('Starting new Custom Checks Thread %d' % i)
+                        i += 1
+                        executor.submit(check.real_check_run)
+            else:
+                #print('Sleep wait for next run ', check_interval_counter, '/', check_interval)
+                check_interval_counter += 1
+                time.sleep(1)
+
+    def spawn_custom_checks_thread(self):
+        # Start a new thread to execute checks
+        self.custom_checks_thread = threading.Thread(target=self._loop_custom_checks_thread, daemon=True)
+        self.custom_checks_thread.start()
+
+    def shutdown_custom_checks_thread(self):
+        self.loop_custom_checks_thread = False
+        self.custom_checks_thread.join()
+
 
     def _loop_autossl_thread(self):
         # Define all checks that should get executed by the Agent
@@ -143,7 +181,7 @@ class ThreadFactory:
                 with concurrent.futures.ThreadPoolExecutor(max_workers=5) as executor:
                     i = 0
                     for check in checks:
-                        print('Starting new Thread %d', i)
+                        self.agent_log.debug('Starting new AutoSSL Thread %d' % i)
                         i += 1
                         executor.submit(check.real_check_run)
             else:

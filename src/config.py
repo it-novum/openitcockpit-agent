@@ -6,6 +6,7 @@ import sys
 import configparser
 import traceback
 
+from src.color_output import ColorOutput
 from src.filesystem import Filesystem
 from src.help import Help
 from src.operating_system import OperatingSystem
@@ -26,6 +27,8 @@ class Config:
 
         self.config = configparser.ConfigParser(allow_no_value=True)
         self.customchecks = configparser.ConfigParser(allow_no_value=True)
+
+        self.ColorOutput = ColorOutput()
 
     def load_configuration(self):
         """Function to load/reload all configuration options
@@ -66,11 +69,11 @@ class Config:
         if self.configpath != "":
             if Filesystem.file_readable(path=self.configpath):
                 with open(self.configpath, 'r') as configfile:
-                    print('Load agent configuration file "%s"' % (self.configpath))
+                    self.ColorOutput.info('Load agent configuration file "%s"' % (self.configpath))
                     self.config.read_file(configfile)
             else:
                 with open(self.configpath, 'w') as configfile:
-                    print('Create new default agent configuration file "%s"' % (self.configpath))
+                    self.ColorOutput.info('Create new default agent configuration file "%s"' % (self.configpath))
                     self.config.write(configfile)
 
         self.build_autossl_defaults()
@@ -175,13 +178,11 @@ class Config:
                         self.config['default']['keyfile']):
                     self.enableSSL = True
                 else:
-                    print("Could not read certfile or keyfile\nFall back to default http server")
-                    if self.verbose:
-                        print("Could not read certfile or keyfile\nFall back to default http server")
+                    self.ColorOutput.error('Could not read certfile or keyfile. Fall back to default http server.')
 
 
             except IOError:
-                print("Could not read certfile or keyfile\nFall back to default http server")
+                self.ColorOutput.error('Could not read certfile or keyfile. Fall back to default http server')
 
     def build_autossl_defaults(self):
         """ Function to define the system depending certificate file paths
@@ -244,9 +245,6 @@ class Config:
                 for custom_key_option in self.customchecks[custom_key]:
                     data['customchecks'][custom_key][custom_key_option] = self.customchecks[custom_key][
                         custom_key_option]
-
-        if 'DEFAULT' in data['customchecks']:
-            del data['customchecks']['DEFAULT']
 
         if data['config']['auth'] != "":
             data['config']['auth'] = str(base64.b64decode(data['config']['auth']), "utf-8")
@@ -431,13 +429,14 @@ class Config:
 
                     if self.configpath != "":
                         with open(self.configpath, 'w') as configfile:
-                            print("Save new configuration to ", self.configpath)
+                            self.ColorOutput.info('Save new configuration to %s' % (self.configpath))
                             new_config.write(configfile)
                     else:
-                        print("ERROR: New configuration is invalid - aborting")
+                        self.ColorOutput.error('New configuration is invalid - aborting')
 
                 elif key == 'config' and not Filesystem.file_readable(self.configpath):
-                    print('ERROR: Agent configuration file %s is not readable ' % self.configpath)
+                    self.ColorOutput.error('Agent configuration file %s is not readable ' % (self.configpath))
+
 
                 if key == 'customchecks' and Filesystem.file_readable(self.config['default']['customchecks']):
                     new_customchecks = configparser.ConfigParser(allow_no_value=True)
@@ -466,18 +465,19 @@ class Config:
 
                     if self.config['default']['customchecks'] != "":
                         with open(self.config['default']['customchecks'], 'w') as configfile:
-                            print("Save new configuration to ", self.config['default']['customchecks'])
+                            self.ColorOutput.info('Save new configuration to %s' % (self.config['default']['customchecks']))
                             new_customchecks.write(configfile)
                     else:
-                        print("ERROR: New customchecks configuration is invalid - aborting")
+                        self.ColorOutput.error('New customchecks configuration is invalid - aborting')
+
 
                 elif key == 'customchecks' and not Filesystem.file_readable(self.config['default']['customchecks']):
-                    print('ERROR: Customchecks configuration file %s is not readable' % self.configpath)
+                    self.ColorOutput.error('Customchecks configuration file %s is not readable' % self.configpath)
 
             return True
 
         except Exception as e:
-            print('ERROR: An error occurred while updateing the agent configuration')
+            self.ColorOutput.error('An error occurred while updating the agent configuration')
             print(e)
 
             if self.stacktrace:

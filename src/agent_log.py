@@ -1,10 +1,10 @@
-from src.config import Config
-
 from datetime import datetime
+
+from src.color_output import ColorOutput
 
 
 class AgentLog:
-    PURPLe = '\033[95m'
+    PURPLE = '\033[95m'
     BLUE = '\033[94m'
     CYAN = '\033[96m'
     GREEN = '\033[92m'
@@ -16,8 +16,10 @@ class AgentLog:
     END = '\033[0m'
 
     # todo add log level (info, error, warning, verbose etc)
+    # todo write to log file
     def __init__(self, Config):
         self.Config = Config
+        self.ColorOutput = ColorOutput()
 
     def print_verbose(self, msg, more_on_stacktrace):
         """Function to print verbose output uniformly and prevent double verbose output at the same time
@@ -56,26 +58,23 @@ class AgentLog:
 
         """
         if self.Config.verbose:
-            print(msg)
+            self.ColorOutput.verbose(msg)
         if not self.Config.stacktrace and more_on_stacktrace and self.Config.verbose:
-            print("Enable --stacktrace to get more information.")
+            self.ColorOutput.info('Enable --stacktrace to get more information.')
 
     def info(self, msg):
-        self.print_with_time(self.CYAN + "[info] " + self.END + msg)
+        self.ColorOutput.info(msg)
 
     def error(self, msg):
-        self.print_with_time(self.RED + "[error] " + self.END + msg)
+        self.ColorOutput.error(msg)
 
     def warning(self, msg):
-        self.print_with_time(self.YELLOW + "[warning] " + self.END + msg)
+        self.ColorOutput.warning(msg)
 
     def debug(self, msg):
-        self.print_with_time(self.BLUE + "[DEBUG] " + self.END + msg)
+        self.ColorOutput.debug(msg)
 
+    # todo enable verbose
     def verbose(self, msg):
-        # print(msg)
+        # self.ColorOutput.verbose(msg)
         pass
-
-    def print_with_time(self, msg):
-        now = datetime.now()
-        print(self.LIGHT_GRAY + now.strftime("%H:%M:%S") + self.END + " " + msg)

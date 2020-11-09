@@ -109,6 +109,6 @@ class SystemdChecks(Check):
                     traceback.print_exc()
 
         del self.systemd_services_data['running']
-        self.agent_log.info('Systemd services check finished')
+        self.agent_log.verbose('Systemd services check finished')
 
         return self.systemd_services_data.copy()

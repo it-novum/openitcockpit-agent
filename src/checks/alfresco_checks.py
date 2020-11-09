@@ -86,7 +86,7 @@ class AlfrescoChecks(Check):
             else:
                 alfrescostats = 'JAVA instance not found! (' + self.Config.config['default']['alfresco-javapath'] + ')'
 
-        self.agent_log.info('Alfresco stats check finished')
+        self.agent_log.verbose('Alfresco stats check finished')
 
         self.alfresco_stats_data['result'] = alfrescostats
         return self.alfresco_stats_data.copy()

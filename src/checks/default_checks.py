@@ -67,7 +67,7 @@ class DefaultChecks(Check):
             Object (dictionary) containing all the default check results
 
         """
-        self.agent_log.info('Running default checks')
+        self.agent_log.verbose('Running default checks')
 
         # if verbose:
         #    print_lock.acquire()

@@ -138,7 +138,7 @@ class DockerChecks(Check):
         elif self.docker_stats_data['error'] is None and tmp_docker_stats_result != "":
             self.docker_stats_data['error'] = tmp_docker_stats_result
 
-        self.agent_log.info('Docker status check finished')
+        self.agent_log.verbose('Docker status check finished')
         del self.docker_stats_data['running']
 
         return self.docker_stats_data.copy()
