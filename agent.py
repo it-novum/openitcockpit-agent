@@ -58,6 +58,9 @@ if __name__ == '__main__':
             # Start checks in separate thread
             thread_factory.spawn_checks_thread()
 
+            # Start custom checks in separate thread
+            thread_factory.spawn_custom_checks_thread()
+
             # All threads got spawned
             main_thread.spawn_threads = False
 

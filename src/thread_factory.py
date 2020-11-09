@@ -8,6 +8,7 @@ from src.checks.systemd_checks import SystemdChecks
 from src.checks.docker_checks import DockerChecks
 from src.checks.qemu_checks import QemuChecks
 from src.http_server.webserver import Webserver
+from src.custom_check import CustomCheck
 from src.config import Config
 from src.agent_log import AgentLog
 from src.check_result_store import CheckResultStore
@@ -27,13 +28,14 @@ class ThreadFactory:
         self.loop_custom_checks_thread = True
         self.loop_autossl_thread = True
 
-        if(self.Config.autossl is False):
-            #Autossl is disabled
+        if (self.Config.autossl is False):
+            # Autossl is disabled
             self.loop_autossl_thread = False
 
     def shutdown_all_threads(self):
         self.shutdown_webserver_thread()
         self.shutdown_checks_thread()
+        self.shutdown_custom_checks_thread()
 
     def spawn_webserver_thread(self):
         self.webserver = Webserver(self.Config, self.agent_log, self.check_store, self.main_thread)
@@ -59,22 +61,22 @@ class ThreadFactory:
             DefaultChecks(self.Config, self.agent_log, self.check_store, check_params),
         ]
 
-        if(self.Config.config.getboolean('default', 'dockerstats')):
+        if (self.Config.config.getboolean('default', 'dockerstats')):
             checks.append(
                 DockerChecks(self.Config, self.agent_log, self.check_store, check_params)
             )
 
-        if(self.Config.config.getboolean('default', 'qemustats')):
+        if (self.Config.config.getboolean('default', 'qemustats')):
             checks.append(
                 QemuChecks(self.Config, self.agent_log, self.check_store, check_params)
             )
 
-        if(self.Config.config.getboolean('default', 'systemdservices')):
+        if (self.Config.config.getboolean('default', 'systemdservices')):
             checks.append(
                 SystemdChecks(self.Config, self.agent_log, self.check_store, check_params),
             )
 
-        if(self.Config.config.getboolean('default', 'alfrescostats')):
+        if (self.Config.config.getboolean('default', 'alfrescostats')):
             checks.append(
                 AlfrescoChecks(self.Config, self.agent_log, self.check_store, check_params),
             )
@@ -89,7 +91,7 @@ class ThreadFactory:
         while self.loop_checks_thread is True:
             if (check_interval_counter >= check_interval):
                 # Execute checks
-                #print('run checks')
+                # print('run checks')
                 check_interval_counter = 1
 
                 # Execute all checks in a separate thread managed by ThreadPoolExecutor
@@ -100,7 +102,7 @@ class ThreadFactory:
                         i += 1
                         executor.submit(check.real_check_run)
             else:
-                #print('Sleep wait for next run ', check_interval_counter, '/', check_interval)
+                # print('Sleep wait for next run ', check_interval_counter, '/', check_interval)
                 check_interval_counter += 1
                 time.sleep(1)
 
@@ -119,26 +121,32 @@ class ThreadFactory:
             "timeout": 10
         }
 
-        custom_checks = []
+        custom_checks = self.Config.get_custom_checks()
+        worker = self.Config.customchecks.getint('default', 'max_worker_threads', fallback=8)
 
-        # Run checks on agent startup
-        check_interval_counter = check_interval
-        while self.loop_checks_thread is True:
-            if (check_interval_counter >= check_interval):
-                # Execute checks
-                #print('run checks')
-                check_interval_counter = 1
+        if worker <= 0:
+            worker = 8
 
-                # Execute all checks in a separate thread managed by ThreadPoolExecutor
-                with concurrent.futures.ThreadPoolExecutor(max_workers=5) as executor:
-                    i = 0
-                    for check in checks:
+        while self.loop_custom_checks_thread is True:
+
+            # Execute all custom checks in a separate thread managed by ThreadPoolExecutor
+            with concurrent.futures.ThreadPoolExecutor(max_workers=worker) as executor:
+                i = 0
+                for key in custom_checks:
+                    custom_check = custom_checks[key]
+                    custom_check['name'] = key
+
+                    if custom_check['next_check'] <= time.time():
                         self.agent_log.debug('Starting new Custom Checks Thread %d' % i)
+
+                        custom_check_obj = CustomCheck(custom_check, self.check_store, self.agent_log)
+
+                        executor.submit(custom_check_obj.execute_check)
+                        custom_check['next_check'] = time.time() + custom_check['interval']
+                        custom_check['last_check'] = time.time()
                         i += 1
-                        executor.submit(check.real_check_run)
-            else:
-                #print('Sleep wait for next run ', check_interval_counter, '/', check_interval)
-                check_interval_counter += 1
+
+                # Custom Checks thread has nothing todo...
                 time.sleep(1)
 
     def spawn_custom_checks_thread(self):
@@ -149,7 +157,6 @@ class ThreadFactory:
     def shutdown_custom_checks_thread(self):
         self.loop_custom_checks_thread = False
         self.custom_checks_thread.join()
-
 
     def _loop_autossl_thread(self):
         # Define all checks that should get executed by the Agent
@@ -174,7 +181,7 @@ class ThreadFactory:
         while self.loop_autossl_thread is True:
             if (check_interval_counter >= check_interval):
                 # Execute checks
-                #print('run checks')
+                # print('run checks')
                 check_interval_counter = 1
 
                 # Execute all checks in a separate thread managed by ThreadPoolExecutor
@@ -185,7 +192,7 @@ class ThreadFactory:
                         i += 1
                         executor.submit(check.real_check_run)
             else:
-                #print('Sleep wait for next run ', check_interval_counter, '/', check_interval)
+                # print('Sleep wait for next run ', check_interval_counter, '/', check_interval)
                 check_interval_counter += 1
                 time.sleep(1)
 

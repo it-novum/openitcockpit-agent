@@ -89,6 +89,7 @@ class AgentRequestHandler(BaseHTTPRequestHandler):
                 self._process_get_request()
         except:
             self.agent_log.error('Error while processing GET request')
+            traceback.print_exc()
             if self.config.stacktrace:
                 traceback.print_exc()
 

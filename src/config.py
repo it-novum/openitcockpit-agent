@@ -5,6 +5,7 @@ import os
 import sys
 import configparser
 import traceback
+import time
 
 from src.color_output import ColorOutput
 from src.filesystem import Filesystem
@@ -213,6 +214,35 @@ class Config:
         self.config['default']['autossl-crt-file'] = etc_agent_path + 'agent.crt'
         self.config['default']['autossl-key-file'] = etc_agent_path + 'agent.key'
         self.config['default']['autossl-ca-file'] = etc_agent_path + 'server_ca.crt'
+
+    def get_custom_checks(self) -> dict:
+        custom_checks_config_file = self.config.get('default', 'customchecks')
+        if Filesystem.file_readable(custom_checks_config_file) is False:
+            self.ColorOutput.error('Could not read customchecks configuration file %s' % (custom_checks_config_file))
+
+        with open(custom_checks_config_file, 'r') as configfile:
+            self.ColorOutput.info('Load agent custom checks configuration file "%s"' % (custom_checks_config_file))
+            self.customchecks.read_file(configfile)
+
+        custom_checks = {}
+
+        for section in self.customchecks.sections():
+            if section != 'default' and section != 'DEFAULT':
+
+                enabled = self.customchecks.getboolean(section, 'enabled', fallback=False)
+
+                if enabled:
+                    custom_checks[section] = {
+                        'command': self.customchecks.get(section, 'command', fallback='whoami'),
+                        'interval': self.customchecks.getint(section, 'interval', fallback=60),
+                        'timeout': self.customchecks.getint(section, 'timeout', fallback=5),
+                        'enabled': enabled,
+                        'last_check': 0,
+                        'next_check': time.time()
+                    }
+
+        # Make this thread safe
+        return custom_checks.copy()
 
     def get_config_as_dict(self) -> dict:
         """Build / Prepare config for a JSON object
@@ -437,7 +467,6 @@ class Config:
                 elif key == 'config' and not Filesystem.file_readable(self.configpath):
                     self.ColorOutput.error('Agent configuration file %s is not readable ' % (self.configpath))
 
-
                 if key == 'customchecks' and Filesystem.file_readable(self.config['default']['customchecks']):
                     new_customchecks = configparser.ConfigParser(allow_no_value=True)
                     new_customchecks.read_string(Help.sample_customcheck_config)
@@ -465,7 +494,8 @@ class Config:
 
                     if self.config['default']['customchecks'] != "":
                         with open(self.config['default']['customchecks'], 'w') as configfile:
-                            self.ColorOutput.info('Save new configuration to %s' % (self.config['default']['customchecks']))
+                            self.ColorOutput.info(
+                                'Save new configuration to %s' % (self.config['default']['customchecks']))
                             new_customchecks.write(configfile)
                     else:
                         self.ColorOutput.error('New customchecks configuration is invalid - aborting')

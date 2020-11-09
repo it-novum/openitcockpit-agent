@@ -74,7 +74,9 @@ class AgentLog:
     def debug(self, msg):
         self.ColorOutput.debug(msg)
 
-    # todo enable verbose
     def verbose(self, msg):
-        # self.ColorOutput.verbose(msg)
-        pass
+        # todo remove this if
+        if "is not allowing us to" in msg:
+            return
+
+        self.ColorOutput.verbose(msg)
