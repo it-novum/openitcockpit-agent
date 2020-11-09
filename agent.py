@@ -22,14 +22,11 @@ import signal
 import threading
 import time
 
-from src.checks.default_checks import DefaultChecks
-from src.checks.systemd_checks import SystemdChecks
 from src.operating_system import OperatingSystem
 from src.main_thread import MainThread
 from src.config import Config
 from src.agent_log import AgentLog
-from src.check_result_store import CheckResultStore
-from src.http_server.webserver import Webserver
+from src.certificates import Certificates
 from src.thread_factory import ThreadFactory
 
 if __name__ == '__main__':
@@ -47,6 +44,10 @@ if __name__ == '__main__':
 
     thread_factory = ThreadFactory(config, agent_log, main_thread)
     operating_system = OperatingSystem()
+
+    if config.autossl is True:
+        certificats = Certificates(config, agent_log)
+        certificats.check_auto_certificate()
 
     # Endless loop until we get a signal to stop caught by main_thread.signal_handler
     while main_thread.loop is True:

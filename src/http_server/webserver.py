@@ -70,7 +70,7 @@ class Webserver:
                                                 )
 
             self.agent_log.info("Server started at %s://%s:%s with a check interval of %d seconds" % (
-                self.protocol,
+                'https',
                 self.Config.config.get('default', 'address', fallback='0.0.0.0'),
                 self.Config.config.getint('default', 'port', fallback=3333),
                 self.Config.config.getint('default', 'interval', fallback=5)

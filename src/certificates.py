@@ -146,10 +146,6 @@ class Certificates:
 
         # repeat condition because pull_crt_from_server from above could fail
         if Filesystem.file_readable(self.Config.config['default']['autossl-crt-file']):
-            self.agent_log.warning(
-                'Could not read certificate file %s' % self.Config.config['default']['autossl-crt-file']
-            )
-
             with open(self.Config.config['default']['autossl-crt-file'], 'rb') as f:
                 cert = f.read()
                 x509 = load_certificate(FILETYPE_PEM, cert)
@@ -219,16 +215,18 @@ class Certificates:
 
         """
 
-        self.agent_log.info('Pulling Certificate Signing Request (CSR) file from Server')
-
         if self.certificate_check_lock.locked():
             self.agent_log.error('Function to pull a new certificate is locked by another thread!')
             return False
 
         with self.certificate_check_lock:
+            # ONLY PULL cert if Agent is running in PULL mode!!
             if self.Config.config['oitc']['url'] and self.Config.config['oitc']['url'] != "" and \
                     self.Config.config['oitc']['apikey'] and self.Config.config['oitc']['apikey'] != "" and \
                     self.Config.config['oitc']['hostuuid'] and self.Config.config['oitc']['hostuuid'] != "":
+
+                self.agent_log.info('Pulling Certificate Signing Request (CSR) file from Server')
+
                 try:
                     csr = self.get_csr()
 
@@ -298,6 +296,10 @@ class Certificates:
 
                     if self.Config.stacktrace:
                         traceback.print_exc()
+
+            else:
+                self.agent_log.error(
+                    'Agent is not running in PUSH mode or no openITCOCKPIT API Configuration found in config.cnf - Certificate Signing Request not possible')
 
         return False
 

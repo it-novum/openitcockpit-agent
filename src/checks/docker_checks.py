@@ -33,10 +33,10 @@ class DockerChecks(Check):
 
         timeout = self.check_params['timeout']
 
-        print('Start docker status check with timeout of %ss at %s' % (str(timeout), str(round(time.time()))))
         if self.Config.verbose:
-            self.agent_log.info(
-                'Start docker status check with timeout of %ss at %s' % (str(timeout), str(round(time.time()))))
+            self.agent_log.verbose(
+                'Start docker status check with timeout of %ss' % (str(timeout))
+            )
 
         tmp_docker_stats_result = ''
         self.docker_stats_data['running'] = "true"
