@@ -32,6 +32,8 @@ class ThreadFactory:
             # Autossl is disabled
             self.loop_autossl_thread = False
 
+        self.custom_checks = {}
+
     def shutdown_all_threads(self):
         self.shutdown_webserver_thread()
         self.shutdown_checks_thread()
@@ -121,7 +123,7 @@ class ThreadFactory:
             "timeout": 10
         }
 
-        custom_checks = self.Config.get_custom_checks()
+        self.custom_checks = self.Config.get_custom_checks()
         worker = self.Config.customchecks.getint('default', 'max_worker_threads', fallback=8)
 
         if worker <= 0:
@@ -132,22 +134,33 @@ class ThreadFactory:
             # Execute all custom checks in a separate thread managed by ThreadPoolExecutor
             with concurrent.futures.ThreadPoolExecutor(max_workers=worker) as executor:
                 i = 0
-                for key in custom_checks:
-                    custom_check = custom_checks[key]
+                for key in self.custom_checks:
+                    custom_check = self.custom_checks[key]
                     custom_check['name'] = key
 
-                    if custom_check['next_check'] <= time.time():
+                    if custom_check['next_check'] <= time.time() and custom_check['running'] is False:
                         self.agent_log.debug('Starting new Custom Checks Thread %d' % i)
 
+                        # Mark custom check as running, create a new CustomCheck object
+                        # and execute the custom check via the ThreadPool
+                        custom_check['running'] = True
                         custom_check_obj = CustomCheck(custom_check, self.check_store, self.agent_log)
 
-                        executor.submit(custom_check_obj.execute_check)
+                        f = executor.submit(custom_check_obj.execute_check)
+                        f.add_done_callback(self.custom_check_thread_is_done_callback)
+
                         custom_check['next_check'] = time.time() + custom_check['interval']
                         custom_check['last_check'] = time.time()
                         i += 1
 
                 # Custom Checks thread has nothing todo...
                 time.sleep(1)
+
+    def custom_check_thread_is_done_callback(self, fn):
+        # Execution of a custom check is finished
+        check_name = fn.result()
+        if check_name in self.custom_checks:
+            self.custom_checks[check_name]['running'] = False
 
     def spawn_custom_checks_thread(self):
         # Start a new thread to execute checks

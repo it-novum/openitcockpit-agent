@@ -238,7 +238,8 @@ class Config:
                         'timeout': self.customchecks.getint(section, 'timeout', fallback=5),
                         'enabled': enabled,
                         'last_check': 0,
-                        'next_check': time.time()
+                        'next_check': time.time(),
+                        'running': False
                     }
 
         # Make this thread safe

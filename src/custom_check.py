@@ -15,7 +15,7 @@ class CustomCheck:
         if self.timeout < 1:
             self.timeout = 1
 
-    def execute_check(self):
+    def execute_check(self) -> str:
         self.agent_log.verbose('Run custom check "%s"' % (self.custom_check['name']))
 
         check_result = {
@@ -60,3 +60,6 @@ class CustomCheck:
             )
 
         self.check_store.store_custom_check(self.custom_check['name'], check_result.copy())
+
+        # Return the name of the current custom check as string so the main thread can mark this as executed
+        return self.custom_check['name']
