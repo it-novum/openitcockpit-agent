@@ -110,6 +110,7 @@ class ThreadFactory:
 
     def spawn_checks_thread(self):
         # Start a new thread to execute checks
+        self.loop_checks_thread = True
         self.checks_thread = threading.Thread(target=self._loop_checks_thread, daemon=True)
         self.checks_thread.start()
 
@@ -164,6 +165,7 @@ class ThreadFactory:
 
     def spawn_custom_checks_thread(self):
         # Start a new thread to execute checks
+        self.loop_custom_checks_thread = True
         self.custom_checks_thread = threading.Thread(target=self._loop_custom_checks_thread, daemon=True)
         self.custom_checks_thread.start()
 
@@ -210,7 +212,8 @@ class ThreadFactory:
                 time.sleep(1)
 
     def spawn_autossl_thread(self):
-        # Start a new thread to handle auto ssl renewal
+        # Start a new thread to handle auto ssl renewal in PUSH Mode
+        self.loop_autossl_thread = True
         self.autossl_thread = threading.Thread(target=self._loop_autossl_thread, daemon=True)
         self.autossl_thread.start()
 
