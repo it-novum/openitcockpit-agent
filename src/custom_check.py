@@ -2,6 +2,7 @@ from src.agent_log import AgentLog
 from src.check_result_store import CheckResultStore
 
 import subprocess
+import time
 
 
 class CustomCheck:
@@ -21,7 +22,9 @@ class CustomCheck:
         check_result = {
             'result': 'Unknown error',
             'error': 'Unknown error',
-            'returncode': -1
+            'returncode': -1,
+            'last_updated': time.ctime(0),
+            'last_updated_timestamp': 0
         }
 
         try:
@@ -35,7 +38,9 @@ class CustomCheck:
             check_result = {
                 'result': result.stdout.decode(),
                 'error': result.stderr.decode(),
-                'returncode': result.returncode
+                'returncode': result.returncode,
+                'last_updated': time.ctime(0),
+                'last_updated_timestamp': round(time.time())
             }
 
         except subprocess.TimeoutExpired:
@@ -48,7 +53,9 @@ class CustomCheck:
                           str(self.timeout) + ' seconds',
                 'error': 'Command "' + self.custom_check['name'] + '" timed out after ' +
                          str(self.timeout) + ' seconds',
-                'returncode': 124
+                'returncode': 124,
+                'last_updated': time.ctime(0),
+                'last_updated_timestamp': round(time.time())
             }
 
         except Exception:

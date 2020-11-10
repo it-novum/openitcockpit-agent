@@ -150,8 +150,6 @@ class ThreadFactory:
                         f = executor.submit(custom_check_obj.execute_check)
                         f.add_done_callback(self.custom_check_thread_is_done_callback)
 
-                        custom_check['next_check'] = time.time() + custom_check['interval']
-                        custom_check['last_check'] = time.time()
                         i += 1
 
                 # Custom Checks thread has nothing todo...
@@ -162,6 +160,8 @@ class ThreadFactory:
         check_name = fn.result()
         if check_name in self.custom_checks:
             self.custom_checks[check_name]['running'] = False
+            self.custom_checks[check_name]['next_check'] = time.time() + self.custom_checks[check_name]['interval']
+            self.custom_checks[check_name]['last_check'] = time.time()
 
     def spawn_custom_checks_thread(self):
         # Start a new thread to execute checks

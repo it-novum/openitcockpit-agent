@@ -2114,7 +2114,7 @@ def process_customcheck_results(future_checks):
     future_checks
         Object containing the running custom check threads (futures)
 
-    """
+    """last_updated_timestamp
     for future in futures.as_completed(future_checks):  # , timeout=10
         check = future_checks[future]
         try:
