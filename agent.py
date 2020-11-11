@@ -69,7 +69,7 @@ if __name__ == '__main__':
 
             if config.is_push_mode:
                 # Start a new thread to push the check results to the openITCOCKPIT Server
-                thread_factory.spawn_custom_checks_thread()
+                thread_factory.spawn_check_result_push_thread()
 
             # All threads got spawned
             main_thread.spawn_threads = False
