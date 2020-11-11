@@ -52,6 +52,12 @@ if __name__ == '__main__':
     # Endless loop until we get a signal to stop caught by main_thread.signal_handler
     while main_thread.loop is True:
         if main_thread.spawn_threads is True:
+            mode = 'pull'
+            if config.is_push_mode:
+                mode = 'push'
+
+            agent_log.info('Agent is running in %s mode' % mode)
+
             # Start the web server in a separate thread
             thread_factory.spawn_webserver_thread()
 
@@ -60,6 +66,10 @@ if __name__ == '__main__':
 
             # Start custom checks in separate thread
             thread_factory.spawn_custom_checks_thread()
+
+            if config.is_push_mode:
+                # Start a new thread to push the check results to the openITCOCKPIT Server
+                thread_factory.spawn_custom_checks_thread()
 
             # All threads got spawned
             main_thread.spawn_threads = False

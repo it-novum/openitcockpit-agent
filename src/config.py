@@ -25,6 +25,7 @@ class Config:
         self.enableSSL = False
         self.autossl = True
         self.temperatureIsFahrenheit = False
+        self.is_push_mode = False
 
         self.config = configparser.ConfigParser(allow_no_value=True)
         self.customchecks = configparser.ConfigParser(allow_no_value=True)
@@ -166,6 +167,20 @@ class Config:
         self.autossl = self.config.getboolean('default', 'try-autossl')
         self.temperatureIsFahrenheit = self.config.getboolean('default', 'temperature-fahrenheit')
 
+        # Determine if the Agent should run in PUSH mode
+        if self.config.getboolean('oitc', 'enabled') is True:
+            self.push_config = {
+                'url': self.config.get('oitc', 'url').strip(),
+                'apikey': self.config.get('oitc', 'url').strip(),
+                'interval': self.config.get('oitc', 'interval', fallback=30)
+            }
+
+            if self.push_config['interval'] <= 0:
+                self.push_config['interval'] = 30
+
+            if self.push_config['url'] and self.push_config['apikey']:
+                self.is_push_mode = True
+
         if self.config['default']['autossl-folder'] != "":
             self.build_autossl_defaults()
 
@@ -179,7 +194,7 @@ class Config:
                         self.config['default']['keyfile']):
                     self.enableSSL = True
                 else:
-                    self.ColorOutput.error('Could not read certfile or keyfile. Fall back to default http server.')
+                    self.ColorOutput.error('Could not read certificate or key file. Fall back to default http server.')
 
 
             except IOError:

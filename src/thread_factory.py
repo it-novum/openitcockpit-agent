@@ -26,6 +26,7 @@ class ThreadFactory:
 
         self.loop_checks_thread = True
         self.loop_custom_checks_thread = True
+        self.loop_check_result_push_thread = True
         self.loop_autossl_thread = True
 
         if (self.Config.autossl is False):
@@ -38,6 +39,12 @@ class ThreadFactory:
         self.shutdown_webserver_thread()
         self.shutdown_checks_thread()
         self.shutdown_custom_checks_thread()
+
+        try:
+            # Try to stop the push thread - only successful if the Agent is running in PUSH Mode
+            self.shutdown_check_result_push_thread()
+        except Exception:
+            pass
 
     def spawn_webserver_thread(self):
         self.webserver = Webserver(self.Config, self.agent_log, self.check_store, self.main_thread)
@@ -172,6 +179,54 @@ class ThreadFactory:
     def shutdown_custom_checks_thread(self):
         self.loop_custom_checks_thread = False
         self.custom_checks_thread.join()
+
+    def _loop_check_result_push_thread(self):
+        # Define all checks that should get executed by the Agent
+        check_params = {
+            "timeout": 5
+        }
+
+        # todo implment configuration to disable checks
+        checks = [
+            DefaultChecks(self.Config, self.agent_log, self.check_store, check_params),
+            SystemdChecks(self.Config, self.agent_log, self.check_store, check_params),
+            DockerChecks(self.Config, self.agent_log, self.check_store, check_params)
+        ]
+
+        check_interval = self.Config.config.getint('default', 'interval', fallback=5)
+        if (check_interval <= 0):
+            self.agent_log.info('check_interval <= 0. Using 5 seconds as check_interval for now.')
+            check_interval = 5
+
+        # Run checks on agent startup
+        check_interval_counter = check_interval
+        while self.loop_check_result_push_thread is True:
+            if (check_interval_counter >= check_interval):
+                # Execute checks
+                # print('run checks')
+                check_interval_counter = 1
+
+                # Execute all checks in a separate thread managed by ThreadPoolExecutor
+                with concurrent.futures.ThreadPoolExecutor(max_workers=5) as executor:
+                    i = 0
+                    for check in checks:
+                        self.agent_log.debug('Starting new AutoSSL Thread %d' % i)
+                        i += 1
+                        executor.submit(check.real_check_run)
+            else:
+                # print('Sleep wait for next run ', check_interval_counter, '/', check_interval)
+                check_interval_counter += 1
+                time.sleep(1)
+
+    def spawn_check_result_push_thread(self):
+        # Start a new thread to handle auto ssl renewal in PUSH Mode
+        self.loop_check_result_push_thread = True
+        self.check_result_push_thread = threading.Thread(target=self._loop_check_result_push_thread, daemon=True)
+        self.check_result_push_thread.start()
+
+    def shutdown_check_result_push_thread(self):
+        self.loop_check_result_push_thread = False
+        self.check_result_push_thread.join()
 
     def _loop_autossl_thread(self):
         # Define all checks that should get executed by the Agent
