@@ -186,6 +186,9 @@ class Certificates:
                 return True
 
         # Check if CA certificate will expire soon
+        # todo remove me
+        # touch /Users/dziegler/git/openitcockpit-agent/doit
+        # rm touch /Users/dziegler/git/openitcockpit-agent/doit
         exp = Filesystem.file_readable('/Users/dziegler/git/openitcockpit-agent/doit')
         if Filesystem.file_readable(self.Config.config['default']['autossl-ca-file']):
             self.agent_log.info('CA file %s found and readable' % self.Config.config['default']['autossl-ca-file'])
@@ -356,12 +359,13 @@ class Certificates:
                 print(cert)
                 # cert = cert.replace("\r\n", "\n")
                 self.sha512.update(cert)
-                cert_checksum = self.sha512.hexdigest().upper()
-                self.cert_checksum = cert_checksum
+                self.cert_checksum = self.sha512.hexdigest().upper()
+
+        cert_checksum = self.cert_checksum
         self.checksum_lock.release()
 
-        self.agent_log.debug(self.cert_checksum)
-        return self.cert_checksum
+        self.agent_log.debug(cert_checksum)
+        return cert_checksum
 
     def store_cert_file(self, cert_data: str) -> bool:
         self.checksum_lock.acquire()
