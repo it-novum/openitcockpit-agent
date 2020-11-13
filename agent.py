@@ -37,17 +37,19 @@ if __name__ == '__main__':
 
     agent_log = AgentLog(Config=Config)
 
+    certificates = Certificates(config, agent_log)
+
     main_thread = MainThread(config, agent_log)
     signal.signal(signal.SIGINT, main_thread.signal_handler)  # ^C
     signal.signal(signal.SIGTERM, main_thread.signal_handler)  # systemctl stop openitcockpit-agent
     signal.signal(signal.SIGHUP, main_thread.signal_handler)  # systemctl reload openitcockpit-agent
 
-    thread_factory = ThreadFactory(config, agent_log, main_thread)
+    thread_factory = ThreadFactory(config, agent_log, main_thread, certificates)
     operating_system = OperatingSystem()
 
     if config.autossl is True:
-        certificats = Certificates(config, agent_log)
-        certificats.check_auto_certificate()
+        pass # todo implement me
+        #certificates.check_auto_certificate()
 
     # Endless loop until we get a signal to stop caught by main_thread.signal_handler
     while main_thread.loop is True:
@@ -70,6 +72,10 @@ if __name__ == '__main__':
             if config.is_push_mode:
                 # Start a new thread to push the check results to the openITCOCKPIT Server
                 thread_factory.spawn_check_result_push_thread()
+
+                if config.autossl:
+                    # Start a new thread to check for certificate renewal
+                    thread_factory.spawn_autossl_thread()
 
             # All threads got spawned
             main_thread.spawn_threads = False

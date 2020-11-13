@@ -1,0 +1,2 @@
+class UntrustedAgentException(Exception):
+    pass

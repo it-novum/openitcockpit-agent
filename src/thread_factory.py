@@ -13,14 +13,19 @@ from src.config import Config
 from src.agent_log import AgentLog
 from src.check_result_store import CheckResultStore
 from src.main_thread import MainThread
+from src.push_client import PushClient
+from src.certificates import Certificates
+from src.exceptions.untrusted_agent_exception import UntrustedAgentException
 
 
 class ThreadFactory:
 
-    def __init__(self, config, agent_log, main_thread):
+    def __init__(self, config, agent_log, main_thread, certificates):
         self.Config: Config = config
         self.agent_log: AgentLog = agent_log
         self.main_thread: MainThread = main_thread
+        self.certificates: Certificates = certificates
+
 
         self.check_store = CheckResultStore()
 
@@ -46,8 +51,15 @@ class ThreadFactory:
         except Exception:
             pass
 
+        try:
+            # Try to stop the certificate renewal thread - only successful if the Agent is running in PUSH Mode
+            # with enabled autossl
+            self.shutdown_autossl_thread()
+        except Exception:
+            pass
+
     def spawn_webserver_thread(self):
-        self.webserver = Webserver(self.Config, self.agent_log, self.check_store, self.main_thread)
+        self.webserver = Webserver(self.Config, self.agent_log, self.check_store, self.main_thread, self.certificates)
         self.webserver.start_webserver()
 
         # Start the web server in a separate thread
@@ -181,41 +193,23 @@ class ThreadFactory:
         self.custom_checks_thread.join()
 
     def _loop_check_result_push_thread(self):
-        # Define all checks that should get executed by the Agent
-        check_params = {
-            "timeout": 5
-        }
+        push_config = self.Config.push_config
+        push_interval = push_config['interval']
 
-        # todo implment configuration to disable checks
-        checks = [
-            DefaultChecks(self.Config, self.agent_log, self.check_store, check_params),
-            SystemdChecks(self.Config, self.agent_log, self.check_store, check_params),
-            DockerChecks(self.Config, self.agent_log, self.check_store, check_params)
-        ]
+        push_interval_counter = 1
 
-        check_interval = self.Config.config.getint('default', 'interval', fallback=5)
-        if (check_interval <= 0):
-            self.agent_log.info('check_interval <= 0. Using 5 seconds as check_interval for now.')
-            check_interval = 5
+        push_client = PushClient(self.Config, self.agent_log, self.check_store, self.certificates)
 
-        # Run checks on agent startup
-        check_interval_counter = check_interval
         while self.loop_check_result_push_thread is True:
-            if (check_interval_counter >= check_interval):
-                # Execute checks
-                # print('run checks')
-                check_interval_counter = 1
+            if (push_interval_counter >= push_interval):
 
-                # Execute all checks in a separate thread managed by ThreadPoolExecutor
-                with concurrent.futures.ThreadPoolExecutor(max_workers=5) as executor:
-                    i = 0
-                    for check in checks:
-                        self.agent_log.debug('Starting new AutoSSL Thread %d' % i)
-                        i += 1
-                        executor.submit(check.real_check_run)
+                # Push checks results to openITCOCKPIT Server
+                push_interval_counter = 1
+                push_client.send_check_results()
+
             else:
-                # print('Sleep wait for next run ', check_interval_counter, '/', check_interval)
-                check_interval_counter += 1
+                # print('Sleep wait for next run ', push_interval_counter, '/', push_interval)
+                push_interval_counter += 1
                 time.sleep(1)
 
     def spawn_check_result_push_thread(self):
@@ -228,48 +222,58 @@ class ThreadFactory:
         self.loop_check_result_push_thread = False
         self.check_result_push_thread.join()
 
-    def _loop_autossl_thread(self):
-        # Define all checks that should get executed by the Agent
-        check_params = {
-            "timeout": 5
-        }
+    def _loop_autossl_thread(self, interval):
+        if interval <= 0:
+            interval = 21600
 
-        # todo implment configuration to disable checks
-        checks = [
-            DefaultChecks(self.Config, self.agent_log, self.check_store, check_params),
-            SystemdChecks(self.Config, self.agent_log, self.check_store, check_params),
-            DockerChecks(self.Config, self.agent_log, self.check_store, check_params)
-        ]
+        orig_interval = interval
 
-        check_interval = self.Config.config.getint('default', 'interval', fallback=5)
-        if (check_interval <= 0):
-            self.agent_log.info('check_interval <= 0. Using 5 seconds as check_interval for now.')
-            check_interval = 5
+        check_autossl_counter = 0
 
-        # Run checks on agent startup
-        check_interval_counter = check_interval
         while self.loop_autossl_thread is True:
-            if (check_interval_counter >= check_interval):
-                # Execute checks
-                # print('run checks')
-                check_interval_counter = 1
+            if (check_autossl_counter >= interval):
 
-                # Execute all checks in a separate thread managed by ThreadPoolExecutor
-                with concurrent.futures.ThreadPoolExecutor(max_workers=5) as executor:
-                    i = 0
-                    for check in checks:
-                        self.agent_log.debug('Starting new AutoSSL Thread %d' % i)
-                        i += 1
-                        executor.submit(check.real_check_run)
+                try:
+                    trigger_reload = self.certificates.check_auto_certificate()
+
+                    # No Exception so no new certificate. Use the normal check interval
+                    interval = orig_interval
+                    check_autossl_counter = 0
+
+                    if trigger_reload is True:
+                        self.agent_log.info(
+                            'Reloading agent to enable new autossl certificates'
+                        )
+                        self.main_thread.trigger_reload()
+
+                except UntrustedAgentException:
+                    # Agent is not marked as trusted on the openITCOCKPIT Server
+                    # Check for a new certificate every minute as long as the agent is not trusted
+
+                    interval = 60
+                    check_autossl_counter = 0
+
+                    self.agent_log.error(
+                        'Agent state is untrusted! Set autossl retry interval to 60 seconds'
+                    )
+
+                except:
+                    self.agent_log.error(
+                        'Unknown error while pulling agent certificate.'
+                    )
+
             else:
-                # print('Sleep wait for next run ', check_interval_counter, '/', check_interval)
-                check_interval_counter += 1
+                # print('Sleep wait for next run ', check_autossl_counter, '/', interval)
+                check_autossl_counter += 1
                 time.sleep(1)
 
-    def spawn_autossl_thread(self):
+    # 21600
+    def spawn_autossl_thread(self, interval=15):
+        # 21600 => check certificate age 4 times a day
+
         # Start a new thread to handle auto ssl renewal in PUSH Mode
         self.loop_autossl_thread = True
-        self.autossl_thread = threading.Thread(target=self._loop_autossl_thread, daemon=True)
+        self.autossl_thread = threading.Thread(target=self._loop_autossl_thread, daemon=True, args=(interval,))
         self.autossl_thread.start()
 
     def shutdown_autossl_thread(self):

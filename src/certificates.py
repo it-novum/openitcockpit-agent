@@ -15,6 +15,7 @@ from Crypto.Hash import SHA512
 from src.config import Config
 from src.agent_log import AgentLog
 from src.filesystem import Filesystem
+from src.exceptions.untrusted_agent_exception import UntrustedAgentException
 
 from OpenSSL.SSL import FILETYPE_PEM
 from OpenSSL.crypto import (dump_certificate_request, dump_privatekey, load_certificate, PKey, TYPE_RSA, X509Req)
@@ -33,6 +34,7 @@ class Certificates:
 
         self.cert_checksum = None
         self.certificate_check_lock = Lock()
+        self.checksum_lock = Lock()
 
     def get_csr(self) -> FILETYPE_PEM:
         """Function that creates a new Certificate signing request (CSR)
@@ -130,44 +132,61 @@ class Certificates:
 
             return False
 
-    def check_auto_certificate(self):
-        """Function to check the automatically generated certificate
-
-        This function checks if the automatically generated certificate is installed and will otherwise trigger the download.
-        In addition it checks if the certificate will expire soon.
-
+    def requires_new_certificate(self) -> bool:
+        """Checks if new autossl certificates are required if:
+         - no agent certificate exists
         """
-        self.agent_log.info('Checking auto TLS certificate')
-        request_new_certificate = False
+
+        if self.Config.autossl is False:
+            return False
+
+        # Check if agent certificate file exists
         if not Filesystem.file_readable(self.Config.config['default']['autossl-crt-file']):
             self.agent_log.warning(
-                'Could not read certificate file %s' % self.Config.config['default']['autossl-crt-file'])
-            self.pull_crt_from_server()
+                'Could not read agent certificate file %s' % self.Config.config['default']['autossl-crt-file']
+            )
+            return True
 
-        # repeat condition because pull_crt_from_server from above could fail
-        if Filesystem.file_readable(self.Config.config['default']['autossl-crt-file']):
-            with open(self.Config.config['default']['autossl-crt-file'], 'rb') as f:
-                cert = f.read()
-                x509 = load_certificate(FILETYPE_PEM, cert)
-                x509info = x509.get_notAfter()
-                exp_day = x509info[6:8].decode('utf-8')
-                exp_month = x509info[4:6].decode('utf-8')
-                exp_year = x509info[:4].decode('utf-8')
-                exp_date = str(exp_day) + "-" + str(exp_month) + "-" + str(exp_year)
+        # Check if CA certificate file exists
+        if not Filesystem.file_readable(self.Config.config['default']['autossl-ca-file']):
+            self.agent_log.warning(
+                'Could not read CA certificate file %s' % self.Config.config['default']['autossl-ca-file']
+            )
+            return True
 
-                self.agent_log.info("SSL Certificate expires in %s on %s (DD-MM-YYYY)" % (
-                    str(datetime.date(int(exp_year),
-                                      int(exp_month),
-                                      int(exp_day)) - datetime.datetime.now().date()).split(',')[
-                        0], exp_date))
+        return False
 
-                if datetime.date(int(exp_year), int(exp_month),
-                                 int(exp_day)) - datetime.datetime.now().date() <= datetime.timedelta(
-                    self.days_until_cert_warning):
-                    self.agent_log.warning(
-                        'SSL Certificate will expire soon. Try to create a new one automatically ...')
-                    request_new_certificate = True
+    def requires_certificate_renewal(self) -> bool:
+        """Checks if a autossl certificates requires a renewal:
+         - agent certificate expire soon
+         - CA certificate expires soon
+        """
 
+        # Check if agent certificate will expire soon
+        with open(self.Config.config['default']['autossl-crt-file'], 'rb') as f:
+            cert = f.read()
+            x509 = load_certificate(FILETYPE_PEM, cert)
+            x509info = x509.get_notAfter()
+            exp_day = x509info[6:8].decode('utf-8')
+            exp_month = x509info[4:6].decode('utf-8')
+            exp_year = x509info[:4].decode('utf-8')
+            exp_date = str(exp_day) + "-" + str(exp_month) + "-" + str(exp_year)
+
+            self.agent_log.info("SSL Certificate expires in %s on %s (DD-MM-YYYY)" % (
+                str(datetime.date(int(exp_year),
+                                  int(exp_month),
+                                  int(exp_day)) - datetime.datetime.now().date()).split(',')[0], exp_date
+            ))
+
+            if datetime.date(int(exp_year), int(exp_month),
+                             int(exp_day)) - datetime.datetime.now().date() <= datetime.timedelta(
+                self.days_until_cert_warning):
+                self.agent_log.warning(
+                    'Agent SSL certificate will expire soon. Try to create a new one automatically ...')
+                return True
+
+        # Check if CA certificate will expire soon
+        exp = Filesystem.file_readable('/Users/dziegler/git/openitcockpit-agent/doit')
         if Filesystem.file_readable(self.Config.config['default']['autossl-ca-file']):
             self.agent_log.info('CA file %s found and readable' % self.Config.config['default']['autossl-ca-file'])
             with open(self.Config.config['default']['autossl-ca-file'], 'rb') as f:
@@ -181,27 +200,56 @@ class Certificates:
 
                 if datetime.date(int(exp_year), int(exp_month),
                                  int(exp_day)) - datetime.datetime.now().date() <= datetime.timedelta(
-                    self.days_until_ca_warning):
+                    self.days_until_ca_warning) or exp:
+                    exp = False
                     self.agent_log.warning("CA Certificate expires in %s on %s (DD-MM-YYYY)" % (
                         str(datetime.date(int(exp_year), int(exp_month),
                                           int(exp_day)) - datetime.datetime.now().date()).split(
                             ',')[0], exp_date))
-                    request_new_certificate = True
+                    return True
 
-        if request_new_certificate:
-            self.agent_log.info('Try pulling new Certificate from monitoring server')
-            if self.pull_crt_from_server(True) is not False:
-                self.check_auto_certificate()
+        return False
 
-    def pull_crt_from_server(self, renew=False):
+    def check_auto_certificate(self) -> bool:
+        """Function to check the automatically generated certificate
+
+        This function checks if the automatically generated certificate is installed and will otherwise trigger the download.
+        In addition it checks if the certificate will expire soon.
+
+        """
+
+        self.agent_log.info('Checking auto TLS certificate')
+
+        trigger_reload = False
+        if self.requires_new_certificate() is True:
+            result = self._pull_crt_from_server(renew=False)
+            if result == 1:
+                trigger_reload = True
+
+            if result == 2:
+                # throw the UntrustedAgentException to the function the calls check_auto_certificate
+                # so it can set the certificate check interval to 60 seconds instead of 6 hours
+                raise UntrustedAgentException
+
+        if Filesystem.file_readable(self.Config.config['default']['autossl-crt-file']):
+            if self.requires_certificate_renewal() is True:
+                result = self._pull_crt_from_server(renew=True)
+                if result == 1:
+                    trigger_reload = True
+
+                if result == 2:
+                    # throw the UntrustedAgentException to the function the calls check_auto_certificate
+                    # so it can set the certificate check interval to 60 seconds instead of 6 hours
+                    raise UntrustedAgentException
+
+        return trigger_reload
+
+    def _pull_crt_from_server(self, renew=False) -> int:
         """Function to pull a new certificate using a Certificate signing request (CSR)
 
         This function tries to pull a new certificate from the configured openITCOCKPIT Server.
         Therefore a new certificate signing request (CSR) is needed and self.get_csr() will be called.
         The request with the CSR should return the new client and CA certificate.
-
-        If the agent is not known or not yet trusted by the openITCOCKPIT Server the function will be executed again in 10 minutes.
-        Therefore the function wait_and_check_auto_certificate(600) will be called as new thread (future).
 
         If the agent is not yet trusted by the openITCOCKPIT Server a manual confirmation in the openITCOCKPIT frontend is needed!
 
@@ -210,128 +258,145 @@ class Certificates:
 
         Returns
         -------
-        bool
-            True if successful, False otherwise.
-
+        int
+        1 = successful
+        2 = untrusted agent
+        3 = other error
         """
+
+        # ONLY PULL cert if Agent is running in PUSH mode!!
+        if self.Config.is_push_mode is False:
+            return 3
 
         if self.certificate_check_lock.locked():
             self.agent_log.error('Function to pull a new certificate is locked by another thread!')
-            return False
+            return 3
 
+        # with self.certificate_check_lock is a shortcut for:
+        # self.certificate_check_lock.acquire()
+        # do_something()
+        # self.certificate_check_lock.release()
         with self.certificate_check_lock:
-            # ONLY PULL cert if Agent is running in PULL mode!!
-            if self.Config.config['oitc']['url'] and self.Config.config['oitc']['url'] != "" and \
-                    self.Config.config['oitc']['apikey'] and self.Config.config['oitc']['apikey'] != "" and \
-                    self.Config.config['oitc']['hostuuid'] and self.Config.config['oitc']['hostuuid'] != "":
+            self.agent_log.info('Pulling Certificate Signing Request (CSR) file from Server')
 
-                self.agent_log.info('Pulling Certificate Signing Request (CSR) file from Server')
+            try:
+                csr = self.get_csr()
+
+                data = {
+                    'csr': csr.decode(),
+                    'hostuuid': self.Config.config['oitc']['hostuuid']
+                }
+                headers = {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                    'Authorization': 'X-OITC-API ' + self.Config.config['oitc']['apikey'].strip(),
+                }
+                if renew:
+                    data['checksum'] = self.get_cert_checksum()
 
                 try:
-                    csr = self.get_csr()
-
-                    data = {
-                        'csr': csr.decode(),
-                        'hostuuid': self.Config.config['oitc']['hostuuid']
-                    }
-                    headers = {
-                        'Content-Type': 'application/x-www-form-urlencoded',
-                        'Authorization': 'X-OITC-API ' + self.Config.config['oitc']['apikey'].strip(),
-                    }
-                    if renew:
-                        with open(self.Config.config['default']['autossl-crt-file'], 'rb') as f:
-                            cert = f.read()
-                            # cert = cert.replace("\r\n", "\n")
-                            self.sha512.update(cert)
-                            data['checksum'] = self.sha512.hexdigest().upper()
-
-                    try:
-                        urllib3.disable_warnings()
-                    except:
-
-                        if self.Config.stacktrace:
-                            traceback.print_exc()
-
-                    response = requests.post(
-                        self.Config.config['oitc']['url'].strip() + '/agentconnector/certificate.json',
-                        data=data,
-                        headers=headers,
-                        verify=False)
-                    if response.content.decode('utf-8').strip() != '':
-                        jdata = json.loads(response.content.decode('utf-8'))
-
-                        if 'checksum_missing' in jdata:
-                            self.agent_log.error('Agent certificate already generated. May be hijacked?')
-                            self.agent_log.info(
-                                'Add old certificate checksum to request or recreate Agent in openITCOCKPIT.')
-
-                        if 'unknown' in jdata:
-                            self.agent_log.error(
-                                'Agent state is untrusted! Try again in 1 minute to get a certificate from the server.')
-
-                            # print_verbose(
-                            #    'Untrusted agent! Try again in 1 minute to get a certificate from the server.',
-                            #    False)
-                            # agent_log.warning(
-                            #    'Untrusted agent! Try again in 1 minute to get a certificate from the server.')
-                            # executor = futures.ThreadPoolExecutor(max_workers=1)
-                            # executor.submit(wait_and_check_auto_certificate, 60)
-
-                        if 'signed' in jdata and 'ca' in jdata:
-                            with open(self.Config.config['default']['autossl-crt-file'], 'wb+') as f:
-                                f.write(jdata['signed'])
-                                self.sha512.update(jdata['signed'].encode())
-                                self.cert_checksum = self.sha512.hexdigest().upper()
-                            with open(self.Config.config['default']['autossl-ca-file'], 'wb+') as f:
-                                f.write(jdata['ca'])
-
-                            # Trigger an reload of all threads to enable the new certificats
-                            # Todo fix reload !!
-                            # restart_webserver()
-
-                            self.agent_log.info('Signed certificate updated successfully')
-                            return True
+                    urllib3.disable_warnings()
                 except:
-                    self.agent_log.error('An error occurred during autossl certificate renewal process')
-
                     if self.Config.stacktrace:
                         traceback.print_exc()
 
+                print(data)
+                response = requests.post(
+                    self.Config.config['oitc']['url'].strip() + '/agentconnector/certificate.json',
+                    data=data,
+                    headers=headers,
+                    verify=False)
+                if response.content.decode('utf-8').strip() != '':
+                    jdata = json.loads(response.content.decode('utf-8'))
+
+                    if 'checksum_missing' in jdata:
+                        self.agent_log.error('Agent certificate already generated. May be hijacked?')
+                        self.agent_log.info(
+                            'Add old certificate checksum to request or recreate Agent in openITCOCKPIT.'
+                        )
+                        return False
+
+                    if 'unknown' in jdata:
+                        # self.agent_log.error(
+                        #    'Agent state is untrusted! Try again in 1 minute to get a certificate from the server.'
+                        # )
+
+                        return 2  # Agent not trusted yet
+
+                    if 'signed' in jdata and 'ca' in jdata:
+                        self.store_cert_file(jdata['signed'])
+                        self.store_ca_file(jdata['ca'])
+
+                        self.agent_log.info('Signed certificate updated successfully')
+
+                        # Successfully get PULLED a new certificate
+                        # return 1 to trigger a reload of the agent
+                        return 1
+
+            except:
+                self.agent_log.error('An error occurred during autossl certificate renewal process')
+
+                if self.Config.stacktrace:
+                    traceback.print_exc()
+
             else:
                 self.agent_log.error(
-                    'Agent is not running in PUSH mode or no openITCOCKPIT API Configuration found in config.cnf - Certificate Signing Request not possible')
+                    'Agent is not running in PUSH mode or no openITCOCKPIT API Configuration found in config.cnf - Certificate Signing Request not possible'
+                )
 
-        return False
+        # error
+        return 3
 
-    def update_crt_files(self, data) -> bool:
-        """Function to update the certificate files
+    def get_cert_checksum(self) -> str:
+        """Returns the current sha512 checksum of the agent certificate"""
 
-        Update the automatically generated agent certificate file and the ca certificate file if they are writeable.
-        Update the cached certificate checksum.
+        self.checksum_lock.acquire()
+        if self.cert_checksum is None:
+            with open(self.Config.config['default']['autossl-crt-file'], 'rb') as f:
+                cert = f.read()
+                print(cert)
+                # cert = cert.replace("\r\n", "\n")
+                self.sha512.update(cert)
+                cert_checksum = self.sha512.hexdigest().upper()
+                self.cert_checksum = cert_checksum
+        self.checksum_lock.release()
 
-        Parameters
-        ----------
-        data
-            Object containing 'signed'(certificate file) and 'ca'(ca certificate) contents.
+        self.agent_log.debug(self.cert_checksum)
+        return self.cert_checksum
 
-        """
+    def store_cert_file(self, cert_data: str) -> bool:
+        self.checksum_lock.acquire()
         self.agent_log.info('Update certificate files')
-
         try:
-            jdata = json.loads(data.decode('utf-8'))
-            jxdata = json.loads(jdata)
-            if 'signed' in jdata and 'ca' in jdata:
-                with open(self.Config.config['default']['autossl-crt-file'], 'wb+') as f:
-                    f.write(jxdata['signed'].encode())
-                    self.sha512.update(jxdata['signed'].encode())
-                    self.cert_checksum = self.sha512.hexdigest().upper()
-                with open(self.Config.config['default']['autossl-ca-file'], 'wb+') as f:
-                    f.write(jxdata['ca'].encode())
+            self.cert_checksum = None
 
+            with open(self.Config.config['default']['autossl-crt-file'], 'wb+') as f:
+                f.write(cert_data.encode())
+
+                self.checksum_lock.release()
                 return True
 
-        except Exception as e:
-            self.agent_log.error("An error occured during new certificate processing")
+        except:
+            self.agent_log.error("An error occurred while saving new agent certificate")
             traceback.print_exc()
 
+            self.checksum_lock.release()
+            return False
+
+    def store_ca_file(self, ca_data: str) -> bool:
+        self.checksum_lock.acquire()
+        self.agent_log.info('Update CA certificate files')
+        try:
+            self.cert_checksum = None
+
+            with open(self.Config.config['default']['autossl-ca-file'], 'wb+') as f:
+                f.write(ca_data.encode())
+
+                self.checksum_lock.release()
+                return True
+
+        except:
+            self.agent_log.error("An error occurred while saving new CA certificate")
+            traceback.print_exc()
+
+            self.checksum_lock.release()
             return False

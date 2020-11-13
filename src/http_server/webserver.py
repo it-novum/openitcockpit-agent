@@ -11,13 +11,12 @@ import ssl
 
 class Webserver:
 
-    def __init__(self, config, agent_log, check_store, main_thread):
+    def __init__(self, config, agent_log, check_store, main_thread, certificates):
         self.Config: Config = config
         self.agent_log: AgentLog = agent_log
         self.check_store: CheckResultStore = check_store
         self.main_thread: MainThread = main_thread
-
-        self.certificates = Certificates(config, agent_log)
+        self.certificates: Certificates = certificates
 
         # Dependency injection into AgentRequestHandler
         AgentRequestHandler.check_store = check_store

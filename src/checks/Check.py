@@ -9,6 +9,7 @@ class Check:
         self.agent_log: AgentLog = agent_log
         self.check_params = check_params
         self.check_store: CheckResultStore = check_store
+
     def run_check(self):
         pass
 

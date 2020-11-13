@@ -66,7 +66,18 @@ class AgentRequestHandler(BaseHTTPRequestHandler):
 
         elif self.path == "/updateCrt" and self.config.autossl:
             # Save new SSL certificate
-            if self.certificates.update_crt_files(data) is True:
+            update_sucessfully = False
+            try:
+                jdata = json.loads(data.decode('utf-8'))
+                jxdata = json.loads(jdata)
+                if 'signed' in jdata and 'ca' in jdata:
+                    if self.certificates.store_cert_file(jxdata['signed']) and \
+                            self.certificates.store_ca_file(jxdata['ca']):
+                        update_sucessfully = True
+            except:
+                traceback.print_exc()
+
+            if update_sucessfully is True:
                 response['success'] = True
                 # Reload all threads to enable the SSL certificate
                 self.main_thread.trigger_reload()
@@ -104,7 +115,7 @@ class AgentRequestHandler(BaseHTTPRequestHandler):
         """
         try:
             if 'auth' in self.config.config['default']:
-                if str(self.config.config['default']['auth']).strip() and self.headers.get('Authorization') == None:
+                if str(self.config.config['default']['auth']).strip() and self.headers.get('Authorization') is None:
                     self._set_401_unauthorized_headers()
                     self.wfile.write('no auth header received'.encode())
                 elif self.headers.get('Authorization') == 'Basic ' + self.config.config['default']['auth'] or \

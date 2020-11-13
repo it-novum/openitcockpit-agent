@@ -171,8 +171,9 @@ class Config:
         if self.config.getboolean('oitc', 'enabled') is True:
             self.push_config = {
                 'url': self.config.get('oitc', 'url').strip(),
-                'apikey': self.config.get('oitc', 'url').strip(),
-                'interval': self.config.get('oitc', 'interval', fallback=30)
+                'apikey': self.config.get('oitc', 'apikey').strip(),
+                'hostuuid': self.config.get('oitc', 'hostuuid').strip(),
+                'interval': self.config.getint('oitc', 'interval', fallback=30)
             }
 
             if self.push_config['interval'] <= 0:

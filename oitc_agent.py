@@ -2525,7 +2525,7 @@ def pull_crt_from_server(renew=False):
 
     agent_log.info('Pulling csr file from Server')
 
-    if certificate_check_lock.locked():
+if certificate_check_lock.locked():
         print_verbose('Function to pull a new certificate is locked!', False)
         agent_log.warning('Function to pull a new certificate is locked!')
         return False
