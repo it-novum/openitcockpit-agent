@@ -53,6 +53,8 @@ Uninstall:  `rpm -e openitcockpit-agent`
 
 #### macOS
 
+Install with double clicking the pkg installer file.
+
 Install `sudo installer -pkg openitcockpit-agent-1.*.pkg -target / -verbose`
 
 Uninstall `sudo installer -pkg openitcockpit-agent-uninstaller*.pkg -target / -verbose`
@@ -63,7 +65,7 @@ Install with double clicking the msi installer file.
 
 Automated install:  `msiexec.exe /i openitcockpit-agent.msi INSTALLDIR="C:\Program Files\it-novum\openitcockpit-agent\" /qn`
 
-Uninstall using the windows built-in graphical package manager.
+Uninstall using the windows built-in graphical software manager.
 
 
 ## Developer installation
@@ -122,58 +124,61 @@ Default: ```python agent.py```
 
 Custom: ```python oitc_agent.py -v -i <check interval seconds> -p <port number> -a <ip address> -c <config path> --certfile <certfile path> --keyfile <keyfile path> --auth <user>:<password> --oitc-url <url> --oitc-apikey <api key> --oitc-interval <seconds>```
 
-Windows: ```python.exe oitc_agent.py```
+Windows: ```python.exe agent.py```
 
-#### Pull mode (publish data as json threw a web server)
+#### Pull mode (publish data as json via a web server)
 
-Default url to get check results: ```http://address:port```
+Default url to get check results: ```http://address:3333```
 
 Default url to get current configuration: ```http://address:port/config```
 
 
 Options (script start parameters overwrite options in config file):
 
-|option| value | description | 
-| ------ | ------ | ----------- | 
-|-i --interval       |seconds       |check interval in seconds     | 
-|-p --port       |number       |webserver port number     | 
-|-a --address       |ip address       |webserver ip address     | 
-|-c --config       |config path       |config file path (absolute path recommended)     | 
-|--customchecks       |file path       |custom check config file path (absolute path recommended)    | 
-|--auth       |user:password       |enable http basic auth     | 
-|-v --verbose       |       |enable verbose mode (information/errors without stackstrace)     | 
-|-s --stacktrace       |       |print stackstrace for possible exceptions     | 
-|--config-update-mode       |       |enable configuration update mode threw post request and /config to get current configuration     | 
-|--temperature-fahrenheit       |       |set temperature to fahrenheit if enabled (else use celsius)     | 
-|--dockerstats       |       |enable docker status check     | 
-|--qemustats       |       |enable qemu status check (linux only)     | 
-|--no-cpustats       |       |disable default cpu status check     | 
-|--no-sensorstats       |       |disable default sensor status check     | 
-|--no-processstats       |       |disable default process status check     | 
-|--processstats-including-child-ids       |       |add process child ids to the default process status check (computationally intensive)     | 
-|--no-netstats       |       |disable default network status check     | 
-|--no-diskstats       |       |disable default disk status check     | 
-|--no-netio       |       |disable default network I/O calculation     | 
-|--no-diskio       |       |disable default disk I/O calculation     | 
-|--no-winservices       |       |disable default windows services status check (windows only)    | 
-|-h --help       |       |print a help message and exit     | 
+| Option                             | Value         | Description                                                                                  |
+|------------------------------------|---------------|----------------------------------------------------------------------------------------------|
+| -i --interval                      | seconds       | check interval in seconds                                                                    |
+| -p --port                          | number        | webserver port number                                                                        |
+| -a --address                       | ip address    | webserver ip address                                                                         |
+| -c --config                        | config path   | config file path (absolute path recommended)                                                 |
+| --customchecks                     | file path     | custom check config file path (absolute path recommended)                                    |
+| --auth                             | user:password | enable http basic auth                                                                       |
+| -v --verbose                       |               | enable verbose mode (information/errors without stackstrace)                                 |
+| -s --stacktrace                    |               | print stackstrace for possible exceptions                                                    |
+| --config-update-mode               |               | enable configuration update mode threw post request and /config to get current configuration |
+| --temperature-fahrenheit           |               | set temperature to fahrenheit if enabled (else use celsius)                                  |
+| --dockerstats                      |               | enable docker status check                                                                   |
+| --qemustats                        |               | enable qemu status check (linux only)                                                        |
+| --no-cpustats                      |               | disable default cpu status check                                                             |
+| --no-sensorstats                   |               | disable default sensor status check                                                          |
+| --no-processstats                  |               | disable default process status check                                                         |
+| --processstats-including-child-ids |               | add process child ids to the default process status check (computationally intensive)        |
+| --no-netstats                      |               | disable default network status check                                                         |
+| --no-diskstats                     |               | disable default disk status check                                                            |
+| --no-netio                         |               | disable default network I/O calculation                                                      |
+| --no-diskio                        |               | disable default disk I/O calculation                                                         |
+| --no-winservices                   |               | disable default windows services status check (windows only)                                 |
+| -h --help                          |               | print a help message and exit                                                                |
+
 
 Add there parameters to enable ssl encrypted http(s) server:
 
-|option| value | description | 
-| ------ | ------ | ----------- | 
-|--certfile       |certfile path       |/path/to/cert.pem (absolute path recommended)    | 
-|--keyfile       |keyfile path       |/path/to/key.pem (absolute path recommended)    | 
-|--try-autossl       |       |try to enable auto webserver ssl mode    | 
+| Option        | Value         | Description                                   |
+|---------------|---------------|-----------------------------------------------|
+| --certfile    | certfile path | /path/to/cert.pem (absolute path recommended) |
+| --keyfile     | keyfile path  | /path/to/key.pem (absolute path recommended)  |
+| --try-autossl |               | try to enable auto webserver ssl mode         |
+
 
 File paths used for autossl (default: /etc/openitcockpit-agent/... or C:\Program Files\openitcockpit-agent\\...):
 
-|option| value | description | 
-| ------ | ------ | ----------- | 
-|--autossl-csr-file       |file path       |/path/to/agent.csr (absolute path recommended)    | 
-|--autossl-crt-file       |file path       |/path/to/agent.crt (absolute path recommended)    | 
-|--autossl-key-file       |file path       |/path/to/agent.key (absolute path recommended)    | 
-|--autossl-ca-file       |file path       |/path/to/server_ca.crt (absolute path recommended)    | 
+| Option             | Value     | Description                                        |
+|--------------------|-----------|----------------------------------------------------|
+| --autossl-csr-file | file path | /path/to/agent.csr (absolute path recommended)     |
+| --autossl-crt-file | file path | /path/to/agent.crt (absolute path recommended)     |
+| --autossl-key-file | file path | /path/to/agent.key (absolute path recommended)     |
+| --autossl-ca-file  | file path | /path/to/server_ca.crt (absolute path recommended) |
+
 
 Using ssl or autossl the URL change from http://address:port to https://address:port
 
@@ -193,16 +198,17 @@ cat server.cert server.key > both.pem
 openssl pkcs12 -export -in both.pem -out both.p12
 ```
 
-#### Push mode (send data as post request to a url endpoint)
+#### Push mode (send data as POST request to a url endpoint)
 
 Add there parameters (all required) to enable transfer of check results to a openITCOCKPIT server:
 
-|option| value | description | 
-| ------ | ------ | ----------- | 
-|--oitc-hostuuid   |host uuid       |openITCOCKPIT host uuid     | 
-|--oitc-url       |url       |openITCOCKPIT url (https://demo.openitcockpit.io)     | 
-|--oitc-apikey       |api key       |openITCOCKPIT api key     | 
-|--oitc-interval       |seconds       |transfer interval in seconds     | 
+| Option          | Value     | Description                                       |
+|-----------------|-----------|---------------------------------------------------|
+| --oitc-hostuuid | host uuid | openITCOCKPIT host uuid                           |
+| --oitc-url      | url       | openITCOCKPIT url (https://demo.openitcockpit.io) |
+| --oitc-apikey   | api key   | openITCOCKPIT api key                             |
+| --oitc-interval | seconds   | transfer interval in seconds                      |
+
 
 Post data:
 ```
@@ -351,7 +357,7 @@ JSON Example (file: new_config.json) for update mode and http://address:port/con
 
 ---
 
-## Agent build instructions
+## Package build instructions
 
 Clone this repository to your filesystem and run the following commands in the repository folder
 
@@ -425,38 +431,6 @@ sudo rm -r ./dist ./build ./__pycache__ oitc_agent.spec
 sudo chmod +x ./executables/openitcockpit-agent-python3-arm64.run
 ```
 
-### Python 2.7 - Linux
-
-#### Create python virtual environment
-Make sure pip for python2 is installed
-
-```
-apt install python-pip
-pip2 install --upgrade virtualenv
-virtualenv -p python2.7 ./python2.7-linux-env
-source ./python2.7-linux-env/bin/activate
-./python2.7-linux-env/bin/pip2 install -r requirements_python2.txt pyinstaller
-deactivate
-
-zip -rq ./environments/python2.7-linux-env.zip python2.7-linux-env
-```
-
-#### Build executable with pyinstaller
-
-```
-apt install unzip
-unzip -q ./environments/python2.7-linux-env.zip
-
-source ./python2.7-linux-env/bin/activate
-sudo ./python2.7-linux-env/bin/python2 ./python2.7-linux-env/bin/pyinstaller oitc_agent.py --onefile
-deactivate
-sudo mv ./dist/oitc_agent ./executables/openitcockpit-agent-python2.run
-sudo rm -r ./dist ./build oitc_agent.spec
-sudo chmod +x ./executables/openitcockpit-agent-python2.run
-
-sudo rm -rf python2.7-linux-env
-```
-
 ### Python 3 - Windows
 
 #### Using a real Windows
@@ -484,31 +458,6 @@ rm -r -fo .\build
 rm -r -fo .\__pycache__
 rm -r -fo .\oitc_agent.spec
 # rm -r -fo .\python3-windows-env
-```
-
-
-#### Using wine (not recommended -> psutil too old; version check need to be fixed in script before building)
-
-##### Initial wine and python installation:
-
-```
-apt-get install wine wine32
-wget https://www.python.org/ftp/python/3.4.4/python-3.4.4.amd64.msi
-wine msiexec /i python-3.4.4.amd64.msi /L*v log.txt
-```
-
-##### Create python virtual environment
-
-```
-wine ~/.wine/drive_c/Python34/python.exe -m venv ./python3-wine-env
-wine cmd
-./python3-wine-env/Scripts/activate.bat
-./python3-wine-env/Scripts/pip.exe install configparser psutil==3.4.2 pyinstaller pycryptodome pyopenssl
-./python3-wine-env/Scripts/deactivate.bat
-exit
-
-zip -rq ./environments/python3-wine-env.zip python3-wine-env
-rm -rf python3-wine-env
 ```
 
 #### Build executable with pyinstaller on linux
@@ -598,6 +547,6 @@ rm -r package_osx package_osx_uninstaller
 
 ```
 pip3 install pdoc3
-pdoc oitc_agent.py --html --output-dir docs
+pdoc . --html --output-dir docs
 rm -r ./__pycache__
 ```

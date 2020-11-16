@@ -1,0 +1,1783 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
+<meta name="generator" content="pdoc 0.9.1" />
+<title>openitcockpit-agent.src.config API documentation</title>
+<meta name="description" content="" />
+<link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/sanitize.min.css" integrity="sha256-PK9q560IAAa6WVRRh76LtCaI8pjTJ2z11v0miyNNjrs=" crossorigin>
+<link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/typography.min.css" integrity="sha256-7l/o7C8jubJiy74VsKTidCy1yBkRtiUGbVkYBylBqUg=" crossorigin>
+<link rel="stylesheet preload" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/styles/github.min.css" crossorigin>
+<style>:root{--highlight-color:#fe9}.flex{display:flex !important}body{line-height:1.5em}#content{padding:20px}#sidebar{padding:30px;overflow:hidden}#sidebar > *:last-child{margin-bottom:2cm}.http-server-breadcrumbs{font-size:130%;margin:0 0 15px 0}#footer{font-size:.75em;padding:5px 30px;border-top:1px solid #ddd;text-align:right}#footer p{margin:0 0 0 1em;display:inline-block}#footer p:last-child{margin-right:30px}h1,h2,h3,h4,h5{font-weight:300}h1{font-size:2.5em;line-height:1.1em}h2{font-size:1.75em;margin:1em 0 .50em 0}h3{font-size:1.4em;margin:25px 0 10px 0}h4{margin:0;font-size:105%}h1:target,h2:target,h3:target,h4:target,h5:target,h6:target{background:var(--highlight-color);padding:.2em 0}a{color:#058;text-decoration:none;transition:color .3s ease-in-out}a:hover{color:#e82}.title code{font-weight:bold}h2[id^="header-"]{margin-top:2em}.ident{color:#900}pre code{background:#f8f8f8;font-size:.8em;line-height:1.4em}code{background:#f2f2f1;padding:1px 4px;overflow-wrap:break-word}h1 code{background:transparent}pre{background:#f8f8f8;border:0;border-top:1px solid #ccc;border-bottom:1px solid #ccc;margin:1em 0;padding:1ex}#http-server-module-list{display:flex;flex-flow:column}#http-server-module-list div{display:flex}#http-server-module-list dt{min-width:10%}#http-server-module-list p{margin-top:0}.toc ul,#index{list-style-type:none;margin:0;padding:0}#index code{background:transparent}#index h3{border-bottom:1px solid #ddd}#index ul{padding:0}#index h4{margin-top:.6em;font-weight:bold}@media (min-width:200ex){#index .two-column{column-count:2}}@media (min-width:300ex){#index .two-column{column-count:3}}dl{margin-bottom:2em}dl dl:last-child{margin-bottom:4em}dd{margin:0 0 1em 3em}#header-classes + dl > dd{margin-bottom:3em}dd dd{margin-left:2em}dd p{margin:10px 0}.name{background:#eee;font-weight:bold;font-size:.85em;padding:5px 10px;display:inline-block;min-width:40%}.name:hover{background:#e0e0e0}dt:target .name{background:var(--highlight-color)}.name > span:first-child{white-space:nowrap}.name.class > span:nth-child(2){margin-left:.4em}.inherited{color:#999;border-left:5px solid #eee;padding-left:1em}.inheritance em{font-style:normal;font-weight:bold}.desc h2{font-weight:400;font-size:1.25em}.desc h3{font-size:1em}.desc dt code{background:inherit}.source summary,.git-link-div{color:#666;text-align:right;font-weight:400;font-size:.8em;text-transform:uppercase}.source summary > *{white-space:nowrap;cursor:pointer}.git-link{color:inherit;margin-left:1em}.source pre{max-height:500px;overflow:auto;margin:0}.source pre code{font-size:12px;overflow:visible}.hlist{list-style:none}.hlist li{display:inline}.hlist li:after{content:',\2002'}.hlist li:last-child:after{content:none}.hlist .hlist{display:inline;padding-left:1em}img{max-width:100%}td{padding:0 .5em}.admonition{padding:.1em .5em;margin-bottom:1em}.admonition-title{font-weight:bold}.admonition.note,.admonition.info,.admonition.important{background:#aef}.admonition.todo,.admonition.versionadded,.admonition.tip,.admonition.hint{background:#dfd}.admonition.warning,.admonition.versionchanged,.admonition.deprecated{background:#fd4}.admonition.error,.admonition.danger,.admonition.caution{background:lightpink}</style>
+<style media="screen and (min-width: 700px)">@media screen and (min-width:700px){#sidebar{width:30%;height:100vh;overflow:auto;position:sticky;top:0}#content{width:70%;max-width:100ch;padding:3em 4em;border-left:1px solid #ddd}pre code{font-size:1em}.item .name{font-size:1em}main{display:flex;flex-direction:row-reverse;justify-content:flex-end}.toc ul ul,#index ul{padding-left:1.5em}.toc > ul > li{margin-top:.5em}}</style>
+<style media="print">@media print{#sidebar h1{page-break-before:always}.source{display:none}}@media print{*{background:transparent !important;color:#000 !important;box-shadow:none !important;text-shadow:none !important}a[href]:after{content:" (" attr(href) ")";font-size:90%}a[href][title]:after{content:none}abbr[title]:after{content:" (" attr(title) ")"}.ir a:after,a[href^="javascript:"]:after,a[href^="#"]:after{content:""}pre,blockquote{border:1px solid #999;page-break-inside:avoid}thead{display:table-header-group}tr,img{page-break-inside:avoid}img{max-width:100% !important}@page{margin:0.5cm}p,h2,h3{orphans:3;widows:3}h1,h2,h3,h4,h5,h6{page-break-after:avoid}}</style>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/highlight.min.js" integrity="sha256-Uv3H6lx7dJmRfRvH8TH6kJD1TSK1aFcwgx+mdg3epi8=" crossorigin></script>
+<script>window.addEventListener('DOMContentLoaded', () => hljs.initHighlighting())</script>
+</head>
+<body>
+<main>
+<article id="content">
+<header>
+<h1 class="title">Module <code>openitcockpit-agent.src.config</code></h1>
+</header>
+<section id="section-intro">
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">import base64
+import getopt
+import json
+import os
+import sys
+import configparser
+import traceback
+import time
+
+from src.color_output import ColorOutput
+from src.filesystem import Filesystem
+from src.help import Help
+from src.operating_system import OperatingSystem
+
+
+class Config:
+
+    def __init__(self, agentVersion):
+        self.agentVersion = agentVersion
+
+        self.verbose = False
+        self.stacktrace = False
+        self.added_oitc_parameter = 0
+        self.configpath = &#34;&#34;
+        self.enableSSL = False
+        self.autossl = True
+        self.temperatureIsFahrenheit = False
+        self.is_push_mode = False
+
+        self.config = configparser.ConfigParser(allow_no_value=True)
+        self.customchecks = configparser.ConfigParser(allow_no_value=True)
+
+        self.ColorOutput = ColorOutput()
+
+    def load_configuration(self):
+        &#34;&#34;&#34;Function to load/reload all configuration options
+
+        Read and merge the start parameters and options from the configuration files (if configured).
+
+        Decides if ssl will be enabled or not.
+
+        &#34;&#34;&#34;
+
+        try:
+            opts, args = getopt.getopt(sys.argv[1:], &#34;h:i:p:a:c:vs&#34;,
+                                       [&#34;interval=&#34;, &#34;port=&#34;, &#34;address=&#34;, &#34;config=&#34;, &#34;customchecks=&#34;, &#34;certfile=&#34;,
+                                        &#34;keyfile=&#34;, &#34;auth=&#34;, &#34;oitc-hostuuid=&#34;, &#34;oitc-url=&#34;, &#34;oitc-apikey=&#34;,
+                                        &#34;oitc-interval=&#34;, &#34;config-update-mode&#34;, &#34;temperature-fahrenheit&#34;, &#34;try-autossl&#34;,
+                                        &#34;disable-autossl&#34;, &#34;autossl-folder&#34;, &#34;autossl-csr-file&#34;, &#34;autossl-crt-file&#34;,
+                                        &#34;autossl-key-file&#34;, &#34;autossl-ca-file&#34;, &#34;dockerstats&#34;, &#34;qemustats&#34;,
+                                        &#34;no-cpustats&#34;,
+                                        &#34;no-sensorstats&#34;, &#34;no-processstats&#34;, &#34;processstats-including-child-ids&#34;,
+                                        &#34;no-netstats&#34;, &#34;no-diskstats&#34;, &#34;no-netio&#34;, &#34;no-diskio&#34;, &#34;no-winservices&#34;,
+                                        &#34;verbose&#34;,
+                                        &#34;stacktrace&#34;, &#34;help&#34;])
+        except getopt.GetoptError:
+            help = Help()
+            help.print_help()
+            sys.exit(2)
+
+        self.config = configparser.ConfigParser(allow_no_value=True)
+
+        for opt, arg in opts:
+            if opt in (&#34;-c&#34;, &#34;--config&#34;):
+                self.configpath = str(arg)
+            elif opt in (&#34;-v&#34;, &#34;--verbose&#34;):
+                self.verbose = True
+            elif opt in (&#34;-s&#34;, &#34;--stacktrace&#34;):
+                self.stacktrace = True
+
+        if self.configpath != &#34;&#34;:
+            if Filesystem.file_readable(path=self.configpath):
+                with open(self.configpath, &#39;r&#39;) as configfile:
+                    self.ColorOutput.info(&#39;Load agent configuration file &#34;%s&#34;&#39; % (self.configpath))
+                    self.config.read_file(configfile)
+            else:
+                with open(self.configpath, &#39;w&#39;) as configfile:
+                    self.ColorOutput.info(&#39;Create new default agent configuration file &#34;%s&#34;&#39; % (self.configpath))
+                    self.config.write(configfile)
+
+        self.build_autossl_defaults()
+
+        self.added_oitc_parameter = 0
+
+        for opt, arg in opts:
+            if opt in (&#34;-h&#34;, &#34;--help&#34;):
+                help = Help()
+                help.print_help()
+                sys.exit(0)
+            elif opt in (&#34;-i&#34;, &#34;--interval&#34;):
+                self.config[&#39;default&#39;][&#39;interval&#39;] = str(arg)
+            elif opt in (&#34;-p&#34;, &#34;--port&#34;):
+                self.config[&#39;default&#39;][&#39;port&#39;] = str(arg)
+            elif opt in (&#34;-a&#34;, &#34;--address&#34;):
+                self.config[&#39;default&#39;][&#39;address&#39;] = str(arg)
+            elif opt == &#34;--certfile&#34;:
+                self.config[&#39;default&#39;][&#39;certfile&#39;] = str(arg)
+            elif opt == &#34;--keyfile&#34;:
+                self.config[&#39;default&#39;][&#39;keyfile&#39;] = str(arg)
+            elif opt == &#34;--try-autossl&#34;:
+                self.config[&#39;default&#39;][&#39;try-autossl&#39;] = &#34;true&#34;
+            elif opt == &#34;--autossl-folder&#34;:
+                self.config[&#39;default&#39;][&#39;autossl-folder&#39;] = str(arg)
+            elif opt == &#34;--autossl-csr-file&#34;:
+                self.config[&#39;default&#39;][&#39;autossl-csr-file&#39;] = str(arg)
+            elif opt == &#34;--autossl-crt-file&#34;:
+                self.config[&#39;default&#39;][&#39;autossl-crt-file&#39;] = str(arg)
+            elif opt == &#34;--autossl-key-file&#34;:
+                self.config[&#39;default&#39;][&#39;autossl-key-file&#39;] = str(arg)
+            elif opt == &#34;--autossl-ca-file&#34;:
+                self.config[&#39;default&#39;][&#39;autossl-ca-file&#39;] = str(arg)
+            elif opt == &#34;--auth&#34;:
+                self.config[&#39;default&#39;][&#39;auth&#39;] = str(arg)
+            elif opt in (&#34;-v&#34;, &#34;--verbose&#34;):
+                self.config[&#39;default&#39;][&#39;verbose&#39;] = &#34;true&#34;
+            elif opt in (&#34;-s&#34;, &#34;--stacktrace&#34;):
+                self.config[&#39;default&#39;][&#39;stacktrace&#39;] = &#34;true&#34;
+            elif opt == &#34;--config-update-mode&#34;:
+                self.config[&#39;default&#39;][&#39;config-update-mode&#39;] = &#34;true&#34;
+            elif opt == &#34;--temperature-fahrenheit&#34;:
+                self.config[&#39;default&#39;][&#39;temperature-fahrenheit&#39;] = &#34;true&#34;
+            elif opt == &#34;--dockerstats&#34;:
+                self.config[&#39;default&#39;][&#39;dockerstats&#39;] = &#34;true&#34;
+            elif opt == &#34;--qemustats&#34;:
+                self.config[&#39;default&#39;][&#39;qemustats&#39;] = &#34;true&#34;
+            elif opt == &#34;--no-cpustats&#34;:
+                self.config[&#39;default&#39;][&#39;cpustats&#39;] = &#34;false&#34;
+            elif opt == &#34;--no-sensorstats&#34;:
+                self.config[&#39;default&#39;][&#39;sensorstats&#39;] = &#34;false&#34;
+            elif opt == &#34;--no-processstats&#34;:
+                self.config[&#39;default&#39;][&#39;processstats&#39;] = &#34;false&#34;
+            elif opt == &#34;--processstats-including-child-ids&#34;:
+                self.config[&#39;default&#39;][&#39;processstats-including-child-ids&#39;] = &#34;true&#34;
+            elif opt == &#34;--no-netstats&#34;:
+                self.config[&#39;default&#39;][&#39;netstats&#39;] = &#34;false&#34;
+            elif opt == &#34;--no-diskstats&#34;:
+                self.config[&#39;default&#39;][&#39;diskstats&#39;] = &#34;false&#34;
+            elif opt == &#34;--no-netio&#34;:
+                self.config[&#39;default&#39;][&#39;netio&#39;] = &#34;false&#34;
+            elif opt == &#34;--no-diskio&#34;:
+                self.config[&#39;default&#39;][&#39;diskio&#39;] = &#34;false&#34;
+            elif opt == &#34;--no-winservices&#34;:
+                self.config[&#39;default&#39;][&#39;winservices&#39;] = &#34;false&#34;
+            elif opt == &#34;--oitc-hostuuid&#34;:
+                self.config[&#39;oitc&#39;][&#39;hostuuid&#39;] = str(arg)
+                self.added_oitc_parameter += 1
+            elif opt == &#34;--oitc-url&#34;:
+                self.config[&#39;oitc&#39;][&#39;url&#39;] = str(arg)
+                self.added_oitc_parameter += 1
+            elif opt == &#34;--oitc-apikey&#34;:
+                self.config[&#39;oitc&#39;][&#39;apikey&#39;] = str(arg)
+                self.added_oitc_parameter += 1
+            elif opt == &#34;--oitc-interval&#34;:
+                self.config[&#39;oitc&#39;][&#39;interval&#39;] = str(arg)
+                self.added_oitc_parameter += 1
+            elif opt == &#34;--customchecks&#34;:
+                self.config[&#39;default&#39;][&#39;customchecks&#39;] = str(arg)
+
+        # loop again to consider default overwrite options
+        for opt, arg in opts:
+            if opt == &#34;--disable-autossl&#34;:
+                self.config[&#39;default&#39;][&#39;try-autossl&#39;] = &#34;false&#34;
+                break
+
+        self.verbose = self.config.getboolean(&#39;default&#39;, &#39;verbose&#39;)
+        self.stacktrace = self.config.getboolean(&#39;default&#39;, &#39;stacktrace&#39;)
+        self.autossl = self.config.getboolean(&#39;default&#39;, &#39;try-autossl&#39;)
+        self.temperatureIsFahrenheit = self.config.getboolean(&#39;default&#39;, &#39;temperature-fahrenheit&#39;)
+
+        # Determine if the Agent should run in PUSH mode
+        if self.config.getboolean(&#39;oitc&#39;, &#39;enabled&#39;) is True:
+            self.push_config = {
+                &#39;url&#39;: self.config.get(&#39;oitc&#39;, &#39;url&#39;).strip(),
+                &#39;apikey&#39;: self.config.get(&#39;oitc&#39;, &#39;apikey&#39;).strip(),
+                &#39;hostuuid&#39;: self.config.get(&#39;oitc&#39;, &#39;hostuuid&#39;).strip(),
+                &#39;interval&#39;: self.config.getint(&#39;oitc&#39;, &#39;interval&#39;, fallback=30)
+            }
+
+            if self.push_config[&#39;interval&#39;] &lt;= 0:
+                self.push_config[&#39;interval&#39;] = 30
+
+            if self.push_config[&#39;url&#39;] and self.push_config[&#39;apikey&#39;]:
+                self.is_push_mode = True
+
+        if self.config[&#39;default&#39;][&#39;autossl-folder&#39;] != &#34;&#34;:
+            self.build_autossl_defaults()
+
+        if &#39;auth&#39; in self.config[&#39;default&#39;] and str(self.config[&#39;default&#39;][&#39;auth&#39;]).strip():
+            if not self.is_base64(s=self.config[&#39;default&#39;][&#39;auth&#39;]):
+                self.config[&#39;default&#39;][&#39;auth&#39;] = str(base64.b64encode(self.config[&#39;default&#39;][&#39;auth&#39;].encode()), &#34;utf-8&#34;)
+
+        if self.config[&#39;default&#39;][&#39;certfile&#39;] != &#34;&#34; and self.config[&#39;default&#39;][&#39;keyfile&#39;] != &#34;&#34;:
+            try:
+                if Filesystem.file_readable(self.config[&#39;default&#39;][&#39;certfile&#39;]) and Filesystem.file_readable(
+                        self.config[&#39;default&#39;][&#39;keyfile&#39;]):
+                    self.enableSSL = True
+                else:
+                    self.ColorOutput.error(&#39;Could not read certificate or key file. Fall back to default http server.&#39;)
+
+
+            except IOError:
+                self.ColorOutput.error(&#39;Could not read certfile or keyfile. Fall back to default http server&#39;)
+
+    def build_autossl_defaults(self):
+        &#34;&#34;&#34; Function to define the system depending certificate file paths
+
+            Certificate file default paths:
+
+            - Windows:        C:\Program Files\openitcockpit-agent\agent.crt
+            - Linux:          /etc/openitcockpit-agent/agent.crt
+            - macOS:          /etc/openitcockpit-agent/agent.crt
+
+            Config file default paths:
+
+            - Windows:        C:\Program Files\openitcockpit-agent\config.cnf
+            - Linux:          /etc/openitcockpit-agent/config.cnf
+            - macOS:          /Library/openitcockpit-agent/config.cnf
+
+        &#34;&#34;&#34;
+        operatingsystem = OperatingSystem()
+
+        etc_agent_path = &#39;/etc/openitcockpit-agent/&#39;
+        if operatingsystem.isWindows():
+            etc_agent_path = &#39;C:&#39; + os.path.sep + &#39;Program Files&#39; + os.path.sep + &#39;it-novum&#39; + os.path.sep + &#39;openitcockpit-agent&#39; + os.path.sep
+
+        if self.config[&#39;default&#39;][&#39;autossl-folder&#39;] != &#34;&#34;:
+            etc_agent_path = self.config[&#39;default&#39;][&#39;autossl-folder&#39;] + os.path.sep
+
+        self.config[&#39;default&#39;][&#39;autossl-csr-file&#39;] = etc_agent_path + &#39;agent.csr&#39;
+        self.config[&#39;default&#39;][&#39;autossl-crt-file&#39;] = etc_agent_path + &#39;agent.crt&#39;
+        self.config[&#39;default&#39;][&#39;autossl-key-file&#39;] = etc_agent_path + &#39;agent.key&#39;
+        self.config[&#39;default&#39;][&#39;autossl-ca-file&#39;] = etc_agent_path + &#39;server_ca.crt&#39;
+
+    def get_custom_checks(self) -&gt; dict:
+        custom_checks_config_file = self.config.get(&#39;default&#39;, &#39;customchecks&#39;)
+        if Filesystem.file_readable(custom_checks_config_file) is False:
+            self.ColorOutput.error(&#39;Could not read customchecks configuration file %s&#39; % (custom_checks_config_file))
+
+        with open(custom_checks_config_file, &#39;r&#39;) as configfile:
+            self.ColorOutput.info(&#39;Load agent custom checks configuration file &#34;%s&#34;&#39; % (custom_checks_config_file))
+            self.customchecks.read_file(configfile)
+
+        custom_checks = {}
+
+        for section in self.customchecks.sections():
+            if section != &#39;default&#39; and section != &#39;DEFAULT&#39;:
+
+                enabled = self.customchecks.getboolean(section, &#39;enabled&#39;, fallback=False)
+
+                if enabled:
+                    custom_checks[section] = {
+                        &#39;command&#39;: self.customchecks.get(section, &#39;command&#39;, fallback=&#39;whoami&#39;),
+                        &#39;interval&#39;: self.customchecks.getint(section, &#39;interval&#39;, fallback=60),
+                        &#39;timeout&#39;: self.customchecks.getint(section, &#39;timeout&#39;, fallback=5),
+                        &#39;enabled&#39;: enabled,
+                        &#39;last_check&#39;: 0,
+                        &#39;next_check&#39;: time.time(),
+                        &#39;running&#39;: False
+                    }
+
+        # Make this thread safe
+        return custom_checks.copy()
+
+    def get_config_as_dict(self) -&gt; dict:
+        &#34;&#34;&#34;Build / Prepare config for a JSON object
+
+        Build and returns the current configuration as object (dict).
+
+        Returns
+        -------
+        data
+            Dictionary object with the current configuration
+
+        &#34;&#34;&#34;
+        data = {
+            &#39;config&#39;: {},
+            &#39;customchecks&#39;: {}
+        }
+
+        for key in self.config[&#39;default&#39;]:
+            data[&#39;config&#39;][key] = self.config[&#39;default&#39;][key]
+
+        for key in self.config[&#39;oitc&#39;]:
+            data[&#39;config&#39;][&#39;oitc-&#39; + key] = self.config[&#39;oitc&#39;][key]
+
+        for custom_key in self.customchecks:
+            data[&#39;customchecks&#39;][custom_key] = {}
+            if custom_key == &#39;default&#39;:
+                data[&#39;customchecks&#39;][custom_key][&#39;max_worker_threads&#39;] = self.customchecks[custom_key][
+                    &#39;max_worker_threads&#39;]
+            else:
+                for custom_key_option in self.customchecks[custom_key]:
+                    data[&#39;customchecks&#39;][custom_key][custom_key_option] = self.customchecks[custom_key][
+                        custom_key_option]
+
+        if data[&#39;config&#39;][&#39;auth&#39;] != &#34;&#34;:
+            data[&#39;config&#39;][&#39;auth&#39;] = str(base64.b64decode(data[&#39;config&#39;][&#39;auth&#39;]), &#34;utf-8&#34;)
+
+        return data
+
+    def set_new_config_from_dict(self, data) -&gt; bool:
+        &#34;&#34;&#34;Function to check and update the agent configuration
+
+        The POST Data Object will be parsed as valid json object.
+        The configuration options are loaded into the configparser objects and will be written to the config files(if defined).
+        After that an agent reload will be triggered to apply the new configuration files
+
+        Parameters
+        ----------
+        data
+            POST Data Object from webserver
+
+        &#34;&#34;&#34;
+        try:
+            jdata = json.loads(data.decode(&#39;utf-8&#39;))
+
+            for key in jdata:
+                if key == &#39;config&#39; and Filesystem.file_readable(self.configpath):
+                    new_config = configparser.ConfigParser(allow_no_value=True)
+                    new_config[&#39;default&#39;] = {}
+                    new_config[&#39;oitc&#39;] = {}
+
+                    if &#39;interval&#39; in jdata[key]:
+                        if int(jdata[key][&#39;interval&#39;]) &gt; 0:
+                            new_config[&#39;default&#39;][&#39;interval&#39;] = str(jdata[key][&#39;interval&#39;])
+                    if &#39;port&#39; in jdata[key]:
+                        if int(jdata[key][&#39;port&#39;]) &gt; 0:
+                            new_config[&#39;default&#39;][&#39;port&#39;] = str(jdata[key][&#39;port&#39;])
+                    if &#39;address&#39; in jdata[key]:
+                        new_config[&#39;default&#39;][&#39;address&#39;] = str(jdata[key][&#39;address&#39;])
+                    if &#39;certfile&#39; in jdata[key]:
+                        new_config[&#39;default&#39;][&#39;certfile&#39;] = str(jdata[key][&#39;certfile&#39;])
+                    if &#39;keyfile&#39; in jdata[key]:
+                        new_config[&#39;default&#39;][&#39;keyfile&#39;] = str(jdata[key][&#39;keyfile&#39;])
+                    if &#39;try-autossl&#39; in jdata[key]:
+                        if jdata[key][&#39;try-autossl&#39;] in (1, &#34;1&#34;, &#34;true&#34;, &#34;True&#34;):
+                            new_config[&#39;default&#39;][&#39;try-autossl&#39;] = &#34;true&#34;
+                        else:
+                            new_config[&#39;default&#39;][&#39;try-autossl&#39;] = &#34;false&#34;
+                    if &#39;autossl-folder&#39; in jdata[key]:
+                        new_config[&#39;default&#39;][&#39;autossl-folder&#39;] = str(jdata[key][&#39;autossl-folder&#39;])
+                    if &#39;autossl-csr-file&#39; in jdata[key]:
+                        new_config[&#39;default&#39;][&#39;autossl-csr-file&#39;] = str(jdata[key][&#39;autossl-csr-file&#39;])
+                    if &#39;autossl-crt-file&#39; in jdata[key]:
+                        new_config[&#39;default&#39;][&#39;autossl-crt-file&#39;] = str(jdata[key][&#39;autossl-crt-file&#39;])
+                    if &#39;autossl-key-file&#39; in jdata[key]:
+                        new_config[&#39;default&#39;][&#39;autossl-key-file&#39;] = str(jdata[key][&#39;autossl-key-file&#39;])
+                    if &#39;autossl-ca-file&#39; in jdata[key]:
+                        new_config[&#39;default&#39;][&#39;autossl-ca-file&#39;] = str(jdata[key][&#39;autossl-ca-file&#39;])
+                    if &#39;auth&#39; in jdata[key]:
+                        new_config[&#39;default&#39;][&#39;auth&#39;] = str(jdata[key][&#39;auth&#39;])
+                    if &#39;verbose&#39; in jdata[key]:
+                        if jdata[key][&#39;verbose&#39;] in (1, &#34;1&#34;, &#34;true&#34;, &#34;True&#34;):
+                            new_config[&#39;default&#39;][&#39;verbose&#39;] = &#34;true&#34;
+                        else:
+                            new_config[&#39;default&#39;][&#39;verbose&#39;] = &#34;false&#34;
+                    if &#39;stacktrace&#39; in jdata[key]:
+                        if jdata[key][&#39;stacktrace&#39;] in (1, &#34;1&#34;, &#34;true&#34;, &#34;True&#34;):
+                            new_config[&#39;default&#39;][&#39;stacktrace&#39;] = &#34;true&#34;
+                        else:
+                            new_config[&#39;default&#39;][&#39;stacktrace&#39;] = &#34;false&#34;
+                    if &#39;config-update-mode&#39; in jdata[key]:
+                        if jdata[key][&#39;config-update-mode&#39;] in (1, &#34;1&#34;, &#34;true&#34;, &#34;True&#34;):
+                            new_config[&#39;default&#39;][&#39;config-update-mode&#39;] = &#34;true&#34;
+                        else:
+                            new_config[&#39;default&#39;][&#39;config-update-mode&#39;] = &#34;false&#34;
+                    if &#39;dockerstats&#39; in jdata[key]:
+                        if jdata[key][&#39;dockerstats&#39;] in (1, &#34;1&#34;, &#34;true&#34;, &#34;True&#34;):
+                            new_config[&#39;default&#39;][&#39;dockerstats&#39;] = &#34;true&#34;
+                        else:
+                            new_config[&#39;default&#39;][&#39;dockerstats&#39;] = &#34;false&#34;
+                    if &#39;qemustats&#39; in jdata[key]:
+                        if jdata[key][&#39;qemustats&#39;] in (1, &#34;1&#34;, &#34;true&#34;, &#34;True&#34;):
+                            new_config[&#39;default&#39;][&#39;qemustats&#39;] = &#34;true&#34;
+                        else:
+                            new_config[&#39;default&#39;][&#39;qemustats&#39;] = &#34;false&#34;
+                    if &#39;cpustats&#39; in jdata[key]:
+                        if jdata[key][&#39;cpustats&#39;] in (1, &#34;1&#34;, &#34;true&#34;, &#34;True&#34;):
+                            new_config[&#39;default&#39;][&#39;cpustats&#39;] = &#34;true&#34;
+                        else:
+                            new_config[&#39;default&#39;][&#39;cpustats&#39;] = &#34;false&#34;
+                    if &#39;sensorstats&#39; in jdata[key]:
+                        if jdata[key][&#39;sensorstats&#39;] in (1, &#34;1&#34;, &#34;true&#34;, &#34;True&#34;):
+                            new_config[&#39;default&#39;][&#39;sensorstats&#39;] = &#34;true&#34;
+                        else:
+                            new_config[&#39;default&#39;][&#39;sensorstats&#39;] = &#34;false&#34;
+                    if &#39;processstats&#39; in jdata[key]:
+                        if jdata[key][&#39;processstats&#39;] in (1, &#34;1&#34;, &#34;true&#34;, &#34;True&#34;):
+                            new_config[&#39;default&#39;][&#39;processstats&#39;] = &#34;true&#34;
+                        else:
+                            new_config[&#39;default&#39;][&#39;processstats&#39;] = &#34;false&#34;
+                    if &#39;processstats-including-child-ids&#39; in jdata[key]:
+                        if jdata[key][&#39;processstats-including-child-ids&#39;] in (1, &#34;1&#34;, &#34;true&#34;, &#34;True&#34;):
+                            new_config[&#39;default&#39;][&#39;processstats-including-child-ids&#39;] = &#34;true&#34;
+                        else:
+                            new_config[&#39;default&#39;][&#39;processstats-including-child-ids&#39;] = &#34;false&#34;
+                    if &#39;netstats&#39; in jdata[key]:
+                        if jdata[key][&#39;netstats&#39;] in (1, &#34;1&#34;, &#34;true&#34;, &#34;True&#34;):
+                            new_config[&#39;default&#39;][&#39;netstats&#39;] = &#34;true&#34;
+                        else:
+                            new_config[&#39;default&#39;][&#39;netstats&#39;] = &#34;false&#34;
+                    if &#39;diskstats&#39; in jdata[key]:
+                        if jdata[key][&#39;diskstats&#39;] in (1, &#34;1&#34;, &#34;true&#34;, &#34;True&#34;):
+                            new_config[&#39;default&#39;][&#39;diskstats&#39;] = &#34;true&#34;
+                        else:
+                            new_config[&#39;default&#39;][&#39;diskstats&#39;] = &#34;false&#34;
+                    if &#39;netio&#39; in jdata[key]:
+                        if jdata[key][&#39;netio&#39;] in (1, &#34;1&#34;, &#34;true&#34;, &#34;True&#34;):
+                            new_config[&#39;default&#39;][&#39;netio&#39;] = &#34;true&#34;
+                        else:
+                            new_config[&#39;default&#39;][&#39;netio&#39;] = &#34;false&#34;
+                    if &#39;diskio&#39; in jdata[key]:
+                        if jdata[key][&#39;diskio&#39;] in (1, &#34;1&#34;, &#34;true&#34;, &#34;True&#34;):
+                            new_config[&#39;default&#39;][&#39;diskio&#39;] = &#34;true&#34;
+                        else:
+                            new_config[&#39;default&#39;][&#39;diskio&#39;] = &#34;false&#34;
+                    if &#39;winservices&#39; in jdata[key]:
+                        if jdata[key][&#39;winservices&#39;] in (1, &#34;1&#34;, &#34;true&#34;, &#34;True&#34;):
+                            new_config[&#39;default&#39;][&#39;winservices&#39;] = &#34;true&#34;
+                        else:
+                            new_config[&#39;default&#39;][&#39;winservices&#39;] = &#34;false&#34;
+                    if &#39;systemdservices&#39; in jdata[key]:
+                        if jdata[key][&#39;systemdservices&#39;] in (1, &#34;1&#34;, &#34;true&#34;, &#34;True&#34;):
+                            new_config[&#39;default&#39;][&#39;systemdservices&#39;] = &#34;true&#34;
+                        else:
+                            new_config[&#39;default&#39;][&#39;systemdservices&#39;] = &#34;false&#34;
+                    if &#39;wineventlog&#39; in jdata[key]:
+                        if jdata[key][&#39;wineventlog&#39;] in (1, &#34;1&#34;, &#34;true&#34;, &#34;True&#34;):
+                            new_config[&#39;default&#39;][&#39;wineventlog&#39;] = &#34;true&#34;
+                        else:
+                            new_config[&#39;default&#39;][&#39;wineventlog&#39;] = &#34;false&#34;
+                    if &#39;wineventlog-logtypes&#39; in jdata[key]:
+                        new_config[&#39;default&#39;][&#39;wineventlog-logtypes&#39;] = str(jdata[key][&#39;wineventlog-logtypes&#39;])
+
+                    if &#39;alfrescostats&#39; in jdata[key]:
+                        if jdata[key][&#39;alfrescostats&#39;] in (1, &#34;1&#34;, &#34;true&#34;, &#34;True&#34;):
+                            new_config[&#39;default&#39;][&#39;alfrescostats&#39;] = &#34;true&#34;
+                        else:
+                            new_config[&#39;default&#39;][&#39;alfrescostats&#39;] = &#34;false&#34;
+                    if &#39;alfresco-jmxuser&#39; in jdata[key]:
+                        new_config[&#39;default&#39;][&#39;alfresco-jmxuser&#39;] = str(jdata[key][&#39;alfresco-jmxuser&#39;])
+                    if &#39;alfresco-jmxpassword&#39; in jdata[key]:
+                        new_config[&#39;default&#39;][&#39;alfresco-jmxpassword&#39;] = str(jdata[key][&#39;alfresco-jmxpassword&#39;])
+                    if &#39;alfresco-jmxaddress&#39; in jdata[key]:
+                        new_config[&#39;default&#39;][&#39;alfresco-jmxaddress&#39;] = str(jdata[key][&#39;alfresco-jmxaddress&#39;])
+                    if &#39;alfresco-jmxport&#39; in jdata[key]:
+                        new_config[&#39;default&#39;][&#39;alfresco-jmxport&#39;] = str(jdata[key][&#39;alfresco-jmxport&#39;])
+                    if &#39;alfresco-jmxpath&#39; in jdata[key]:
+                        new_config[&#39;default&#39;][&#39;alfresco-jmxpath&#39;] = str(jdata[key][&#39;alfresco-jmxpath&#39;])
+                    if &#39;alfresco-jmxquery&#39; in jdata[key]:
+                        new_config[&#39;default&#39;][&#39;alfresco-jmxquery&#39;] = str(jdata[key][&#39;alfresco-jmxquery&#39;])
+                    if &#39;alfresco-javapath&#39; in jdata[key]:
+                        new_config[&#39;default&#39;][&#39;alfresco-javapath&#39;] = str(jdata[key][&#39;alfresco-javapath&#39;])
+
+                    if &#39;customchecks&#39; in jdata[key]:
+                        if jdata[key][&#39;customchecks&#39;] not in (1, &#34;1&#34;, &#34;true&#34;, &#34;True&#34;, 0, &#34;0&#34;, &#34;false&#34;, &#34;False&#34;):
+                            new_config[&#39;default&#39;][&#39;customchecks&#39;] = str(jdata[key][&#39;customchecks&#39;])
+                    if &#39;temperature-fahrenheit&#39; in jdata[key]:
+                        if jdata[key][&#39;temperature-fahrenheit&#39;] in (1, &#34;1&#34;, &#34;true&#34;, &#34;True&#34;):
+                            new_config[&#39;default&#39;][&#39;temperature-fahrenheit&#39;] = &#34;true&#34;
+                        else:
+                            new_config[&#39;default&#39;][&#39;temperature-fahrenheit&#39;] = &#34;false&#34;
+                    if &#39;oitc-hostuuid&#39; in jdata[key]:
+                        new_config[&#39;oitc&#39;][&#39;hostuuid&#39;] = str(jdata[key][&#39;oitc-hostuuid&#39;])
+                    if &#39;oitc-url&#39; in jdata[key]:
+                        new_config[&#39;oitc&#39;][&#39;url&#39;] = str(jdata[key][&#39;oitc-url&#39;])
+                    if &#39;oitc-apikey&#39; in jdata[key]:
+                        new_config[&#39;oitc&#39;][&#39;apikey&#39;] = str(jdata[key][&#39;oitc-apikey&#39;])
+                    if &#39;oitc-interval&#39; in jdata[key]:
+                        new_config[&#39;oitc&#39;][&#39;interval&#39;] = str(jdata[key][&#39;oitc-interval&#39;])
+                    if &#39;oitc-enabled&#39; in jdata[key]:
+                        if jdata[key][&#39;oitc-enabled&#39;] in (1, &#34;1&#34;, &#34;true&#34;, &#34;True&#34;):
+                            new_config[&#39;oitc&#39;][&#39;enabled&#39;] = &#34;true&#34;
+                        else:
+                            new_config[&#39;oitc&#39;][&#39;enabled&#39;] = &#34;false&#34;
+
+                    if self.configpath != &#34;&#34;:
+                        with open(self.configpath, &#39;w&#39;) as configfile:
+                            self.ColorOutput.info(&#39;Save new configuration to %s&#39; % (self.configpath))
+                            new_config.write(configfile)
+                    else:
+                        self.ColorOutput.error(&#39;New configuration is invalid - aborting&#39;)
+
+                elif key == &#39;config&#39; and not Filesystem.file_readable(self.configpath):
+                    self.ColorOutput.error(&#39;Agent configuration file %s is not readable &#39; % (self.configpath))
+
+                if key == &#39;customchecks&#39; and Filesystem.file_readable(self.config[&#39;default&#39;][&#39;customchecks&#39;]):
+                    new_customchecks = configparser.ConfigParser(allow_no_value=True)
+                    new_customchecks.read_string(Help.sample_customcheck_config)
+
+                    for customkey in jdata[key]:
+                        new_customchecks[customkey] = {}
+
+                        if customkey == &#39;default&#39;:
+                            if &#39;max_worker_threads&#39; in jdata[key][customkey]:
+                                new_customchecks[customkey][&#39;max_worker_threads&#39;] = str(
+                                    jdata[key][customkey][&#39;max_worker_threads&#39;])
+                        else:
+                            if &#39;command&#39; in jdata[key][customkey]:
+                                new_customchecks[customkey][&#39;command&#39;] = str(jdata[key][customkey][&#39;command&#39;])
+                            if &#39;interval&#39; in jdata[key][customkey]:
+                                if int(jdata[key][customkey][&#39;interval&#39;]) &gt; 0:
+                                    new_customchecks[customkey][&#39;interval&#39;] = str(jdata[key][customkey][&#39;interval&#39;])
+                            if &#39;timeout&#39; in jdata[key][customkey]:
+                                if int(jdata[key][customkey][&#39;timeout&#39;]) &gt; 0:
+                                    new_customchecks[customkey][&#39;timeout&#39;] = str(jdata[key][customkey][&#39;timeout&#39;])
+                            if &#39;enabled&#39; in jdata[key][customkey]:
+                                new_customchecks[customkey][&#39;enabled&#39;] = &#34;false&#34;
+                                if jdata[key][customkey][&#39;enabled&#39;] in (1, &#34;1&#34;, &#34;true&#34;, &#34;True&#34;):
+                                    new_customchecks[customkey][&#39;enabled&#39;] = &#34;true&#34;
+
+                    if self.config[&#39;default&#39;][&#39;customchecks&#39;] != &#34;&#34;:
+                        with open(self.config[&#39;default&#39;][&#39;customchecks&#39;], &#39;w&#39;) as configfile:
+                            self.ColorOutput.info(
+                                &#39;Save new configuration to %s&#39; % (self.config[&#39;default&#39;][&#39;customchecks&#39;]))
+                            new_customchecks.write(configfile)
+                    else:
+                        self.ColorOutput.error(&#39;New customchecks configuration is invalid - aborting&#39;)
+
+
+                elif key == &#39;customchecks&#39; and not Filesystem.file_readable(self.config[&#39;default&#39;][&#39;customchecks&#39;]):
+                    self.ColorOutput.error(&#39;Customchecks configuration file %s is not readable&#39; % self.configpath)
+
+            return True
+
+        except Exception as e:
+            self.ColorOutput.error(&#39;An error occurred while updating the agent configuration&#39;)
+            print(e)
+
+            if self.stacktrace:
+                traceback.print_exc()
+
+            return False
+
+    def is_base64(self, s):
+        &#34;&#34;&#34;Function to check whether a string is base64 encoded or not
+
+        Parameters
+        ----------
+        s
+            String to check
+
+        &#34;&#34;&#34;
+        try:
+            return base64.b64encode(base64.b64decode(s)) == s
+        except Exception:
+            return False</code></pre>
+</details>
+</section>
+<section>
+</section>
+<section>
+</section>
+<section>
+</section>
+<section>
+<h2 class="section-title" id="header-classes">Classes</h2>
+<dl>
+<dt id="openitcockpit-agent.src.config.Config"><code class="flex name class">
+<span>class <span class="ident">Config</span></span>
+<span>(</span><span>agentVersion)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class Config:
+
+    def __init__(self, agentVersion):
+        self.agentVersion = agentVersion
+
+        self.verbose = False
+        self.stacktrace = False
+        self.added_oitc_parameter = 0
+        self.configpath = &#34;&#34;
+        self.enableSSL = False
+        self.autossl = True
+        self.temperatureIsFahrenheit = False
+        self.is_push_mode = False
+
+        self.config = configparser.ConfigParser(allow_no_value=True)
+        self.customchecks = configparser.ConfigParser(allow_no_value=True)
+
+        self.ColorOutput = ColorOutput()
+
+    def load_configuration(self):
+        &#34;&#34;&#34;Function to load/reload all configuration options
+
+        Read and merge the start parameters and options from the configuration files (if configured).
+
+        Decides if ssl will be enabled or not.
+
+        &#34;&#34;&#34;
+
+        try:
+            opts, args = getopt.getopt(sys.argv[1:], &#34;h:i:p:a:c:vs&#34;,
+                                       [&#34;interval=&#34;, &#34;port=&#34;, &#34;address=&#34;, &#34;config=&#34;, &#34;customchecks=&#34;, &#34;certfile=&#34;,
+                                        &#34;keyfile=&#34;, &#34;auth=&#34;, &#34;oitc-hostuuid=&#34;, &#34;oitc-url=&#34;, &#34;oitc-apikey=&#34;,
+                                        &#34;oitc-interval=&#34;, &#34;config-update-mode&#34;, &#34;temperature-fahrenheit&#34;, &#34;try-autossl&#34;,
+                                        &#34;disable-autossl&#34;, &#34;autossl-folder&#34;, &#34;autossl-csr-file&#34;, &#34;autossl-crt-file&#34;,
+                                        &#34;autossl-key-file&#34;, &#34;autossl-ca-file&#34;, &#34;dockerstats&#34;, &#34;qemustats&#34;,
+                                        &#34;no-cpustats&#34;,
+                                        &#34;no-sensorstats&#34;, &#34;no-processstats&#34;, &#34;processstats-including-child-ids&#34;,
+                                        &#34;no-netstats&#34;, &#34;no-diskstats&#34;, &#34;no-netio&#34;, &#34;no-diskio&#34;, &#34;no-winservices&#34;,
+                                        &#34;verbose&#34;,
+                                        &#34;stacktrace&#34;, &#34;help&#34;])
+        except getopt.GetoptError:
+            help = Help()
+            help.print_help()
+            sys.exit(2)
+
+        self.config = configparser.ConfigParser(allow_no_value=True)
+
+        for opt, arg in opts:
+            if opt in (&#34;-c&#34;, &#34;--config&#34;):
+                self.configpath = str(arg)
+            elif opt in (&#34;-v&#34;, &#34;--verbose&#34;):
+                self.verbose = True
+            elif opt in (&#34;-s&#34;, &#34;--stacktrace&#34;):
+                self.stacktrace = True
+
+        if self.configpath != &#34;&#34;:
+            if Filesystem.file_readable(path=self.configpath):
+                with open(self.configpath, &#39;r&#39;) as configfile:
+                    self.ColorOutput.info(&#39;Load agent configuration file &#34;%s&#34;&#39; % (self.configpath))
+                    self.config.read_file(configfile)
+            else:
+                with open(self.configpath, &#39;w&#39;) as configfile:
+                    self.ColorOutput.info(&#39;Create new default agent configuration file &#34;%s&#34;&#39; % (self.configpath))
+                    self.config.write(configfile)
+
+        self.build_autossl_defaults()
+
+        self.added_oitc_parameter = 0
+
+        for opt, arg in opts:
+            if opt in (&#34;-h&#34;, &#34;--help&#34;):
+                help = Help()
+                help.print_help()
+                sys.exit(0)
+            elif opt in (&#34;-i&#34;, &#34;--interval&#34;):
+                self.config[&#39;default&#39;][&#39;interval&#39;] = str(arg)
+            elif opt in (&#34;-p&#34;, &#34;--port&#34;):
+                self.config[&#39;default&#39;][&#39;port&#39;] = str(arg)
+            elif opt in (&#34;-a&#34;, &#34;--address&#34;):
+                self.config[&#39;default&#39;][&#39;address&#39;] = str(arg)
+            elif opt == &#34;--certfile&#34;:
+                self.config[&#39;default&#39;][&#39;certfile&#39;] = str(arg)
+            elif opt == &#34;--keyfile&#34;:
+                self.config[&#39;default&#39;][&#39;keyfile&#39;] = str(arg)
+            elif opt == &#34;--try-autossl&#34;:
+                self.config[&#39;default&#39;][&#39;try-autossl&#39;] = &#34;true&#34;
+            elif opt == &#34;--autossl-folder&#34;:
+                self.config[&#39;default&#39;][&#39;autossl-folder&#39;] = str(arg)
+            elif opt == &#34;--autossl-csr-file&#34;:
+                self.config[&#39;default&#39;][&#39;autossl-csr-file&#39;] = str(arg)
+            elif opt == &#34;--autossl-crt-file&#34;:
+                self.config[&#39;default&#39;][&#39;autossl-crt-file&#39;] = str(arg)
+            elif opt == &#34;--autossl-key-file&#34;:
+                self.config[&#39;default&#39;][&#39;autossl-key-file&#39;] = str(arg)
+            elif opt == &#34;--autossl-ca-file&#34;:
+                self.config[&#39;default&#39;][&#39;autossl-ca-file&#39;] = str(arg)
+            elif opt == &#34;--auth&#34;:
+                self.config[&#39;default&#39;][&#39;auth&#39;] = str(arg)
+            elif opt in (&#34;-v&#34;, &#34;--verbose&#34;):
+                self.config[&#39;default&#39;][&#39;verbose&#39;] = &#34;true&#34;
+            elif opt in (&#34;-s&#34;, &#34;--stacktrace&#34;):
+                self.config[&#39;default&#39;][&#39;stacktrace&#39;] = &#34;true&#34;
+            elif opt == &#34;--config-update-mode&#34;:
+                self.config[&#39;default&#39;][&#39;config-update-mode&#39;] = &#34;true&#34;
+            elif opt == &#34;--temperature-fahrenheit&#34;:
+                self.config[&#39;default&#39;][&#39;temperature-fahrenheit&#39;] = &#34;true&#34;
+            elif opt == &#34;--dockerstats&#34;:
+                self.config[&#39;default&#39;][&#39;dockerstats&#39;] = &#34;true&#34;
+            elif opt == &#34;--qemustats&#34;:
+                self.config[&#39;default&#39;][&#39;qemustats&#39;] = &#34;true&#34;
+            elif opt == &#34;--no-cpustats&#34;:
+                self.config[&#39;default&#39;][&#39;cpustats&#39;] = &#34;false&#34;
+            elif opt == &#34;--no-sensorstats&#34;:
+                self.config[&#39;default&#39;][&#39;sensorstats&#39;] = &#34;false&#34;
+            elif opt == &#34;--no-processstats&#34;:
+                self.config[&#39;default&#39;][&#39;processstats&#39;] = &#34;false&#34;
+            elif opt == &#34;--processstats-including-child-ids&#34;:
+                self.config[&#39;default&#39;][&#39;processstats-including-child-ids&#39;] = &#34;true&#34;
+            elif opt == &#34;--no-netstats&#34;:
+                self.config[&#39;default&#39;][&#39;netstats&#39;] = &#34;false&#34;
+            elif opt == &#34;--no-diskstats&#34;:
+                self.config[&#39;default&#39;][&#39;diskstats&#39;] = &#34;false&#34;
+            elif opt == &#34;--no-netio&#34;:
+                self.config[&#39;default&#39;][&#39;netio&#39;] = &#34;false&#34;
+            elif opt == &#34;--no-diskio&#34;:
+                self.config[&#39;default&#39;][&#39;diskio&#39;] = &#34;false&#34;
+            elif opt == &#34;--no-winservices&#34;:
+                self.config[&#39;default&#39;][&#39;winservices&#39;] = &#34;false&#34;
+            elif opt == &#34;--oitc-hostuuid&#34;:
+                self.config[&#39;oitc&#39;][&#39;hostuuid&#39;] = str(arg)
+                self.added_oitc_parameter += 1
+            elif opt == &#34;--oitc-url&#34;:
+                self.config[&#39;oitc&#39;][&#39;url&#39;] = str(arg)
+                self.added_oitc_parameter += 1
+            elif opt == &#34;--oitc-apikey&#34;:
+                self.config[&#39;oitc&#39;][&#39;apikey&#39;] = str(arg)
+                self.added_oitc_parameter += 1
+            elif opt == &#34;--oitc-interval&#34;:
+                self.config[&#39;oitc&#39;][&#39;interval&#39;] = str(arg)
+                self.added_oitc_parameter += 1
+            elif opt == &#34;--customchecks&#34;:
+                self.config[&#39;default&#39;][&#39;customchecks&#39;] = str(arg)
+
+        # loop again to consider default overwrite options
+        for opt, arg in opts:
+            if opt == &#34;--disable-autossl&#34;:
+                self.config[&#39;default&#39;][&#39;try-autossl&#39;] = &#34;false&#34;
+                break
+
+        self.verbose = self.config.getboolean(&#39;default&#39;, &#39;verbose&#39;)
+        self.stacktrace = self.config.getboolean(&#39;default&#39;, &#39;stacktrace&#39;)
+        self.autossl = self.config.getboolean(&#39;default&#39;, &#39;try-autossl&#39;)
+        self.temperatureIsFahrenheit = self.config.getboolean(&#39;default&#39;, &#39;temperature-fahrenheit&#39;)
+
+        # Determine if the Agent should run in PUSH mode
+        if self.config.getboolean(&#39;oitc&#39;, &#39;enabled&#39;) is True:
+            self.push_config = {
+                &#39;url&#39;: self.config.get(&#39;oitc&#39;, &#39;url&#39;).strip(),
+                &#39;apikey&#39;: self.config.get(&#39;oitc&#39;, &#39;apikey&#39;).strip(),
+                &#39;hostuuid&#39;: self.config.get(&#39;oitc&#39;, &#39;hostuuid&#39;).strip(),
+                &#39;interval&#39;: self.config.getint(&#39;oitc&#39;, &#39;interval&#39;, fallback=30)
+            }
+
+            if self.push_config[&#39;interval&#39;] &lt;= 0:
+                self.push_config[&#39;interval&#39;] = 30
+
+            if self.push_config[&#39;url&#39;] and self.push_config[&#39;apikey&#39;]:
+                self.is_push_mode = True
+
+        if self.config[&#39;default&#39;][&#39;autossl-folder&#39;] != &#34;&#34;:
+            self.build_autossl_defaults()
+
+        if &#39;auth&#39; in self.config[&#39;default&#39;] and str(self.config[&#39;default&#39;][&#39;auth&#39;]).strip():
+            if not self.is_base64(s=self.config[&#39;default&#39;][&#39;auth&#39;]):
+                self.config[&#39;default&#39;][&#39;auth&#39;] = str(base64.b64encode(self.config[&#39;default&#39;][&#39;auth&#39;].encode()), &#34;utf-8&#34;)
+
+        if self.config[&#39;default&#39;][&#39;certfile&#39;] != &#34;&#34; and self.config[&#39;default&#39;][&#39;keyfile&#39;] != &#34;&#34;:
+            try:
+                if Filesystem.file_readable(self.config[&#39;default&#39;][&#39;certfile&#39;]) and Filesystem.file_readable(
+                        self.config[&#39;default&#39;][&#39;keyfile&#39;]):
+                    self.enableSSL = True
+                else:
+                    self.ColorOutput.error(&#39;Could not read certificate or key file. Fall back to default http server.&#39;)
+
+
+            except IOError:
+                self.ColorOutput.error(&#39;Could not read certfile or keyfile. Fall back to default http server&#39;)
+
+    def build_autossl_defaults(self):
+        &#34;&#34;&#34; Function to define the system depending certificate file paths
+
+            Certificate file default paths:
+
+            - Windows:        C:\Program Files\openitcockpit-agent\agent.crt
+            - Linux:          /etc/openitcockpit-agent/agent.crt
+            - macOS:          /etc/openitcockpit-agent/agent.crt
+
+            Config file default paths:
+
+            - Windows:        C:\Program Files\openitcockpit-agent\config.cnf
+            - Linux:          /etc/openitcockpit-agent/config.cnf
+            - macOS:          /Library/openitcockpit-agent/config.cnf
+
+        &#34;&#34;&#34;
+        operatingsystem = OperatingSystem()
+
+        etc_agent_path = &#39;/etc/openitcockpit-agent/&#39;
+        if operatingsystem.isWindows():
+            etc_agent_path = &#39;C:&#39; + os.path.sep + &#39;Program Files&#39; + os.path.sep + &#39;it-novum&#39; + os.path.sep + &#39;openitcockpit-agent&#39; + os.path.sep
+
+        if self.config[&#39;default&#39;][&#39;autossl-folder&#39;] != &#34;&#34;:
+            etc_agent_path = self.config[&#39;default&#39;][&#39;autossl-folder&#39;] + os.path.sep
+
+        self.config[&#39;default&#39;][&#39;autossl-csr-file&#39;] = etc_agent_path + &#39;agent.csr&#39;
+        self.config[&#39;default&#39;][&#39;autossl-crt-file&#39;] = etc_agent_path + &#39;agent.crt&#39;
+        self.config[&#39;default&#39;][&#39;autossl-key-file&#39;] = etc_agent_path + &#39;agent.key&#39;
+        self.config[&#39;default&#39;][&#39;autossl-ca-file&#39;] = etc_agent_path + &#39;server_ca.crt&#39;
+
+    def get_custom_checks(self) -&gt; dict:
+        custom_checks_config_file = self.config.get(&#39;default&#39;, &#39;customchecks&#39;)
+        if Filesystem.file_readable(custom_checks_config_file) is False:
+            self.ColorOutput.error(&#39;Could not read customchecks configuration file %s&#39; % (custom_checks_config_file))
+
+        with open(custom_checks_config_file, &#39;r&#39;) as configfile:
+            self.ColorOutput.info(&#39;Load agent custom checks configuration file &#34;%s&#34;&#39; % (custom_checks_config_file))
+            self.customchecks.read_file(configfile)
+
+        custom_checks = {}
+
+        for section in self.customchecks.sections():
+            if section != &#39;default&#39; and section != &#39;DEFAULT&#39;:
+
+                enabled = self.customchecks.getboolean(section, &#39;enabled&#39;, fallback=False)
+
+                if enabled:
+                    custom_checks[section] = {
+                        &#39;command&#39;: self.customchecks.get(section, &#39;command&#39;, fallback=&#39;whoami&#39;),
+                        &#39;interval&#39;: self.customchecks.getint(section, &#39;interval&#39;, fallback=60),
+                        &#39;timeout&#39;: self.customchecks.getint(section, &#39;timeout&#39;, fallback=5),
+                        &#39;enabled&#39;: enabled,
+                        &#39;last_check&#39;: 0,
+                        &#39;next_check&#39;: time.time(),
+                        &#39;running&#39;: False
+                    }
+
+        # Make this thread safe
+        return custom_checks.copy()
+
+    def get_config_as_dict(self) -&gt; dict:
+        &#34;&#34;&#34;Build / Prepare config for a JSON object
+
+        Build and returns the current configuration as object (dict).
+
+        Returns
+        -------
+        data
+            Dictionary object with the current configuration
+
+        &#34;&#34;&#34;
+        data = {
+            &#39;config&#39;: {},
+            &#39;customchecks&#39;: {}
+        }
+
+        for key in self.config[&#39;default&#39;]:
+            data[&#39;config&#39;][key] = self.config[&#39;default&#39;][key]
+
+        for key in self.config[&#39;oitc&#39;]:
+            data[&#39;config&#39;][&#39;oitc-&#39; + key] = self.config[&#39;oitc&#39;][key]
+
+        for custom_key in self.customchecks:
+            data[&#39;customchecks&#39;][custom_key] = {}
+            if custom_key == &#39;default&#39;:
+                data[&#39;customchecks&#39;][custom_key][&#39;max_worker_threads&#39;] = self.customchecks[custom_key][
+                    &#39;max_worker_threads&#39;]
+            else:
+                for custom_key_option in self.customchecks[custom_key]:
+                    data[&#39;customchecks&#39;][custom_key][custom_key_option] = self.customchecks[custom_key][
+                        custom_key_option]
+
+        if data[&#39;config&#39;][&#39;auth&#39;] != &#34;&#34;:
+            data[&#39;config&#39;][&#39;auth&#39;] = str(base64.b64decode(data[&#39;config&#39;][&#39;auth&#39;]), &#34;utf-8&#34;)
+
+        return data
+
+    def set_new_config_from_dict(self, data) -&gt; bool:
+        &#34;&#34;&#34;Function to check and update the agent configuration
+
+        The POST Data Object will be parsed as valid json object.
+        The configuration options are loaded into the configparser objects and will be written to the config files(if defined).
+        After that an agent reload will be triggered to apply the new configuration files
+
+        Parameters
+        ----------
+        data
+            POST Data Object from webserver
+
+        &#34;&#34;&#34;
+        try:
+            jdata = json.loads(data.decode(&#39;utf-8&#39;))
+
+            for key in jdata:
+                if key == &#39;config&#39; and Filesystem.file_readable(self.configpath):
+                    new_config = configparser.ConfigParser(allow_no_value=True)
+                    new_config[&#39;default&#39;] = {}
+                    new_config[&#39;oitc&#39;] = {}
+
+                    if &#39;interval&#39; in jdata[key]:
+                        if int(jdata[key][&#39;interval&#39;]) &gt; 0:
+                            new_config[&#39;default&#39;][&#39;interval&#39;] = str(jdata[key][&#39;interval&#39;])
+                    if &#39;port&#39; in jdata[key]:
+                        if int(jdata[key][&#39;port&#39;]) &gt; 0:
+                            new_config[&#39;default&#39;][&#39;port&#39;] = str(jdata[key][&#39;port&#39;])
+                    if &#39;address&#39; in jdata[key]:
+                        new_config[&#39;default&#39;][&#39;address&#39;] = str(jdata[key][&#39;address&#39;])
+                    if &#39;certfile&#39; in jdata[key]:
+                        new_config[&#39;default&#39;][&#39;certfile&#39;] = str(jdata[key][&#39;certfile&#39;])
+                    if &#39;keyfile&#39; in jdata[key]:
+                        new_config[&#39;default&#39;][&#39;keyfile&#39;] = str(jdata[key][&#39;keyfile&#39;])
+                    if &#39;try-autossl&#39; in jdata[key]:
+                        if jdata[key][&#39;try-autossl&#39;] in (1, &#34;1&#34;, &#34;true&#34;, &#34;True&#34;):
+                            new_config[&#39;default&#39;][&#39;try-autossl&#39;] = &#34;true&#34;
+                        else:
+                            new_config[&#39;default&#39;][&#39;try-autossl&#39;] = &#34;false&#34;
+                    if &#39;autossl-folder&#39; in jdata[key]:
+                        new_config[&#39;default&#39;][&#39;autossl-folder&#39;] = str(jdata[key][&#39;autossl-folder&#39;])
+                    if &#39;autossl-csr-file&#39; in jdata[key]:
+                        new_config[&#39;default&#39;][&#39;autossl-csr-file&#39;] = str(jdata[key][&#39;autossl-csr-file&#39;])
+                    if &#39;autossl-crt-file&#39; in jdata[key]:
+                        new_config[&#39;default&#39;][&#39;autossl-crt-file&#39;] = str(jdata[key][&#39;autossl-crt-file&#39;])
+                    if &#39;autossl-key-file&#39; in jdata[key]:
+                        new_config[&#39;default&#39;][&#39;autossl-key-file&#39;] = str(jdata[key][&#39;autossl-key-file&#39;])
+                    if &#39;autossl-ca-file&#39; in jdata[key]:
+                        new_config[&#39;default&#39;][&#39;autossl-ca-file&#39;] = str(jdata[key][&#39;autossl-ca-file&#39;])
+                    if &#39;auth&#39; in jdata[key]:
+                        new_config[&#39;default&#39;][&#39;auth&#39;] = str(jdata[key][&#39;auth&#39;])
+                    if &#39;verbose&#39; in jdata[key]:
+                        if jdata[key][&#39;verbose&#39;] in (1, &#34;1&#34;, &#34;true&#34;, &#34;True&#34;):
+                            new_config[&#39;default&#39;][&#39;verbose&#39;] = &#34;true&#34;
+                        else:
+                            new_config[&#39;default&#39;][&#39;verbose&#39;] = &#34;false&#34;
+                    if &#39;stacktrace&#39; in jdata[key]:
+                        if jdata[key][&#39;stacktrace&#39;] in (1, &#34;1&#34;, &#34;true&#34;, &#34;True&#34;):
+                            new_config[&#39;default&#39;][&#39;stacktrace&#39;] = &#34;true&#34;
+                        else:
+                            new_config[&#39;default&#39;][&#39;stacktrace&#39;] = &#34;false&#34;
+                    if &#39;config-update-mode&#39; in jdata[key]:
+                        if jdata[key][&#39;config-update-mode&#39;] in (1, &#34;1&#34;, &#34;true&#34;, &#34;True&#34;):
+                            new_config[&#39;default&#39;][&#39;config-update-mode&#39;] = &#34;true&#34;
+                        else:
+                            new_config[&#39;default&#39;][&#39;config-update-mode&#39;] = &#34;false&#34;
+                    if &#39;dockerstats&#39; in jdata[key]:
+                        if jdata[key][&#39;dockerstats&#39;] in (1, &#34;1&#34;, &#34;true&#34;, &#34;True&#34;):
+                            new_config[&#39;default&#39;][&#39;dockerstats&#39;] = &#34;true&#34;
+                        else:
+                            new_config[&#39;default&#39;][&#39;dockerstats&#39;] = &#34;false&#34;
+                    if &#39;qemustats&#39; in jdata[key]:
+                        if jdata[key][&#39;qemustats&#39;] in (1, &#34;1&#34;, &#34;true&#34;, &#34;True&#34;):
+                            new_config[&#39;default&#39;][&#39;qemustats&#39;] = &#34;true&#34;
+                        else:
+                            new_config[&#39;default&#39;][&#39;qemustats&#39;] = &#34;false&#34;
+                    if &#39;cpustats&#39; in jdata[key]:
+                        if jdata[key][&#39;cpustats&#39;] in (1, &#34;1&#34;, &#34;true&#34;, &#34;True&#34;):
+                            new_config[&#39;default&#39;][&#39;cpustats&#39;] = &#34;true&#34;
+                        else:
+                            new_config[&#39;default&#39;][&#39;cpustats&#39;] = &#34;false&#34;
+                    if &#39;sensorstats&#39; in jdata[key]:
+                        if jdata[key][&#39;sensorstats&#39;] in (1, &#34;1&#34;, &#34;true&#34;, &#34;True&#34;):
+                            new_config[&#39;default&#39;][&#39;sensorstats&#39;] = &#34;true&#34;
+                        else:
+                            new_config[&#39;default&#39;][&#39;sensorstats&#39;] = &#34;false&#34;
+                    if &#39;processstats&#39; in jdata[key]:
+                        if jdata[key][&#39;processstats&#39;] in (1, &#34;1&#34;, &#34;true&#34;, &#34;True&#34;):
+                            new_config[&#39;default&#39;][&#39;processstats&#39;] = &#34;true&#34;
+                        else:
+                            new_config[&#39;default&#39;][&#39;processstats&#39;] = &#34;false&#34;
+                    if &#39;processstats-including-child-ids&#39; in jdata[key]:
+                        if jdata[key][&#39;processstats-including-child-ids&#39;] in (1, &#34;1&#34;, &#34;true&#34;, &#34;True&#34;):
+                            new_config[&#39;default&#39;][&#39;processstats-including-child-ids&#39;] = &#34;true&#34;
+                        else:
+                            new_config[&#39;default&#39;][&#39;processstats-including-child-ids&#39;] = &#34;false&#34;
+                    if &#39;netstats&#39; in jdata[key]:
+                        if jdata[key][&#39;netstats&#39;] in (1, &#34;1&#34;, &#34;true&#34;, &#34;True&#34;):
+                            new_config[&#39;default&#39;][&#39;netstats&#39;] = &#34;true&#34;
+                        else:
+                            new_config[&#39;default&#39;][&#39;netstats&#39;] = &#34;false&#34;
+                    if &#39;diskstats&#39; in jdata[key]:
+                        if jdata[key][&#39;diskstats&#39;] in (1, &#34;1&#34;, &#34;true&#34;, &#34;True&#34;):
+                            new_config[&#39;default&#39;][&#39;diskstats&#39;] = &#34;true&#34;
+                        else:
+                            new_config[&#39;default&#39;][&#39;diskstats&#39;] = &#34;false&#34;
+                    if &#39;netio&#39; in jdata[key]:
+                        if jdata[key][&#39;netio&#39;] in (1, &#34;1&#34;, &#34;true&#34;, &#34;True&#34;):
+                            new_config[&#39;default&#39;][&#39;netio&#39;] = &#34;true&#34;
+                        else:
+                            new_config[&#39;default&#39;][&#39;netio&#39;] = &#34;false&#34;
+                    if &#39;diskio&#39; in jdata[key]:
+                        if jdata[key][&#39;diskio&#39;] in (1, &#34;1&#34;, &#34;true&#34;, &#34;True&#34;):
+                            new_config[&#39;default&#39;][&#39;diskio&#39;] = &#34;true&#34;
+                        else:
+                            new_config[&#39;default&#39;][&#39;diskio&#39;] = &#34;false&#34;
+                    if &#39;winservices&#39; in jdata[key]:
+                        if jdata[key][&#39;winservices&#39;] in (1, &#34;1&#34;, &#34;true&#34;, &#34;True&#34;):
+                            new_config[&#39;default&#39;][&#39;winservices&#39;] = &#34;true&#34;
+                        else:
+                            new_config[&#39;default&#39;][&#39;winservices&#39;] = &#34;false&#34;
+                    if &#39;systemdservices&#39; in jdata[key]:
+                        if jdata[key][&#39;systemdservices&#39;] in (1, &#34;1&#34;, &#34;true&#34;, &#34;True&#34;):
+                            new_config[&#39;default&#39;][&#39;systemdservices&#39;] = &#34;true&#34;
+                        else:
+                            new_config[&#39;default&#39;][&#39;systemdservices&#39;] = &#34;false&#34;
+                    if &#39;wineventlog&#39; in jdata[key]:
+                        if jdata[key][&#39;wineventlog&#39;] in (1, &#34;1&#34;, &#34;true&#34;, &#34;True&#34;):
+                            new_config[&#39;default&#39;][&#39;wineventlog&#39;] = &#34;true&#34;
+                        else:
+                            new_config[&#39;default&#39;][&#39;wineventlog&#39;] = &#34;false&#34;
+                    if &#39;wineventlog-logtypes&#39; in jdata[key]:
+                        new_config[&#39;default&#39;][&#39;wineventlog-logtypes&#39;] = str(jdata[key][&#39;wineventlog-logtypes&#39;])
+
+                    if &#39;alfrescostats&#39; in jdata[key]:
+                        if jdata[key][&#39;alfrescostats&#39;] in (1, &#34;1&#34;, &#34;true&#34;, &#34;True&#34;):
+                            new_config[&#39;default&#39;][&#39;alfrescostats&#39;] = &#34;true&#34;
+                        else:
+                            new_config[&#39;default&#39;][&#39;alfrescostats&#39;] = &#34;false&#34;
+                    if &#39;alfresco-jmxuser&#39; in jdata[key]:
+                        new_config[&#39;default&#39;][&#39;alfresco-jmxuser&#39;] = str(jdata[key][&#39;alfresco-jmxuser&#39;])
+                    if &#39;alfresco-jmxpassword&#39; in jdata[key]:
+                        new_config[&#39;default&#39;][&#39;alfresco-jmxpassword&#39;] = str(jdata[key][&#39;alfresco-jmxpassword&#39;])
+                    if &#39;alfresco-jmxaddress&#39; in jdata[key]:
+                        new_config[&#39;default&#39;][&#39;alfresco-jmxaddress&#39;] = str(jdata[key][&#39;alfresco-jmxaddress&#39;])
+                    if &#39;alfresco-jmxport&#39; in jdata[key]:
+                        new_config[&#39;default&#39;][&#39;alfresco-jmxport&#39;] = str(jdata[key][&#39;alfresco-jmxport&#39;])
+                    if &#39;alfresco-jmxpath&#39; in jdata[key]:
+                        new_config[&#39;default&#39;][&#39;alfresco-jmxpath&#39;] = str(jdata[key][&#39;alfresco-jmxpath&#39;])
+                    if &#39;alfresco-jmxquery&#39; in jdata[key]:
+                        new_config[&#39;default&#39;][&#39;alfresco-jmxquery&#39;] = str(jdata[key][&#39;alfresco-jmxquery&#39;])
+                    if &#39;alfresco-javapath&#39; in jdata[key]:
+                        new_config[&#39;default&#39;][&#39;alfresco-javapath&#39;] = str(jdata[key][&#39;alfresco-javapath&#39;])
+
+                    if &#39;customchecks&#39; in jdata[key]:
+                        if jdata[key][&#39;customchecks&#39;] not in (1, &#34;1&#34;, &#34;true&#34;, &#34;True&#34;, 0, &#34;0&#34;, &#34;false&#34;, &#34;False&#34;):
+                            new_config[&#39;default&#39;][&#39;customchecks&#39;] = str(jdata[key][&#39;customchecks&#39;])
+                    if &#39;temperature-fahrenheit&#39; in jdata[key]:
+                        if jdata[key][&#39;temperature-fahrenheit&#39;] in (1, &#34;1&#34;, &#34;true&#34;, &#34;True&#34;):
+                            new_config[&#39;default&#39;][&#39;temperature-fahrenheit&#39;] = &#34;true&#34;
+                        else:
+                            new_config[&#39;default&#39;][&#39;temperature-fahrenheit&#39;] = &#34;false&#34;
+                    if &#39;oitc-hostuuid&#39; in jdata[key]:
+                        new_config[&#39;oitc&#39;][&#39;hostuuid&#39;] = str(jdata[key][&#39;oitc-hostuuid&#39;])
+                    if &#39;oitc-url&#39; in jdata[key]:
+                        new_config[&#39;oitc&#39;][&#39;url&#39;] = str(jdata[key][&#39;oitc-url&#39;])
+                    if &#39;oitc-apikey&#39; in jdata[key]:
+                        new_config[&#39;oitc&#39;][&#39;apikey&#39;] = str(jdata[key][&#39;oitc-apikey&#39;])
+                    if &#39;oitc-interval&#39; in jdata[key]:
+                        new_config[&#39;oitc&#39;][&#39;interval&#39;] = str(jdata[key][&#39;oitc-interval&#39;])
+                    if &#39;oitc-enabled&#39; in jdata[key]:
+                        if jdata[key][&#39;oitc-enabled&#39;] in (1, &#34;1&#34;, &#34;true&#34;, &#34;True&#34;):
+                            new_config[&#39;oitc&#39;][&#39;enabled&#39;] = &#34;true&#34;
+                        else:
+                            new_config[&#39;oitc&#39;][&#39;enabled&#39;] = &#34;false&#34;
+
+                    if self.configpath != &#34;&#34;:
+                        with open(self.configpath, &#39;w&#39;) as configfile:
+                            self.ColorOutput.info(&#39;Save new configuration to %s&#39; % (self.configpath))
+                            new_config.write(configfile)
+                    else:
+                        self.ColorOutput.error(&#39;New configuration is invalid - aborting&#39;)
+
+                elif key == &#39;config&#39; and not Filesystem.file_readable(self.configpath):
+                    self.ColorOutput.error(&#39;Agent configuration file %s is not readable &#39; % (self.configpath))
+
+                if key == &#39;customchecks&#39; and Filesystem.file_readable(self.config[&#39;default&#39;][&#39;customchecks&#39;]):
+                    new_customchecks = configparser.ConfigParser(allow_no_value=True)
+                    new_customchecks.read_string(Help.sample_customcheck_config)
+
+                    for customkey in jdata[key]:
+                        new_customchecks[customkey] = {}
+
+                        if customkey == &#39;default&#39;:
+                            if &#39;max_worker_threads&#39; in jdata[key][customkey]:
+                                new_customchecks[customkey][&#39;max_worker_threads&#39;] = str(
+                                    jdata[key][customkey][&#39;max_worker_threads&#39;])
+                        else:
+                            if &#39;command&#39; in jdata[key][customkey]:
+                                new_customchecks[customkey][&#39;command&#39;] = str(jdata[key][customkey][&#39;command&#39;])
+                            if &#39;interval&#39; in jdata[key][customkey]:
+                                if int(jdata[key][customkey][&#39;interval&#39;]) &gt; 0:
+                                    new_customchecks[customkey][&#39;interval&#39;] = str(jdata[key][customkey][&#39;interval&#39;])
+                            if &#39;timeout&#39; in jdata[key][customkey]:
+                                if int(jdata[key][customkey][&#39;timeout&#39;]) &gt; 0:
+                                    new_customchecks[customkey][&#39;timeout&#39;] = str(jdata[key][customkey][&#39;timeout&#39;])
+                            if &#39;enabled&#39; in jdata[key][customkey]:
+                                new_customchecks[customkey][&#39;enabled&#39;] = &#34;false&#34;
+                                if jdata[key][customkey][&#39;enabled&#39;] in (1, &#34;1&#34;, &#34;true&#34;, &#34;True&#34;):
+                                    new_customchecks[customkey][&#39;enabled&#39;] = &#34;true&#34;
+
+                    if self.config[&#39;default&#39;][&#39;customchecks&#39;] != &#34;&#34;:
+                        with open(self.config[&#39;default&#39;][&#39;customchecks&#39;], &#39;w&#39;) as configfile:
+                            self.ColorOutput.info(
+                                &#39;Save new configuration to %s&#39; % (self.config[&#39;default&#39;][&#39;customchecks&#39;]))
+                            new_customchecks.write(configfile)
+                    else:
+                        self.ColorOutput.error(&#39;New customchecks configuration is invalid - aborting&#39;)
+
+
+                elif key == &#39;customchecks&#39; and not Filesystem.file_readable(self.config[&#39;default&#39;][&#39;customchecks&#39;]):
+                    self.ColorOutput.error(&#39;Customchecks configuration file %s is not readable&#39; % self.configpath)
+
+            return True
+
+        except Exception as e:
+            self.ColorOutput.error(&#39;An error occurred while updating the agent configuration&#39;)
+            print(e)
+
+            if self.stacktrace:
+                traceback.print_exc()
+
+            return False
+
+    def is_base64(self, s):
+        &#34;&#34;&#34;Function to check whether a string is base64 encoded or not
+
+        Parameters
+        ----------
+        s
+            String to check
+
+        &#34;&#34;&#34;
+        try:
+            return base64.b64encode(base64.b64decode(s)) == s
+        except Exception:
+            return False</code></pre>
+</details>
+<h3>Methods</h3>
+<dl>
+<dt id="openitcockpit-agent.src.config.Config.build_autossl_defaults"><code class="name flex">
+<span>def <span class="ident">build_autossl_defaults</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Function to define the system depending certificate file paths</p>
+<p>Certificate file default paths:</p>
+<ul>
+<li>Windows:
+C:\Program Files\openitcockpit-agentgent.crt</li>
+<li>Linux:
+/etc/openitcockpit-agent/agent.crt</li>
+<li>macOS:
+/etc/openitcockpit-agent/agent.crt</li>
+</ul>
+<p>Config file default paths:</p>
+<ul>
+<li>Windows:
+C:\Program Files\openitcockpit-agent\config.cnf</li>
+<li>Linux:
+/etc/openitcockpit-agent/config.cnf</li>
+<li>macOS:
+/Library/openitcockpit-agent/config.cnf</li>
+</ul></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def build_autossl_defaults(self):
+    &#34;&#34;&#34; Function to define the system depending certificate file paths
+
+        Certificate file default paths:
+
+        - Windows:        C:\Program Files\openitcockpit-agent\agent.crt
+        - Linux:          /etc/openitcockpit-agent/agent.crt
+        - macOS:          /etc/openitcockpit-agent/agent.crt
+
+        Config file default paths:
+
+        - Windows:        C:\Program Files\openitcockpit-agent\config.cnf
+        - Linux:          /etc/openitcockpit-agent/config.cnf
+        - macOS:          /Library/openitcockpit-agent/config.cnf
+
+    &#34;&#34;&#34;
+    operatingsystem = OperatingSystem()
+
+    etc_agent_path = &#39;/etc/openitcockpit-agent/&#39;
+    if operatingsystem.isWindows():
+        etc_agent_path = &#39;C:&#39; + os.path.sep + &#39;Program Files&#39; + os.path.sep + &#39;it-novum&#39; + os.path.sep + &#39;openitcockpit-agent&#39; + os.path.sep
+
+    if self.config[&#39;default&#39;][&#39;autossl-folder&#39;] != &#34;&#34;:
+        etc_agent_path = self.config[&#39;default&#39;][&#39;autossl-folder&#39;] + os.path.sep
+
+    self.config[&#39;default&#39;][&#39;autossl-csr-file&#39;] = etc_agent_path + &#39;agent.csr&#39;
+    self.config[&#39;default&#39;][&#39;autossl-crt-file&#39;] = etc_agent_path + &#39;agent.crt&#39;
+    self.config[&#39;default&#39;][&#39;autossl-key-file&#39;] = etc_agent_path + &#39;agent.key&#39;
+    self.config[&#39;default&#39;][&#39;autossl-ca-file&#39;] = etc_agent_path + &#39;server_ca.crt&#39;</code></pre>
+</details>
+</dd>
+<dt id="openitcockpit-agent.src.config.Config.get_config_as_dict"><code class="name flex">
+<span>def <span class="ident">get_config_as_dict</span></span>(<span>self) ‑> dict</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Build / Prepare config for a JSON object</p>
+<p>Build and returns the current configuration as object (dict).</p>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>data</code></dt>
+<dd>Dictionary object with the current configuration</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def get_config_as_dict(self) -&gt; dict:
+    &#34;&#34;&#34;Build / Prepare config for a JSON object
+
+    Build and returns the current configuration as object (dict).
+
+    Returns
+    -------
+    data
+        Dictionary object with the current configuration
+
+    &#34;&#34;&#34;
+    data = {
+        &#39;config&#39;: {},
+        &#39;customchecks&#39;: {}
+    }
+
+    for key in self.config[&#39;default&#39;]:
+        data[&#39;config&#39;][key] = self.config[&#39;default&#39;][key]
+
+    for key in self.config[&#39;oitc&#39;]:
+        data[&#39;config&#39;][&#39;oitc-&#39; + key] = self.config[&#39;oitc&#39;][key]
+
+    for custom_key in self.customchecks:
+        data[&#39;customchecks&#39;][custom_key] = {}
+        if custom_key == &#39;default&#39;:
+            data[&#39;customchecks&#39;][custom_key][&#39;max_worker_threads&#39;] = self.customchecks[custom_key][
+                &#39;max_worker_threads&#39;]
+        else:
+            for custom_key_option in self.customchecks[custom_key]:
+                data[&#39;customchecks&#39;][custom_key][custom_key_option] = self.customchecks[custom_key][
+                    custom_key_option]
+
+    if data[&#39;config&#39;][&#39;auth&#39;] != &#34;&#34;:
+        data[&#39;config&#39;][&#39;auth&#39;] = str(base64.b64decode(data[&#39;config&#39;][&#39;auth&#39;]), &#34;utf-8&#34;)
+
+    return data</code></pre>
+</details>
+</dd>
+<dt id="openitcockpit-agent.src.config.Config.get_custom_checks"><code class="name flex">
+<span>def <span class="ident">get_custom_checks</span></span>(<span>self) ‑> dict</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def get_custom_checks(self) -&gt; dict:
+    custom_checks_config_file = self.config.get(&#39;default&#39;, &#39;customchecks&#39;)
+    if Filesystem.file_readable(custom_checks_config_file) is False:
+        self.ColorOutput.error(&#39;Could not read customchecks configuration file %s&#39; % (custom_checks_config_file))
+
+    with open(custom_checks_config_file, &#39;r&#39;) as configfile:
+        self.ColorOutput.info(&#39;Load agent custom checks configuration file &#34;%s&#34;&#39; % (custom_checks_config_file))
+        self.customchecks.read_file(configfile)
+
+    custom_checks = {}
+
+    for section in self.customchecks.sections():
+        if section != &#39;default&#39; and section != &#39;DEFAULT&#39;:
+
+            enabled = self.customchecks.getboolean(section, &#39;enabled&#39;, fallback=False)
+
+            if enabled:
+                custom_checks[section] = {
+                    &#39;command&#39;: self.customchecks.get(section, &#39;command&#39;, fallback=&#39;whoami&#39;),
+                    &#39;interval&#39;: self.customchecks.getint(section, &#39;interval&#39;, fallback=60),
+                    &#39;timeout&#39;: self.customchecks.getint(section, &#39;timeout&#39;, fallback=5),
+                    &#39;enabled&#39;: enabled,
+                    &#39;last_check&#39;: 0,
+                    &#39;next_check&#39;: time.time(),
+                    &#39;running&#39;: False
+                }
+
+    # Make this thread safe
+    return custom_checks.copy()</code></pre>
+</details>
+</dd>
+<dt id="openitcockpit-agent.src.config.Config.is_base64"><code class="name flex">
+<span>def <span class="ident">is_base64</span></span>(<span>self, s)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Function to check whether a string is base64 encoded or not</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>s</code></strong></dt>
+<dd>String to check</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def is_base64(self, s):
+    &#34;&#34;&#34;Function to check whether a string is base64 encoded or not
+
+    Parameters
+    ----------
+    s
+        String to check
+
+    &#34;&#34;&#34;
+    try:
+        return base64.b64encode(base64.b64decode(s)) == s
+    except Exception:
+        return False</code></pre>
+</details>
+</dd>
+<dt id="openitcockpit-agent.src.config.Config.load_configuration"><code class="name flex">
+<span>def <span class="ident">load_configuration</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Function to load/reload all configuration options</p>
+<p>Read and merge the start parameters and options from the configuration files (if configured).</p>
+<p>Decides if ssl will be enabled or not.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def load_configuration(self):
+    &#34;&#34;&#34;Function to load/reload all configuration options
+
+    Read and merge the start parameters and options from the configuration files (if configured).
+
+    Decides if ssl will be enabled or not.
+
+    &#34;&#34;&#34;
+
+    try:
+        opts, args = getopt.getopt(sys.argv[1:], &#34;h:i:p:a:c:vs&#34;,
+                                   [&#34;interval=&#34;, &#34;port=&#34;, &#34;address=&#34;, &#34;config=&#34;, &#34;customchecks=&#34;, &#34;certfile=&#34;,
+                                    &#34;keyfile=&#34;, &#34;auth=&#34;, &#34;oitc-hostuuid=&#34;, &#34;oitc-url=&#34;, &#34;oitc-apikey=&#34;,
+                                    &#34;oitc-interval=&#34;, &#34;config-update-mode&#34;, &#34;temperature-fahrenheit&#34;, &#34;try-autossl&#34;,
+                                    &#34;disable-autossl&#34;, &#34;autossl-folder&#34;, &#34;autossl-csr-file&#34;, &#34;autossl-crt-file&#34;,
+                                    &#34;autossl-key-file&#34;, &#34;autossl-ca-file&#34;, &#34;dockerstats&#34;, &#34;qemustats&#34;,
+                                    &#34;no-cpustats&#34;,
+                                    &#34;no-sensorstats&#34;, &#34;no-processstats&#34;, &#34;processstats-including-child-ids&#34;,
+                                    &#34;no-netstats&#34;, &#34;no-diskstats&#34;, &#34;no-netio&#34;, &#34;no-diskio&#34;, &#34;no-winservices&#34;,
+                                    &#34;verbose&#34;,
+                                    &#34;stacktrace&#34;, &#34;help&#34;])
+    except getopt.GetoptError:
+        help = Help()
+        help.print_help()
+        sys.exit(2)
+
+    self.config = configparser.ConfigParser(allow_no_value=True)
+
+    for opt, arg in opts:
+        if opt in (&#34;-c&#34;, &#34;--config&#34;):
+            self.configpath = str(arg)
+        elif opt in (&#34;-v&#34;, &#34;--verbose&#34;):
+            self.verbose = True
+        elif opt in (&#34;-s&#34;, &#34;--stacktrace&#34;):
+            self.stacktrace = True
+
+    if self.configpath != &#34;&#34;:
+        if Filesystem.file_readable(path=self.configpath):
+            with open(self.configpath, &#39;r&#39;) as configfile:
+                self.ColorOutput.info(&#39;Load agent configuration file &#34;%s&#34;&#39; % (self.configpath))
+                self.config.read_file(configfile)
+        else:
+            with open(self.configpath, &#39;w&#39;) as configfile:
+                self.ColorOutput.info(&#39;Create new default agent configuration file &#34;%s&#34;&#39; % (self.configpath))
+                self.config.write(configfile)
+
+    self.build_autossl_defaults()
+
+    self.added_oitc_parameter = 0
+
+    for opt, arg in opts:
+        if opt in (&#34;-h&#34;, &#34;--help&#34;):
+            help = Help()
+            help.print_help()
+            sys.exit(0)
+        elif opt in (&#34;-i&#34;, &#34;--interval&#34;):
+            self.config[&#39;default&#39;][&#39;interval&#39;] = str(arg)
+        elif opt in (&#34;-p&#34;, &#34;--port&#34;):
+            self.config[&#39;default&#39;][&#39;port&#39;] = str(arg)
+        elif opt in (&#34;-a&#34;, &#34;--address&#34;):
+            self.config[&#39;default&#39;][&#39;address&#39;] = str(arg)
+        elif opt == &#34;--certfile&#34;:
+            self.config[&#39;default&#39;][&#39;certfile&#39;] = str(arg)
+        elif opt == &#34;--keyfile&#34;:
+            self.config[&#39;default&#39;][&#39;keyfile&#39;] = str(arg)
+        elif opt == &#34;--try-autossl&#34;:
+            self.config[&#39;default&#39;][&#39;try-autossl&#39;] = &#34;true&#34;
+        elif opt == &#34;--autossl-folder&#34;:
+            self.config[&#39;default&#39;][&#39;autossl-folder&#39;] = str(arg)
+        elif opt == &#34;--autossl-csr-file&#34;:
+            self.config[&#39;default&#39;][&#39;autossl-csr-file&#39;] = str(arg)
+        elif opt == &#34;--autossl-crt-file&#34;:
+            self.config[&#39;default&#39;][&#39;autossl-crt-file&#39;] = str(arg)
+        elif opt == &#34;--autossl-key-file&#34;:
+            self.config[&#39;default&#39;][&#39;autossl-key-file&#39;] = str(arg)
+        elif opt == &#34;--autossl-ca-file&#34;:
+            self.config[&#39;default&#39;][&#39;autossl-ca-file&#39;] = str(arg)
+        elif opt == &#34;--auth&#34;:
+            self.config[&#39;default&#39;][&#39;auth&#39;] = str(arg)
+        elif opt in (&#34;-v&#34;, &#34;--verbose&#34;):
+            self.config[&#39;default&#39;][&#39;verbose&#39;] = &#34;true&#34;
+        elif opt in (&#34;-s&#34;, &#34;--stacktrace&#34;):
+            self.config[&#39;default&#39;][&#39;stacktrace&#39;] = &#34;true&#34;
+        elif opt == &#34;--config-update-mode&#34;:
+            self.config[&#39;default&#39;][&#39;config-update-mode&#39;] = &#34;true&#34;
+        elif opt == &#34;--temperature-fahrenheit&#34;:
+            self.config[&#39;default&#39;][&#39;temperature-fahrenheit&#39;] = &#34;true&#34;
+        elif opt == &#34;--dockerstats&#34;:
+            self.config[&#39;default&#39;][&#39;dockerstats&#39;] = &#34;true&#34;
+        elif opt == &#34;--qemustats&#34;:
+            self.config[&#39;default&#39;][&#39;qemustats&#39;] = &#34;true&#34;
+        elif opt == &#34;--no-cpustats&#34;:
+            self.config[&#39;default&#39;][&#39;cpustats&#39;] = &#34;false&#34;
+        elif opt == &#34;--no-sensorstats&#34;:
+            self.config[&#39;default&#39;][&#39;sensorstats&#39;] = &#34;false&#34;
+        elif opt == &#34;--no-processstats&#34;:
+            self.config[&#39;default&#39;][&#39;processstats&#39;] = &#34;false&#34;
+        elif opt == &#34;--processstats-including-child-ids&#34;:
+            self.config[&#39;default&#39;][&#39;processstats-including-child-ids&#39;] = &#34;true&#34;
+        elif opt == &#34;--no-netstats&#34;:
+            self.config[&#39;default&#39;][&#39;netstats&#39;] = &#34;false&#34;
+        elif opt == &#34;--no-diskstats&#34;:
+            self.config[&#39;default&#39;][&#39;diskstats&#39;] = &#34;false&#34;
+        elif opt == &#34;--no-netio&#34;:
+            self.config[&#39;default&#39;][&#39;netio&#39;] = &#34;false&#34;
+        elif opt == &#34;--no-diskio&#34;:
+            self.config[&#39;default&#39;][&#39;diskio&#39;] = &#34;false&#34;
+        elif opt == &#34;--no-winservices&#34;:
+            self.config[&#39;default&#39;][&#39;winservices&#39;] = &#34;false&#34;
+        elif opt == &#34;--oitc-hostuuid&#34;:
+            self.config[&#39;oitc&#39;][&#39;hostuuid&#39;] = str(arg)
+            self.added_oitc_parameter += 1
+        elif opt == &#34;--oitc-url&#34;:
+            self.config[&#39;oitc&#39;][&#39;url&#39;] = str(arg)
+            self.added_oitc_parameter += 1
+        elif opt == &#34;--oitc-apikey&#34;:
+            self.config[&#39;oitc&#39;][&#39;apikey&#39;] = str(arg)
+            self.added_oitc_parameter += 1
+        elif opt == &#34;--oitc-interval&#34;:
+            self.config[&#39;oitc&#39;][&#39;interval&#39;] = str(arg)
+            self.added_oitc_parameter += 1
+        elif opt == &#34;--customchecks&#34;:
+            self.config[&#39;default&#39;][&#39;customchecks&#39;] = str(arg)
+
+    # loop again to consider default overwrite options
+    for opt, arg in opts:
+        if opt == &#34;--disable-autossl&#34;:
+            self.config[&#39;default&#39;][&#39;try-autossl&#39;] = &#34;false&#34;
+            break
+
+    self.verbose = self.config.getboolean(&#39;default&#39;, &#39;verbose&#39;)
+    self.stacktrace = self.config.getboolean(&#39;default&#39;, &#39;stacktrace&#39;)
+    self.autossl = self.config.getboolean(&#39;default&#39;, &#39;try-autossl&#39;)
+    self.temperatureIsFahrenheit = self.config.getboolean(&#39;default&#39;, &#39;temperature-fahrenheit&#39;)
+
+    # Determine if the Agent should run in PUSH mode
+    if self.config.getboolean(&#39;oitc&#39;, &#39;enabled&#39;) is True:
+        self.push_config = {
+            &#39;url&#39;: self.config.get(&#39;oitc&#39;, &#39;url&#39;).strip(),
+            &#39;apikey&#39;: self.config.get(&#39;oitc&#39;, &#39;apikey&#39;).strip(),
+            &#39;hostuuid&#39;: self.config.get(&#39;oitc&#39;, &#39;hostuuid&#39;).strip(),
+            &#39;interval&#39;: self.config.getint(&#39;oitc&#39;, &#39;interval&#39;, fallback=30)
+        }
+
+        if self.push_config[&#39;interval&#39;] &lt;= 0:
+            self.push_config[&#39;interval&#39;] = 30
+
+        if self.push_config[&#39;url&#39;] and self.push_config[&#39;apikey&#39;]:
+            self.is_push_mode = True
+
+    if self.config[&#39;default&#39;][&#39;autossl-folder&#39;] != &#34;&#34;:
+        self.build_autossl_defaults()
+
+    if &#39;auth&#39; in self.config[&#39;default&#39;] and str(self.config[&#39;default&#39;][&#39;auth&#39;]).strip():
+        if not self.is_base64(s=self.config[&#39;default&#39;][&#39;auth&#39;]):
+            self.config[&#39;default&#39;][&#39;auth&#39;] = str(base64.b64encode(self.config[&#39;default&#39;][&#39;auth&#39;].encode()), &#34;utf-8&#34;)
+
+    if self.config[&#39;default&#39;][&#39;certfile&#39;] != &#34;&#34; and self.config[&#39;default&#39;][&#39;keyfile&#39;] != &#34;&#34;:
+        try:
+            if Filesystem.file_readable(self.config[&#39;default&#39;][&#39;certfile&#39;]) and Filesystem.file_readable(
+                    self.config[&#39;default&#39;][&#39;keyfile&#39;]):
+                self.enableSSL = True
+            else:
+                self.ColorOutput.error(&#39;Could not read certificate or key file. Fall back to default http server.&#39;)
+
+
+        except IOError:
+            self.ColorOutput.error(&#39;Could not read certfile or keyfile. Fall back to default http server&#39;)</code></pre>
+</details>
+</dd>
+<dt id="openitcockpit-agent.src.config.Config.set_new_config_from_dict"><code class="name flex">
+<span>def <span class="ident">set_new_config_from_dict</span></span>(<span>self, data) ‑> bool</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Function to check and update the agent configuration</p>
+<p>The POST Data Object will be parsed as valid json object.
+The configuration options are loaded into the configparser objects and will be written to the config files(if defined).
+After that an agent reload will be triggered to apply the new configuration files</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>data</code></strong></dt>
+<dd>POST Data Object from webserver</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def set_new_config_from_dict(self, data) -&gt; bool:
+    &#34;&#34;&#34;Function to check and update the agent configuration
+
+    The POST Data Object will be parsed as valid json object.
+    The configuration options are loaded into the configparser objects and will be written to the config files(if defined).
+    After that an agent reload will be triggered to apply the new configuration files
+
+    Parameters
+    ----------
+    data
+        POST Data Object from webserver
+
+    &#34;&#34;&#34;
+    try:
+        jdata = json.loads(data.decode(&#39;utf-8&#39;))
+
+        for key in jdata:
+            if key == &#39;config&#39; and Filesystem.file_readable(self.configpath):
+                new_config = configparser.ConfigParser(allow_no_value=True)
+                new_config[&#39;default&#39;] = {}
+                new_config[&#39;oitc&#39;] = {}
+
+                if &#39;interval&#39; in jdata[key]:
+                    if int(jdata[key][&#39;interval&#39;]) &gt; 0:
+                        new_config[&#39;default&#39;][&#39;interval&#39;] = str(jdata[key][&#39;interval&#39;])
+                if &#39;port&#39; in jdata[key]:
+                    if int(jdata[key][&#39;port&#39;]) &gt; 0:
+                        new_config[&#39;default&#39;][&#39;port&#39;] = str(jdata[key][&#39;port&#39;])
+                if &#39;address&#39; in jdata[key]:
+                    new_config[&#39;default&#39;][&#39;address&#39;] = str(jdata[key][&#39;address&#39;])
+                if &#39;certfile&#39; in jdata[key]:
+                    new_config[&#39;default&#39;][&#39;certfile&#39;] = str(jdata[key][&#39;certfile&#39;])
+                if &#39;keyfile&#39; in jdata[key]:
+                    new_config[&#39;default&#39;][&#39;keyfile&#39;] = str(jdata[key][&#39;keyfile&#39;])
+                if &#39;try-autossl&#39; in jdata[key]:
+                    if jdata[key][&#39;try-autossl&#39;] in (1, &#34;1&#34;, &#34;true&#34;, &#34;True&#34;):
+                        new_config[&#39;default&#39;][&#39;try-autossl&#39;] = &#34;true&#34;
+                    else:
+                        new_config[&#39;default&#39;][&#39;try-autossl&#39;] = &#34;false&#34;
+                if &#39;autossl-folder&#39; in jdata[key]:
+                    new_config[&#39;default&#39;][&#39;autossl-folder&#39;] = str(jdata[key][&#39;autossl-folder&#39;])
+                if &#39;autossl-csr-file&#39; in jdata[key]:
+                    new_config[&#39;default&#39;][&#39;autossl-csr-file&#39;] = str(jdata[key][&#39;autossl-csr-file&#39;])
+                if &#39;autossl-crt-file&#39; in jdata[key]:
+                    new_config[&#39;default&#39;][&#39;autossl-crt-file&#39;] = str(jdata[key][&#39;autossl-crt-file&#39;])
+                if &#39;autossl-key-file&#39; in jdata[key]:
+                    new_config[&#39;default&#39;][&#39;autossl-key-file&#39;] = str(jdata[key][&#39;autossl-key-file&#39;])
+                if &#39;autossl-ca-file&#39; in jdata[key]:
+                    new_config[&#39;default&#39;][&#39;autossl-ca-file&#39;] = str(jdata[key][&#39;autossl-ca-file&#39;])
+                if &#39;auth&#39; in jdata[key]:
+                    new_config[&#39;default&#39;][&#39;auth&#39;] = str(jdata[key][&#39;auth&#39;])
+                if &#39;verbose&#39; in jdata[key]:
+                    if jdata[key][&#39;verbose&#39;] in (1, &#34;1&#34;, &#34;true&#34;, &#34;True&#34;):
+                        new_config[&#39;default&#39;][&#39;verbose&#39;] = &#34;true&#34;
+                    else:
+                        new_config[&#39;default&#39;][&#39;verbose&#39;] = &#34;false&#34;
+                if &#39;stacktrace&#39; in jdata[key]:
+                    if jdata[key][&#39;stacktrace&#39;] in (1, &#34;1&#34;, &#34;true&#34;, &#34;True&#34;):
+                        new_config[&#39;default&#39;][&#39;stacktrace&#39;] = &#34;true&#34;
+                    else:
+                        new_config[&#39;default&#39;][&#39;stacktrace&#39;] = &#34;false&#34;
+                if &#39;config-update-mode&#39; in jdata[key]:
+                    if jdata[key][&#39;config-update-mode&#39;] in (1, &#34;1&#34;, &#34;true&#34;, &#34;True&#34;):
+                        new_config[&#39;default&#39;][&#39;config-update-mode&#39;] = &#34;true&#34;
+                    else:
+                        new_config[&#39;default&#39;][&#39;config-update-mode&#39;] = &#34;false&#34;
+                if &#39;dockerstats&#39; in jdata[key]:
+                    if jdata[key][&#39;dockerstats&#39;] in (1, &#34;1&#34;, &#34;true&#34;, &#34;True&#34;):
+                        new_config[&#39;default&#39;][&#39;dockerstats&#39;] = &#34;true&#34;
+                    else:
+                        new_config[&#39;default&#39;][&#39;dockerstats&#39;] = &#34;false&#34;
+                if &#39;qemustats&#39; in jdata[key]:
+                    if jdata[key][&#39;qemustats&#39;] in (1, &#34;1&#34;, &#34;true&#34;, &#34;True&#34;):
+                        new_config[&#39;default&#39;][&#39;qemustats&#39;] = &#34;true&#34;
+                    else:
+                        new_config[&#39;default&#39;][&#39;qemustats&#39;] = &#34;false&#34;
+                if &#39;cpustats&#39; in jdata[key]:
+                    if jdata[key][&#39;cpustats&#39;] in (1, &#34;1&#34;, &#34;true&#34;, &#34;True&#34;):
+                        new_config[&#39;default&#39;][&#39;cpustats&#39;] = &#34;true&#34;
+                    else:
+                        new_config[&#39;default&#39;][&#39;cpustats&#39;] = &#34;false&#34;
+                if &#39;sensorstats&#39; in jdata[key]:
+                    if jdata[key][&#39;sensorstats&#39;] in (1, &#34;1&#34;, &#34;true&#34;, &#34;True&#34;):
+                        new_config[&#39;default&#39;][&#39;sensorstats&#39;] = &#34;true&#34;
+                    else:
+                        new_config[&#39;default&#39;][&#39;sensorstats&#39;] = &#34;false&#34;
+                if &#39;processstats&#39; in jdata[key]:
+                    if jdata[key][&#39;processstats&#39;] in (1, &#34;1&#34;, &#34;true&#34;, &#34;True&#34;):
+                        new_config[&#39;default&#39;][&#39;processstats&#39;] = &#34;true&#34;
+                    else:
+                        new_config[&#39;default&#39;][&#39;processstats&#39;] = &#34;false&#34;
+                if &#39;processstats-including-child-ids&#39; in jdata[key]:
+                    if jdata[key][&#39;processstats-including-child-ids&#39;] in (1, &#34;1&#34;, &#34;true&#34;, &#34;True&#34;):
+                        new_config[&#39;default&#39;][&#39;processstats-including-child-ids&#39;] = &#34;true&#34;
+                    else:
+                        new_config[&#39;default&#39;][&#39;processstats-including-child-ids&#39;] = &#34;false&#34;
+                if &#39;netstats&#39; in jdata[key]:
+                    if jdata[key][&#39;netstats&#39;] in (1, &#34;1&#34;, &#34;true&#34;, &#34;True&#34;):
+                        new_config[&#39;default&#39;][&#39;netstats&#39;] = &#34;true&#34;
+                    else:
+                        new_config[&#39;default&#39;][&#39;netstats&#39;] = &#34;false&#34;
+                if &#39;diskstats&#39; in jdata[key]:
+                    if jdata[key][&#39;diskstats&#39;] in (1, &#34;1&#34;, &#34;true&#34;, &#34;True&#34;):
+                        new_config[&#39;default&#39;][&#39;diskstats&#39;] = &#34;true&#34;
+                    else:
+                        new_config[&#39;default&#39;][&#39;diskstats&#39;] = &#34;false&#34;
+                if &#39;netio&#39; in jdata[key]:
+                    if jdata[key][&#39;netio&#39;] in (1, &#34;1&#34;, &#34;true&#34;, &#34;True&#34;):
+                        new_config[&#39;default&#39;][&#39;netio&#39;] = &#34;true&#34;
+                    else:
+                        new_config[&#39;default&#39;][&#39;netio&#39;] = &#34;false&#34;
+                if &#39;diskio&#39; in jdata[key]:
+                    if jdata[key][&#39;diskio&#39;] in (1, &#34;1&#34;, &#34;true&#34;, &#34;True&#34;):
+                        new_config[&#39;default&#39;][&#39;diskio&#39;] = &#34;true&#34;
+                    else:
+                        new_config[&#39;default&#39;][&#39;diskio&#39;] = &#34;false&#34;
+                if &#39;winservices&#39; in jdata[key]:
+                    if jdata[key][&#39;winservices&#39;] in (1, &#34;1&#34;, &#34;true&#34;, &#34;True&#34;):
+                        new_config[&#39;default&#39;][&#39;winservices&#39;] = &#34;true&#34;
+                    else:
+                        new_config[&#39;default&#39;][&#39;winservices&#39;] = &#34;false&#34;
+                if &#39;systemdservices&#39; in jdata[key]:
+                    if jdata[key][&#39;systemdservices&#39;] in (1, &#34;1&#34;, &#34;true&#34;, &#34;True&#34;):
+                        new_config[&#39;default&#39;][&#39;systemdservices&#39;] = &#34;true&#34;
+                    else:
+                        new_config[&#39;default&#39;][&#39;systemdservices&#39;] = &#34;false&#34;
+                if &#39;wineventlog&#39; in jdata[key]:
+                    if jdata[key][&#39;wineventlog&#39;] in (1, &#34;1&#34;, &#34;true&#34;, &#34;True&#34;):
+                        new_config[&#39;default&#39;][&#39;wineventlog&#39;] = &#34;true&#34;
+                    else:
+                        new_config[&#39;default&#39;][&#39;wineventlog&#39;] = &#34;false&#34;
+                if &#39;wineventlog-logtypes&#39; in jdata[key]:
+                    new_config[&#39;default&#39;][&#39;wineventlog-logtypes&#39;] = str(jdata[key][&#39;wineventlog-logtypes&#39;])
+
+                if &#39;alfrescostats&#39; in jdata[key]:
+                    if jdata[key][&#39;alfrescostats&#39;] in (1, &#34;1&#34;, &#34;true&#34;, &#34;True&#34;):
+                        new_config[&#39;default&#39;][&#39;alfrescostats&#39;] = &#34;true&#34;
+                    else:
+                        new_config[&#39;default&#39;][&#39;alfrescostats&#39;] = &#34;false&#34;
+                if &#39;alfresco-jmxuser&#39; in jdata[key]:
+                    new_config[&#39;default&#39;][&#39;alfresco-jmxuser&#39;] = str(jdata[key][&#39;alfresco-jmxuser&#39;])
+                if &#39;alfresco-jmxpassword&#39; in jdata[key]:
+                    new_config[&#39;default&#39;][&#39;alfresco-jmxpassword&#39;] = str(jdata[key][&#39;alfresco-jmxpassword&#39;])
+                if &#39;alfresco-jmxaddress&#39; in jdata[key]:
+                    new_config[&#39;default&#39;][&#39;alfresco-jmxaddress&#39;] = str(jdata[key][&#39;alfresco-jmxaddress&#39;])
+                if &#39;alfresco-jmxport&#39; in jdata[key]:
+                    new_config[&#39;default&#39;][&#39;alfresco-jmxport&#39;] = str(jdata[key][&#39;alfresco-jmxport&#39;])
+                if &#39;alfresco-jmxpath&#39; in jdata[key]:
+                    new_config[&#39;default&#39;][&#39;alfresco-jmxpath&#39;] = str(jdata[key][&#39;alfresco-jmxpath&#39;])
+                if &#39;alfresco-jmxquery&#39; in jdata[key]:
+                    new_config[&#39;default&#39;][&#39;alfresco-jmxquery&#39;] = str(jdata[key][&#39;alfresco-jmxquery&#39;])
+                if &#39;alfresco-javapath&#39; in jdata[key]:
+                    new_config[&#39;default&#39;][&#39;alfresco-javapath&#39;] = str(jdata[key][&#39;alfresco-javapath&#39;])
+
+                if &#39;customchecks&#39; in jdata[key]:
+                    if jdata[key][&#39;customchecks&#39;] not in (1, &#34;1&#34;, &#34;true&#34;, &#34;True&#34;, 0, &#34;0&#34;, &#34;false&#34;, &#34;False&#34;):
+                        new_config[&#39;default&#39;][&#39;customchecks&#39;] = str(jdata[key][&#39;customchecks&#39;])
+                if &#39;temperature-fahrenheit&#39; in jdata[key]:
+                    if jdata[key][&#39;temperature-fahrenheit&#39;] in (1, &#34;1&#34;, &#34;true&#34;, &#34;True&#34;):
+                        new_config[&#39;default&#39;][&#39;temperature-fahrenheit&#39;] = &#34;true&#34;
+                    else:
+                        new_config[&#39;default&#39;][&#39;temperature-fahrenheit&#39;] = &#34;false&#34;
+                if &#39;oitc-hostuuid&#39; in jdata[key]:
+                    new_config[&#39;oitc&#39;][&#39;hostuuid&#39;] = str(jdata[key][&#39;oitc-hostuuid&#39;])
+                if &#39;oitc-url&#39; in jdata[key]:
+                    new_config[&#39;oitc&#39;][&#39;url&#39;] = str(jdata[key][&#39;oitc-url&#39;])
+                if &#39;oitc-apikey&#39; in jdata[key]:
+                    new_config[&#39;oitc&#39;][&#39;apikey&#39;] = str(jdata[key][&#39;oitc-apikey&#39;])
+                if &#39;oitc-interval&#39; in jdata[key]:
+                    new_config[&#39;oitc&#39;][&#39;interval&#39;] = str(jdata[key][&#39;oitc-interval&#39;])
+                if &#39;oitc-enabled&#39; in jdata[key]:
+                    if jdata[key][&#39;oitc-enabled&#39;] in (1, &#34;1&#34;, &#34;true&#34;, &#34;True&#34;):
+                        new_config[&#39;oitc&#39;][&#39;enabled&#39;] = &#34;true&#34;
+                    else:
+                        new_config[&#39;oitc&#39;][&#39;enabled&#39;] = &#34;false&#34;
+
+                if self.configpath != &#34;&#34;:
+                    with open(self.configpath, &#39;w&#39;) as configfile:
+                        self.ColorOutput.info(&#39;Save new configuration to %s&#39; % (self.configpath))
+                        new_config.write(configfile)
+                else:
+                    self.ColorOutput.error(&#39;New configuration is invalid - aborting&#39;)
+
+            elif key == &#39;config&#39; and not Filesystem.file_readable(self.configpath):
+                self.ColorOutput.error(&#39;Agent configuration file %s is not readable &#39; % (self.configpath))
+
+            if key == &#39;customchecks&#39; and Filesystem.file_readable(self.config[&#39;default&#39;][&#39;customchecks&#39;]):
+                new_customchecks = configparser.ConfigParser(allow_no_value=True)
+                new_customchecks.read_string(Help.sample_customcheck_config)
+
+                for customkey in jdata[key]:
+                    new_customchecks[customkey] = {}
+
+                    if customkey == &#39;default&#39;:
+                        if &#39;max_worker_threads&#39; in jdata[key][customkey]:
+                            new_customchecks[customkey][&#39;max_worker_threads&#39;] = str(
+                                jdata[key][customkey][&#39;max_worker_threads&#39;])
+                    else:
+                        if &#39;command&#39; in jdata[key][customkey]:
+                            new_customchecks[customkey][&#39;command&#39;] = str(jdata[key][customkey][&#39;command&#39;])
+                        if &#39;interval&#39; in jdata[key][customkey]:
+                            if int(jdata[key][customkey][&#39;interval&#39;]) &gt; 0:
+                                new_customchecks[customkey][&#39;interval&#39;] = str(jdata[key][customkey][&#39;interval&#39;])
+                        if &#39;timeout&#39; in jdata[key][customkey]:
+                            if int(jdata[key][customkey][&#39;timeout&#39;]) &gt; 0:
+                                new_customchecks[customkey][&#39;timeout&#39;] = str(jdata[key][customkey][&#39;timeout&#39;])
+                        if &#39;enabled&#39; in jdata[key][customkey]:
+                            new_customchecks[customkey][&#39;enabled&#39;] = &#34;false&#34;
+                            if jdata[key][customkey][&#39;enabled&#39;] in (1, &#34;1&#34;, &#34;true&#34;, &#34;True&#34;):
+                                new_customchecks[customkey][&#39;enabled&#39;] = &#34;true&#34;
+
+                if self.config[&#39;default&#39;][&#39;customchecks&#39;] != &#34;&#34;:
+                    with open(self.config[&#39;default&#39;][&#39;customchecks&#39;], &#39;w&#39;) as configfile:
+                        self.ColorOutput.info(
+                            &#39;Save new configuration to %s&#39; % (self.config[&#39;default&#39;][&#39;customchecks&#39;]))
+                        new_customchecks.write(configfile)
+                else:
+                    self.ColorOutput.error(&#39;New customchecks configuration is invalid - aborting&#39;)
+
+
+            elif key == &#39;customchecks&#39; and not Filesystem.file_readable(self.config[&#39;default&#39;][&#39;customchecks&#39;]):
+                self.ColorOutput.error(&#39;Customchecks configuration file %s is not readable&#39; % self.configpath)
+
+        return True
+
+    except Exception as e:
+        self.ColorOutput.error(&#39;An error occurred while updating the agent configuration&#39;)
+        print(e)
+
+        if self.stacktrace:
+            traceback.print_exc()
+
+        return False</code></pre>
+</details>
+</dd>
+</dl>
+</dd>
+</dl>
+</section>
+</article>
+<nav id="sidebar">
+<h1>Index</h1>
+<div class="toc">
+<ul></ul>
+</div>
+<ul id="index">
+<li><h3>Super-module</h3>
+<ul>
+<li><code><a title="openitcockpit-agent.src" href="index.html">openitcockpit-agent.src</a></code></li>
+</ul>
+</li>
+<li><h3><a href="#header-classes">Classes</a></h3>
+<ul>
+<li>
+<h4><code><a title="openitcockpit-agent.src.config.Config" href="#openitcockpit-agent.src.config.Config">Config</a></code></h4>
+<ul class="">
+<li><code><a title="openitcockpit-agent.src.config.Config.build_autossl_defaults" href="#openitcockpit-agent.src.config.Config.build_autossl_defaults">build_autossl_defaults</a></code></li>
+<li><code><a title="openitcockpit-agent.src.config.Config.get_config_as_dict" href="#openitcockpit-agent.src.config.Config.get_config_as_dict">get_config_as_dict</a></code></li>
+<li><code><a title="openitcockpit-agent.src.config.Config.get_custom_checks" href="#openitcockpit-agent.src.config.Config.get_custom_checks">get_custom_checks</a></code></li>
+<li><code><a title="openitcockpit-agent.src.config.Config.is_base64" href="#openitcockpit-agent.src.config.Config.is_base64">is_base64</a></code></li>
+<li><code><a title="openitcockpit-agent.src.config.Config.load_configuration" href="#openitcockpit-agent.src.config.Config.load_configuration">load_configuration</a></code></li>
+<li><code><a title="openitcockpit-agent.src.config.Config.set_new_config_from_dict" href="#openitcockpit-agent.src.config.Config.set_new_config_from_dict">set_new_config_from_dict</a></code></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</nav>
+</main>
+<footer id="footer">
+<p>Generated by <a href="https://pdoc3.github.io/pdoc"><cite>pdoc</cite> 0.9.1</a>.</p>
+</footer>
+</body>
+</html>

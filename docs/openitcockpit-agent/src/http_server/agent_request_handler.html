@@ -1,0 +1,540 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
+<meta name="generator" content="pdoc 0.9.1" />
+<title>openitcockpit-agent.src.http_server.agent_request_handler API documentation</title>
+<meta name="description" content="" />
+<link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/sanitize.min.css" integrity="sha256-PK9q560IAAa6WVRRh76LtCaI8pjTJ2z11v0miyNNjrs=" crossorigin>
+<link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/typography.min.css" integrity="sha256-7l/o7C8jubJiy74VsKTidCy1yBkRtiUGbVkYBylBqUg=" crossorigin>
+<link rel="stylesheet preload" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/styles/github.min.css" crossorigin>
+<style>:root{--highlight-color:#fe9}.flex{display:flex !important}body{line-height:1.5em}#content{padding:20px}#sidebar{padding:30px;overflow:hidden}#sidebar > *:last-child{margin-bottom:2cm}.http-server-breadcrumbs{font-size:130%;margin:0 0 15px 0}#footer{font-size:.75em;padding:5px 30px;border-top:1px solid #ddd;text-align:right}#footer p{margin:0 0 0 1em;display:inline-block}#footer p:last-child{margin-right:30px}h1,h2,h3,h4,h5{font-weight:300}h1{font-size:2.5em;line-height:1.1em}h2{font-size:1.75em;margin:1em 0 .50em 0}h3{font-size:1.4em;margin:25px 0 10px 0}h4{margin:0;font-size:105%}h1:target,h2:target,h3:target,h4:target,h5:target,h6:target{background:var(--highlight-color);padding:.2em 0}a{color:#058;text-decoration:none;transition:color .3s ease-in-out}a:hover{color:#e82}.title code{font-weight:bold}h2[id^="header-"]{margin-top:2em}.ident{color:#900}pre code{background:#f8f8f8;font-size:.8em;line-height:1.4em}code{background:#f2f2f1;padding:1px 4px;overflow-wrap:break-word}h1 code{background:transparent}pre{background:#f8f8f8;border:0;border-top:1px solid #ccc;border-bottom:1px solid #ccc;margin:1em 0;padding:1ex}#http-server-module-list{display:flex;flex-flow:column}#http-server-module-list div{display:flex}#http-server-module-list dt{min-width:10%}#http-server-module-list p{margin-top:0}.toc ul,#index{list-style-type:none;margin:0;padding:0}#index code{background:transparent}#index h3{border-bottom:1px solid #ddd}#index ul{padding:0}#index h4{margin-top:.6em;font-weight:bold}@media (min-width:200ex){#index .two-column{column-count:2}}@media (min-width:300ex){#index .two-column{column-count:3}}dl{margin-bottom:2em}dl dl:last-child{margin-bottom:4em}dd{margin:0 0 1em 3em}#header-classes + dl > dd{margin-bottom:3em}dd dd{margin-left:2em}dd p{margin:10px 0}.name{background:#eee;font-weight:bold;font-size:.85em;padding:5px 10px;display:inline-block;min-width:40%}.name:hover{background:#e0e0e0}dt:target .name{background:var(--highlight-color)}.name > span:first-child{white-space:nowrap}.name.class > span:nth-child(2){margin-left:.4em}.inherited{color:#999;border-left:5px solid #eee;padding-left:1em}.inheritance em{font-style:normal;font-weight:bold}.desc h2{font-weight:400;font-size:1.25em}.desc h3{font-size:1em}.desc dt code{background:inherit}.source summary,.git-link-div{color:#666;text-align:right;font-weight:400;font-size:.8em;text-transform:uppercase}.source summary > *{white-space:nowrap;cursor:pointer}.git-link{color:inherit;margin-left:1em}.source pre{max-height:500px;overflow:auto;margin:0}.source pre code{font-size:12px;overflow:visible}.hlist{list-style:none}.hlist li{display:inline}.hlist li:after{content:',\2002'}.hlist li:last-child:after{content:none}.hlist .hlist{display:inline;padding-left:1em}img{max-width:100%}td{padding:0 .5em}.admonition{padding:.1em .5em;margin-bottom:1em}.admonition-title{font-weight:bold}.admonition.note,.admonition.info,.admonition.important{background:#aef}.admonition.todo,.admonition.versionadded,.admonition.tip,.admonition.hint{background:#dfd}.admonition.warning,.admonition.versionchanged,.admonition.deprecated{background:#fd4}.admonition.error,.admonition.danger,.admonition.caution{background:lightpink}</style>
+<style media="screen and (min-width: 700px)">@media screen and (min-width:700px){#sidebar{width:30%;height:100vh;overflow:auto;position:sticky;top:0}#content{width:70%;max-width:100ch;padding:3em 4em;border-left:1px solid #ddd}pre code{font-size:1em}.item .name{font-size:1em}main{display:flex;flex-direction:row-reverse;justify-content:flex-end}.toc ul ul,#index ul{padding-left:1.5em}.toc > ul > li{margin-top:.5em}}</style>
+<style media="print">@media print{#sidebar h1{page-break-before:always}.source{display:none}}@media print{*{background:transparent !important;color:#000 !important;box-shadow:none !important;text-shadow:none !important}a[href]:after{content:" (" attr(href) ")";font-size:90%}a[href][title]:after{content:none}abbr[title]:after{content:" (" attr(title) ")"}.ir a:after,a[href^="javascript:"]:after,a[href^="#"]:after{content:""}pre,blockquote{border:1px solid #999;page-break-inside:avoid}thead{display:table-header-group}tr,img{page-break-inside:avoid}img{max-width:100% !important}@page{margin:0.5cm}p,h2,h3{orphans:3;widows:3}h1,h2,h3,h4,h5,h6{page-break-after:avoid}}</style>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/highlight.min.js" integrity="sha256-Uv3H6lx7dJmRfRvH8TH6kJD1TSK1aFcwgx+mdg3epi8=" crossorigin></script>
+<script>window.addEventListener('DOMContentLoaded', () => hljs.initHighlighting())</script>
+</head>
+<body>
+<main>
+<article id="content">
+<header>
+<h1 class="title">Module <code>openitcockpit-agent.src.http_server.agent_request_handler</code></h1>
+</header>
+<section id="section-intro">
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">import json
+import traceback
+from http.server import BaseHTTPRequestHandler
+from src.check_result_store import CheckResultStore
+from src.config import Config
+from src.certificates import Certificates
+from src.agent_log import AgentLog
+from src.main_thread import MainThread
+
+
+class AgentRequestHandler(BaseHTTPRequestHandler):
+    # todo I don&#39;t like this type of dependency injection very much
+    check_store = None  # type: CheckResultStore
+    config = None  # type: Config
+    certificates = None  # type: Certificates
+    agent_log = None  # type: AgentLog
+    main_thread = None  # type: MainThread
+
+    def _set_200_ok_headers(self):
+        self.send_response(200)
+        self.send_header(&#39;Content-type&#39;, &#39;application/json&#39;)
+        self.end_headers()
+
+    def _set_401_unauthorized_headers(self):
+        self.send_response(401)
+        self.send_header(&#39;WWW-Authenticate&#39;, &#39;Basic realm=&#39;)
+        self.send_header(&#39;Content-type&#39;, &#39;text/html&#39;)
+
+        self.end_headers()
+
+    def _process_get_request(self):
+        self._set_200_ok_headers()
+
+        if self.path == &#34;/&#34;:
+            check_results = self.check_store.get_store_for_json_response()
+            self.wfile.write(json.dumps(check_results).encode())
+        elif self.path == &#34;/config&#34; and self.config.config.getboolean(&#39;default&#39;, &#39;config-update-mode&#39;,
+                                                                      fallback=False) is True:
+            config = self.config.get_config_as_dict()
+            self.wfile.write(json.dumps(config).encode())
+        elif self.path == &#34;/getCsr&#34;:
+            data = {}
+            if self.config.autossl:
+                data[&#39;csr&#39;] = self.certificates.get_csr().decode(&#34;utf-8&#34;)
+            else:
+                data[&#39;csr&#39;] = &#34;disabled&#34;
+            self.wfile.write(json.dumps(data).encode())
+
+        # Todo remove development reload
+        # elif self.path == &#34;/reload&#34;:
+        #    # Reload all threads to enable the new config
+        #    self.main_thread.trigger_reload()
+
+    def _process_post_request(self, data):
+        response = {
+            &#39;success&#39;: False
+        }
+
+        if self.path == &#34;/config&#34; and self.config.config.getboolean(&#39;default&#39;, &#39;config-update-mode&#39;,
+                                                                    fallback=False) is True:
+            if self.config.set_new_config_from_dict(data) is True:
+                response[&#39;success&#39;] = True
+                # Reload all threads to enable the new config
+                self.main_thread.trigger_reload()
+
+
+        elif self.path == &#34;/updateCrt&#34; and self.config.autossl:
+            # Save new SSL certificate
+            update_sucessfully = False
+            try:
+                jdata = json.loads(data.decode(&#39;utf-8&#39;))
+                jxdata = json.loads(jdata)
+                if &#39;signed&#39; in jdata and &#39;ca&#39; in jdata:
+                    if self.certificates.store_cert_file(jxdata[&#39;signed&#39;]) and \
+                            self.certificates.store_ca_file(jxdata[&#39;ca&#39;]):
+                        update_sucessfully = True
+            except:
+                traceback.print_exc()
+
+            if update_sucessfully is True:
+                response[&#39;success&#39;] = True
+                # Reload all threads to enable the SSL certificate
+                self.main_thread.trigger_reload()
+
+        self._set_200_ok_headers()
+        self.wfile.write(json.dumps(response).encode())
+
+    def do_GET(self):
+        &#34;&#34;&#34;
+        Call back function which gets called by the webserver whenever a GET request gets received
+        &#34;&#34;&#34;
+        try:
+            if &#39;auth&#39; in self.config.config[&#39;default&#39;]:
+                if str(self.config.config[&#39;default&#39;][&#39;auth&#39;]).strip() and self.headers.get(&#39;Authorization&#39;) == None:
+                    self._set_401_unauthorized_headers()
+                    self.wfile.write(&#39;no auth header received&#39;.encode())
+                elif self.headers.get(&#39;Authorization&#39;) == &#39;Basic &#39; + self.config.config[&#39;default&#39;][&#39;auth&#39;] or \
+                        self.config.config[&#39;default&#39;][&#39;auth&#39;] == &#34;&#34;:
+                    self._process_get_request()
+                elif str(self.config.config[&#39;default&#39;][&#39;auth&#39;]).strip():
+                    self._set_401_unauthorized_headers()
+                    self.wfile.write(self.headers.get(&#39;Authorization&#39;).encode())
+                    self.wfile.write(&#39;not authenticated&#39;.encode())
+            else:
+                self._process_get_request()
+        except:
+            self.agent_log.error(&#39;Error while processing GET request&#39;)
+            traceback.print_exc()
+            if self.config.stacktrace:
+                traceback.print_exc()
+
+    def do_POST(self):
+        &#34;&#34;&#34;
+        Call back function which gets called by the webserver whenever a POST request gets received
+        &#34;&#34;&#34;
+        try:
+            if &#39;auth&#39; in self.config.config[&#39;default&#39;]:
+                if str(self.config.config[&#39;default&#39;][&#39;auth&#39;]).strip() and self.headers.get(&#39;Authorization&#39;) is None:
+                    self._set_401_unauthorized_headers()
+                    self.wfile.write(&#39;no auth header received&#39;.encode())
+                elif self.headers.get(&#39;Authorization&#39;) == &#39;Basic &#39; + self.config.config[&#39;default&#39;][&#39;auth&#39;] or \
+                        self.config.config[&#39;default&#39;][&#39;auth&#39;] == &#34;&#34;:
+                    self.wfile.write(json.dumps(
+                        self._process_post_request(data=self.rfile.read(int(self.headers[&#39;Content-Length&#39;])))).encode())
+                elif str(self.config.config[&#39;default&#39;][&#39;auth&#39;]).strip():
+                    self._set_401_unauthorized_headers()
+                    self.wfile.write(self.headers.get(&#39;Authorization&#39;).encode())
+                    self.wfile.write(&#39;not authenticated&#39;.encode())
+            else:
+                self._process_post_request(data=self.rfile.read(int(self.headers[&#39;Content-Length&#39;])))
+
+        except:
+            self.agent_log.error(&#39;Error while processing POST request&#39;)
+            if self.config.stacktrace:
+                traceback.print_exc()</code></pre>
+</details>
+</section>
+<section>
+</section>
+<section>
+</section>
+<section>
+</section>
+<section>
+<h2 class="section-title" id="header-classes">Classes</h2>
+<dl>
+<dt id="openitcockpit-agent.src.http_server.agent_request_handler.AgentRequestHandler"><code class="flex name class">
+<span>class <span class="ident">AgentRequestHandler</span></span>
+<span>(</span><span>request, client_address, server)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>HTTP request handler base class.</p>
+<p>The following explanation of HTTP serves to guide you through the
+code as well as to expose any misunderstandings I may have about
+HTTP (so you don't need to read the code to figure out I'm wrong
+:-).</p>
+<p>HTTP (HyperText Transfer Protocol) is an extensible protocol on
+top of a reliable stream transport (e.g. TCP/IP).
+The protocol
+recognizes three parts to a request:</p>
+<ol>
+<li>One line identifying the request type and path</li>
+<li>An optional set of RFC-822-style headers</li>
+<li>An optional data part</li>
+</ol>
+<p>The headers and data are separated by a blank line.</p>
+<p>The first line of the request has the form</p>
+<p><command> <path> <version></p>
+<p>where <command> is a (case-sensitive) keyword such as GET or POST,
+<path> is a string containing path information for the request,
+and <version> should be the string "HTTP/1.0" or "HTTP/1.1".
+<path> is encoded using the URL encoding scheme (using %xx to signify
+the ASCII character with hex code xx).</p>
+<p>The specification specifies that lines are separated by CRLF but
+for compatibility with the widest range of clients recommends
+servers also handle LF.
+Similarly, whitespace in the request line
+is treated sensibly (allowing multiple spaces between components
+and allowing trailing whitespace).</p>
+<p>Similarly, for output, lines ought to be separated by CRLF pairs
+but most clients grok LF characters just fine.</p>
+<p>If the first line of the request has the form</p>
+<p><command> <path></p>
+<p>(i.e. <version> is left out) then this is assumed to be an HTTP
+0.9 request; this form has no optional headers and data part and
+the reply consists of just the data.</p>
+<p>The reply form of the HTTP 1.x protocol again has three parts:</p>
+<ol>
+<li>One line giving the response code</li>
+<li>An optional set of RFC-822-style headers</li>
+<li>The data</li>
+</ol>
+<p>Again, the headers and data are separated by a blank line.</p>
+<p>The response code line has the form</p>
+<p><version> <responsecode> <responsestring></p>
+<p>where <version> is the protocol version ("HTTP/1.0" or "HTTP/1.1"),
+<responsecode> is a 3-digit response code indicating success or
+failure of the request, and <responsestring> is an optional
+human-readable string explaining what the response code means.</p>
+<p>This server parses the request and the headers, and then calls a
+function specific to the request type (<command>).
+Specifically,
+a request SPAM will be handled by a method do_SPAM().
+If no
+such method exists the server sends an error response to the
+client.
+If it exists, it is called with no arguments:</p>
+<p>do_SPAM()</p>
+<p>Note that the request name is case sensitive (i.e. SPAM and spam
+are different requests).</p>
+<p>The various request details are stored in instance variables:</p>
+<ul>
+<li>
+<p>client_address is the client IP address in the form (host,
+port);</p>
+</li>
+<li>
+<p>command, path and version are the broken-down request line;</p>
+</li>
+<li>
+<p>headers is an instance of email.message.Message (or a derived
+class) containing the header information;</p>
+</li>
+<li>
+<p>rfile is a file object open for reading positioned at the
+start of the optional input data part;</p>
+</li>
+<li>
+<p>wfile is a file object open for writing.</p>
+</li>
+</ul>
+<p>IT IS IMPORTANT TO ADHERE TO THE PROTOCOL FOR WRITING!</p>
+<p>The first thing to be written must be the response line.
+Then
+follow 0 or more header lines, then a blank line, and then the
+actual data (if any).
+The meaning of the header lines depends on
+the command executed by the server; in most cases, when data is
+returned, there should be at least one header line of the form</p>
+<p>Content-type: <type>/<subtype></p>
+<p>where <type> and <subtype> should be registered MIME types,
+e.g. "text/html" or "text/plain".</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class AgentRequestHandler(BaseHTTPRequestHandler):
+    # todo I don&#39;t like this type of dependency injection very much
+    check_store = None  # type: CheckResultStore
+    config = None  # type: Config
+    certificates = None  # type: Certificates
+    agent_log = None  # type: AgentLog
+    main_thread = None  # type: MainThread
+
+    def _set_200_ok_headers(self):
+        self.send_response(200)
+        self.send_header(&#39;Content-type&#39;, &#39;application/json&#39;)
+        self.end_headers()
+
+    def _set_401_unauthorized_headers(self):
+        self.send_response(401)
+        self.send_header(&#39;WWW-Authenticate&#39;, &#39;Basic realm=&#39;)
+        self.send_header(&#39;Content-type&#39;, &#39;text/html&#39;)
+
+        self.end_headers()
+
+    def _process_get_request(self):
+        self._set_200_ok_headers()
+
+        if self.path == &#34;/&#34;:
+            check_results = self.check_store.get_store_for_json_response()
+            self.wfile.write(json.dumps(check_results).encode())
+        elif self.path == &#34;/config&#34; and self.config.config.getboolean(&#39;default&#39;, &#39;config-update-mode&#39;,
+                                                                      fallback=False) is True:
+            config = self.config.get_config_as_dict()
+            self.wfile.write(json.dumps(config).encode())
+        elif self.path == &#34;/getCsr&#34;:
+            data = {}
+            if self.config.autossl:
+                data[&#39;csr&#39;] = self.certificates.get_csr().decode(&#34;utf-8&#34;)
+            else:
+                data[&#39;csr&#39;] = &#34;disabled&#34;
+            self.wfile.write(json.dumps(data).encode())
+
+        # Todo remove development reload
+        # elif self.path == &#34;/reload&#34;:
+        #    # Reload all threads to enable the new config
+        #    self.main_thread.trigger_reload()
+
+    def _process_post_request(self, data):
+        response = {
+            &#39;success&#39;: False
+        }
+
+        if self.path == &#34;/config&#34; and self.config.config.getboolean(&#39;default&#39;, &#39;config-update-mode&#39;,
+                                                                    fallback=False) is True:
+            if self.config.set_new_config_from_dict(data) is True:
+                response[&#39;success&#39;] = True
+                # Reload all threads to enable the new config
+                self.main_thread.trigger_reload()
+
+
+        elif self.path == &#34;/updateCrt&#34; and self.config.autossl:
+            # Save new SSL certificate
+            update_sucessfully = False
+            try:
+                jdata = json.loads(data.decode(&#39;utf-8&#39;))
+                jxdata = json.loads(jdata)
+                if &#39;signed&#39; in jdata and &#39;ca&#39; in jdata:
+                    if self.certificates.store_cert_file(jxdata[&#39;signed&#39;]) and \
+                            self.certificates.store_ca_file(jxdata[&#39;ca&#39;]):
+                        update_sucessfully = True
+            except:
+                traceback.print_exc()
+
+            if update_sucessfully is True:
+                response[&#39;success&#39;] = True
+                # Reload all threads to enable the SSL certificate
+                self.main_thread.trigger_reload()
+
+        self._set_200_ok_headers()
+        self.wfile.write(json.dumps(response).encode())
+
+    def do_GET(self):
+        &#34;&#34;&#34;
+        Call back function which gets called by the webserver whenever a GET request gets received
+        &#34;&#34;&#34;
+        try:
+            if &#39;auth&#39; in self.config.config[&#39;default&#39;]:
+                if str(self.config.config[&#39;default&#39;][&#39;auth&#39;]).strip() and self.headers.get(&#39;Authorization&#39;) == None:
+                    self._set_401_unauthorized_headers()
+                    self.wfile.write(&#39;no auth header received&#39;.encode())
+                elif self.headers.get(&#39;Authorization&#39;) == &#39;Basic &#39; + self.config.config[&#39;default&#39;][&#39;auth&#39;] or \
+                        self.config.config[&#39;default&#39;][&#39;auth&#39;] == &#34;&#34;:
+                    self._process_get_request()
+                elif str(self.config.config[&#39;default&#39;][&#39;auth&#39;]).strip():
+                    self._set_401_unauthorized_headers()
+                    self.wfile.write(self.headers.get(&#39;Authorization&#39;).encode())
+                    self.wfile.write(&#39;not authenticated&#39;.encode())
+            else:
+                self._process_get_request()
+        except:
+            self.agent_log.error(&#39;Error while processing GET request&#39;)
+            traceback.print_exc()
+            if self.config.stacktrace:
+                traceback.print_exc()
+
+    def do_POST(self):
+        &#34;&#34;&#34;
+        Call back function which gets called by the webserver whenever a POST request gets received
+        &#34;&#34;&#34;
+        try:
+            if &#39;auth&#39; in self.config.config[&#39;default&#39;]:
+                if str(self.config.config[&#39;default&#39;][&#39;auth&#39;]).strip() and self.headers.get(&#39;Authorization&#39;) is None:
+                    self._set_401_unauthorized_headers()
+                    self.wfile.write(&#39;no auth header received&#39;.encode())
+                elif self.headers.get(&#39;Authorization&#39;) == &#39;Basic &#39; + self.config.config[&#39;default&#39;][&#39;auth&#39;] or \
+                        self.config.config[&#39;default&#39;][&#39;auth&#39;] == &#34;&#34;:
+                    self.wfile.write(json.dumps(
+                        self._process_post_request(data=self.rfile.read(int(self.headers[&#39;Content-Length&#39;])))).encode())
+                elif str(self.config.config[&#39;default&#39;][&#39;auth&#39;]).strip():
+                    self._set_401_unauthorized_headers()
+                    self.wfile.write(self.headers.get(&#39;Authorization&#39;).encode())
+                    self.wfile.write(&#39;not authenticated&#39;.encode())
+            else:
+                self._process_post_request(data=self.rfile.read(int(self.headers[&#39;Content-Length&#39;])))
+
+        except:
+            self.agent_log.error(&#39;Error while processing POST request&#39;)
+            if self.config.stacktrace:
+                traceback.print_exc()</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li>http.server.BaseHTTPRequestHandler</li>
+<li>socketserver.StreamRequestHandler</li>
+<li>socketserver.BaseRequestHandler</li>
+</ul>
+<h3>Class variables</h3>
+<dl>
+<dt id="openitcockpit-agent.src.http_server.agent_request_handler.AgentRequestHandler.agent_log"><code class="name">var <span class="ident">agent_log</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="openitcockpit-agent.src.http_server.agent_request_handler.AgentRequestHandler.certificates"><code class="name">var <span class="ident">certificates</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="openitcockpit-agent.src.http_server.agent_request_handler.AgentRequestHandler.check_store"><code class="name">var <span class="ident">check_store</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="openitcockpit-agent.src.http_server.agent_request_handler.AgentRequestHandler.config"><code class="name">var <span class="ident">config</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="openitcockpit-agent.src.http_server.agent_request_handler.AgentRequestHandler.main_thread"><code class="name">var <span class="ident">main_thread</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+</dl>
+<h3>Methods</h3>
+<dl>
+<dt id="openitcockpit-agent.src.http_server.agent_request_handler.AgentRequestHandler.do_GET"><code class="name flex">
+<span>def <span class="ident">do_GET</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Call back function which gets called by the webserver whenever a GET request gets received</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def do_GET(self):
+    &#34;&#34;&#34;
+    Call back function which gets called by the webserver whenever a GET request gets received
+    &#34;&#34;&#34;
+    try:
+        if &#39;auth&#39; in self.config.config[&#39;default&#39;]:
+            if str(self.config.config[&#39;default&#39;][&#39;auth&#39;]).strip() and self.headers.get(&#39;Authorization&#39;) == None:
+                self._set_401_unauthorized_headers()
+                self.wfile.write(&#39;no auth header received&#39;.encode())
+            elif self.headers.get(&#39;Authorization&#39;) == &#39;Basic &#39; + self.config.config[&#39;default&#39;][&#39;auth&#39;] or \
+                    self.config.config[&#39;default&#39;][&#39;auth&#39;] == &#34;&#34;:
+                self._process_get_request()
+            elif str(self.config.config[&#39;default&#39;][&#39;auth&#39;]).strip():
+                self._set_401_unauthorized_headers()
+                self.wfile.write(self.headers.get(&#39;Authorization&#39;).encode())
+                self.wfile.write(&#39;not authenticated&#39;.encode())
+        else:
+            self._process_get_request()
+    except:
+        self.agent_log.error(&#39;Error while processing GET request&#39;)
+        traceback.print_exc()
+        if self.config.stacktrace:
+            traceback.print_exc()</code></pre>
+</details>
+</dd>
+<dt id="openitcockpit-agent.src.http_server.agent_request_handler.AgentRequestHandler.do_POST"><code class="name flex">
+<span>def <span class="ident">do_POST</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Call back function which gets called by the webserver whenever a POST request gets received</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def do_POST(self):
+    &#34;&#34;&#34;
+    Call back function which gets called by the webserver whenever a POST request gets received
+    &#34;&#34;&#34;
+    try:
+        if &#39;auth&#39; in self.config.config[&#39;default&#39;]:
+            if str(self.config.config[&#39;default&#39;][&#39;auth&#39;]).strip() and self.headers.get(&#39;Authorization&#39;) is None:
+                self._set_401_unauthorized_headers()
+                self.wfile.write(&#39;no auth header received&#39;.encode())
+            elif self.headers.get(&#39;Authorization&#39;) == &#39;Basic &#39; + self.config.config[&#39;default&#39;][&#39;auth&#39;] or \
+                    self.config.config[&#39;default&#39;][&#39;auth&#39;] == &#34;&#34;:
+                self.wfile.write(json.dumps(
+                    self._process_post_request(data=self.rfile.read(int(self.headers[&#39;Content-Length&#39;])))).encode())
+            elif str(self.config.config[&#39;default&#39;][&#39;auth&#39;]).strip():
+                self._set_401_unauthorized_headers()
+                self.wfile.write(self.headers.get(&#39;Authorization&#39;).encode())
+                self.wfile.write(&#39;not authenticated&#39;.encode())
+        else:
+            self._process_post_request(data=self.rfile.read(int(self.headers[&#39;Content-Length&#39;])))
+
+    except:
+        self.agent_log.error(&#39;Error while processing POST request&#39;)
+        if self.config.stacktrace:
+            traceback.print_exc()</code></pre>
+</details>
+</dd>
+</dl>
+</dd>
+</dl>
+</section>
+</article>
+<nav id="sidebar">
+<h1>Index</h1>
+<div class="toc">
+<ul></ul>
+</div>
+<ul id="index">
+<li><h3>Super-module</h3>
+<ul>
+<li><code><a title="openitcockpit-agent.src.http_server" href="index.html">openitcockpit-agent.src.http_server</a></code></li>
+</ul>
+</li>
+<li><h3><a href="#header-classes">Classes</a></h3>
+<ul>
+<li>
+<h4><code><a title="openitcockpit-agent.src.http_server.agent_request_handler.AgentRequestHandler" href="#openitcockpit-agent.src.http_server.agent_request_handler.AgentRequestHandler">AgentRequestHandler</a></code></h4>
+<ul class="two-column">
+<li><code><a title="openitcockpit-agent.src.http_server.agent_request_handler.AgentRequestHandler.agent_log" href="#openitcockpit-agent.src.http_server.agent_request_handler.AgentRequestHandler.agent_log">agent_log</a></code></li>
+<li><code><a title="openitcockpit-agent.src.http_server.agent_request_handler.AgentRequestHandler.certificates" href="#openitcockpit-agent.src.http_server.agent_request_handler.AgentRequestHandler.certificates">certificates</a></code></li>
+<li><code><a title="openitcockpit-agent.src.http_server.agent_request_handler.AgentRequestHandler.check_store" href="#openitcockpit-agent.src.http_server.agent_request_handler.AgentRequestHandler.check_store">check_store</a></code></li>
+<li><code><a title="openitcockpit-agent.src.http_server.agent_request_handler.AgentRequestHandler.config" href="#openitcockpit-agent.src.http_server.agent_request_handler.AgentRequestHandler.config">config</a></code></li>
+<li><code><a title="openitcockpit-agent.src.http_server.agent_request_handler.AgentRequestHandler.do_GET" href="#openitcockpit-agent.src.http_server.agent_request_handler.AgentRequestHandler.do_GET">do_GET</a></code></li>
+<li><code><a title="openitcockpit-agent.src.http_server.agent_request_handler.AgentRequestHandler.do_POST" href="#openitcockpit-agent.src.http_server.agent_request_handler.AgentRequestHandler.do_POST">do_POST</a></code></li>
+<li><code><a title="openitcockpit-agent.src.http_server.agent_request_handler.AgentRequestHandler.main_thread" href="#openitcockpit-agent.src.http_server.agent_request_handler.AgentRequestHandler.main_thread">main_thread</a></code></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</nav>
+</main>
+<footer id="footer">
+<p>Generated by <a href="https://pdoc3.github.io/pdoc"><cite>pdoc</cite> 0.9.1</a>.</p>
+</footer>
+</body>
+</html>
