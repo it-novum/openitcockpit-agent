@@ -60,6 +60,8 @@ class Config:
 
         self.config = configparser.ConfigParser(allow_no_value=True)
 
+        # todo replace all self.config['default']['key'] = value calls with self.config.set('default', 'key', value)
+
         for opt, arg in opts:
             if opt in ("-c", "--config"):
                 self.configpath = str(arg)
@@ -228,10 +230,10 @@ class Config:
         if self.config.get('default', 'autossl-folder', fallback='') != "":
             etc_agent_path = self.config['default']['autossl-folder'] + os.path.sep
 
-        self.config['default']['autossl-csr-file'] = etc_agent_path + 'agent.csr'
-        self.config['default']['autossl-crt-file'] = etc_agent_path + 'agent.crt'
-        self.config['default']['autossl-key-file'] = etc_agent_path + 'agent.key'
-        self.config['default']['autossl-ca-file'] = etc_agent_path + 'server_ca.crt'
+        self.config.set('default', 'autossl-csr-file', etc_agent_path + 'agent.csr')
+        self.config.set('default', 'autossl-crt-file', etc_agent_path + 'agent.crt')
+        self.config.set('default', 'autossl-key-file', etc_agent_path + 'agent.key')
+        self.config.set('default', 'autossl-ca-file', etc_agent_path + 'server_ca.crt')
 
     def get_custom_checks(self) -> dict:
         custom_checks_config_file = self.config.get('default', 'customchecks')
