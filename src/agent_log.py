@@ -23,15 +23,17 @@ class AgentLog:
         self.Config = Config
         self.ColorOutput = ColorOutput()
 
+        # keep each logfile ~10MB (10 * 1024 * 1024)
         log_formatter = logging.Formatter('%(asctime)s; %(levelname)s; %(lineno)d; %(message)s')
         logfile_handler = RotatingFileHandler(
             'agent.log',
             mode='a',
             maxBytes=10 * 1024 * 1024,
-            backupCount=2,
+            backupCount=10,
             encoding=None,
             delay=False
         )
+
         logfile_handler.setFormatter(log_formatter)
         logfile_handler.setLevel(logging.DEBUG)
 
