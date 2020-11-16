@@ -2,7 +2,7 @@ psutil>=5.5.0,<=5.6.2
 configparser
 pycryptodome
 pyopenssl
-requests
+requests~=2.24.0
 pyinstaller
 jmxquery
 urllib3
