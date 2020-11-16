@@ -219,11 +219,13 @@ class Config:
         """
         operatingsystem = OperatingSystem()
 
+        #todo fix path for macos
         etc_agent_path = '/etc/openitcockpit-agent/'
         if operatingsystem.isWindows():
+            # todo read path from windows registry
             etc_agent_path = 'C:' + os.path.sep + 'Program Files' + os.path.sep + 'it-novum' + os.path.sep + 'openitcockpit-agent' + os.path.sep
 
-        if self.config['default']['autossl-folder'] != "":
+        if self.config.get('default', 'autossl-folder', fallback='') != "":
             etc_agent_path = self.config['default']['autossl-folder'] + os.path.sep
 
         self.config['default']['autossl-csr-file'] = etc_agent_path + 'agent.csr'
