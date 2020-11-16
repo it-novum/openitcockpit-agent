@@ -1,6 +1,9 @@
-from datetime import datetime
+import logging
+import logging.handlers
 
+from logging.handlers import RotatingFileHandler
 from src.color_output import ColorOutput
+from datetime import datetime
 
 
 class AgentLog:
@@ -21,62 +24,43 @@ class AgentLog:
         self.Config = Config
         self.ColorOutput = ColorOutput()
 
-    def print_verbose(self, msg, more_on_stacktrace):
-        """Function to print verbose output uniformly and prevent double verbose output at the same time
+        log_formatter = logging.Formatter('%(asctime)s; %(levelname)s; %(lineno)d; %(message)s')
+        logfile_handler = RotatingFileHandler(
+            'agent.log',
+            mode='a',
+            maxBytes=10 * 1024 * 1024,
+            backupCount=2,
+            encoding=None,
+            delay=False
+        )
+        logfile_handler.setFormatter(log_formatter)
+        logfile_handler.setLevel(logging.DEBUG)
 
-        Print verbose output and add stacktrace hint if requested.
-        Uses a lock to prevent duplicate verbose output at the same time,
-        which would result in one of the outputs not being displayed.
+        self.logfile = logging.getLogger('root')
+        self.logfile.setLevel(logging.DEBUG)
 
-        Parameters
-        ----------
-        msg
-            Message string
-        more_on_stacktrace
-            Boolean to decide whether the stacktrace hint will be printed or not
-
-        """
-        print(msg)
-
-        # with print_lock:
-        #    if self.Config.verbose:
-        #        print(msg)
-        #    if not self.Config.stacktrace and more_on_stacktrace and self.Config.verbose:
-        #        print("Enable --stacktrace to get more information.")
-
-    def print_verbose_without_lock(self, msg, more_on_stacktrace):
-        """Function to directly print verbose output uniformly
-
-        Print verbose output and add stacktrace hint if requested.
-
-        Parameters
-        ----------
-        msg
-            Message string
-        more_on_stacktrace
-            Boolean to decide whether the stacktrace hint will be printed or not
-
-        """
-        if self.Config.verbose:
-            self.ColorOutput.verbose(msg)
-        if not self.Config.stacktrace and more_on_stacktrace and self.Config.verbose:
-            self.ColorOutput.info('Enable --stacktrace to get more information.')
+        self.logfile.addHandler(logfile_handler)
 
     def info(self, msg):
         self.ColorOutput.info(msg)
+        self.logfile.info(msg)
 
     def error(self, msg):
         self.ColorOutput.error(msg)
+        self.logfile.error(msg)
 
     def warning(self, msg):
         self.ColorOutput.warning(msg)
+        self.logfile.warning(msg)
 
     def debug(self, msg):
         self.ColorOutput.debug(msg)
+        self.logfile.debug(msg)
 
     def verbose(self, msg):
-        # todo remove this if
+        # todo replace this with an spam loglevel or so
         if "is not allowing us to" in msg:
             return
 
+        self.ColorOutput.verbose(msg)
         self.ColorOutput.verbose(msg)
