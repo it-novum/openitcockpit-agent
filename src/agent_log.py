@@ -19,7 +19,6 @@ class AgentLog:
     END = '\033[0m'
 
     # todo add log level (info, error, warning, verbose etc)
-    # todo write to log file
     def __init__(self, Config):
         self.Config = Config
         self.ColorOutput = ColorOutput()
