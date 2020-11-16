@@ -68,10 +68,9 @@ class PushClient:
                     if response_data['receivedChecks'] == 0:
                         self.agent_log.info('Agent maybe not trusted yet or no checks have been defined')
 
-
-
-        except:
+        except Exception as e:
             self.agent_log.error('An error occurred while sending check results to openITCOCKPIT instance!')
+            self.agent_log.error(str(e))
 
             if self.Config.stacktrace:
                 traceback.print_exc()
