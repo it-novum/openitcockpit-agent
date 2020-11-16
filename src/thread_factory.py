@@ -171,7 +171,7 @@ class ThreadFactory:
 
                         i += 1
 
-                # Custom Checks thread has nothing todo...
+                # Custom Checks thread has nothing to do...
                 time.sleep(1)
 
     def custom_check_thread_is_done_callback(self, fn):

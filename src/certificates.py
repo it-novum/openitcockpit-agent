@@ -30,8 +30,6 @@ class Certificates:
         self.Config: Config = config
         self.agent_log: AgentLog = agent_log
 
-        self.sha512 = hashlib.sha512()
-
         self.days_until_cert_warning = 120
         self.days_until_ca_warning = 30
 
@@ -305,7 +303,6 @@ class Certificates:
                     if self.Config.stacktrace:
                         traceback.print_exc()
 
-                print(data) #todo remove print statement
                 response = requests.post(
                     self.Config.config['oitc']['url'].strip() + '/agentconnector/certificate.json',
                     data=data,
@@ -332,7 +329,7 @@ class Certificates:
                         self.store_cert_file(jdata['signed'])
                         self.store_ca_file(jdata['ca'])
 
-                        self.agent_log.info('Signed certificate updated successfully')
+                        self.agent_log.info('Certificate updated successfully')
 
                         # Successfully get PULLED a new certificate
                         return self.RENEWAL_SUCESSFUL
@@ -358,15 +355,16 @@ class Certificates:
         if self.cert_checksum is None:
             with open(self.Config.config['default']['autossl-crt-file'], 'rb') as f:
                 cert = f.read()
-                print(cert)
                 # cert = cert.replace("\r\n", "\n")
-                self.sha512.update(cert)
-                self.cert_checksum = self.sha512.hexdigest().upper()
+
+                sha512 = hashlib.sha512()
+                sha512.update(cert)
+                self.cert_checksum = sha512.hexdigest().upper()
 
         cert_checksum = self.cert_checksum
         self.checksum_lock.release()
 
-        self.agent_log.debug(cert_checksum)
+        #self.agent_log.debug(cert_checksum)
         return cert_checksum
 
     def store_cert_file(self, cert_data: str) -> bool:

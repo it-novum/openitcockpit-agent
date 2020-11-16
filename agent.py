@@ -83,7 +83,7 @@ if __name__ == '__main__':
         elif main_thread.join_threads is True:
             thread_factory.shutdown_all_threads()
 
-            # Set main_thread.join_threads back to True
+            # Set main_thread.join_threads back to False
             # so we are not in an endloess loop of spawning and joining threads
             main_thread.disable_reload_trigger()
 
@@ -91,7 +91,6 @@ if __name__ == '__main__':
             # set spawn_threads back to True so that the next loop will restart all threads (reload)
             # OR something sets main_thread.loop to False so we break the loop (stop or SIGINT)
             main_thread.spawn_threads = True
-
         else:
             # Noting to do - all work is done by the created threads above
             # just hanging around and waiting for signals like SIGINT and sleep to save up CPU time
