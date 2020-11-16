@@ -6,10 +6,12 @@ pipeline {
             when {
                 beforeAgent true
                 anyOf{
-                    changeRequest target: 'master'
-                    branch 'master'
-                    changeRequest target: 'development'
-                    branch 'development'
+                    //changeRequest target: 'master'
+                    //branch 'master'
+                    //changeRequest target: 'development'
+                    //branch 'development'
+                    changeRequest target: '2.0_build'
+                    branch '2.0_build'
                 }
             }
             agent {
@@ -20,15 +22,15 @@ pipeline {
                 }
             }
             steps {
-                sh 'yum -y install python36-devel python36-pip libffi-devel gcc glibc ruby-devel make rpm-build rubygems rpm bsdtar'
+                sh 'yum -y install python38-devel python38-pip libffi-devel gcc glibc ruby-devel make rpm-build rubygems rpm bsdtar'
                 sh '/bin/bash -c "source /etc/profile.d/rvm.sh && rvm use 2.7 --default && gem install --no-document fpm"'
                 sh 'mkdir -p ./public/{packages,binaries}'
                 sh 'mkdir -p ./release'
                 
                 sh 'pip3 install -r requirements.txt'
-                sh 'pyinstaller oitc_agent.py --onefile'
+                sh 'pyinstaller agent.py --onefile'
                 
-                sh 'mv ./dist/oitc_agent ./public/binaries/openitcockpit-agent-python3.linux.bin'
+                sh 'mv ./dist/agent ./public/binaries/openitcockpit-agent-python3.linux.bin'
                 sh 'chmod +x ./public/binaries/openitcockpit-agent-python3.linux.bin'
                 sh '/bin/cp -f ./public/binaries/openitcockpit-agent-python3.linux.bin executables'
                 sh '/bin/bash -c "source /etc/profile.d/rvm.sh && rvm use 2.7 --default && ./packages/scripts/build_linux_ci.sh"'
@@ -40,32 +42,32 @@ pipeline {
                 }
             }
         }
-        stage('Publish linux packages - Stable') {
+        //stage('Publish linux packages - Stable 2.0') {
+        //    when {
+        //        beforeAgent true
+        //        branch 'master'
+        //    }
+        //    environment {
+        //        VERSION = """${sh(
+        //            returnStdout: true,
+        //            script: 'cat version | xargs | tr -d \'\n\''
+        //        )}"""
+        //    }
+        //    steps {
+        //        script {
+        //            unstash 'release'
+        //        }
+        //        sh 'mkdir -p /tmp/agent/test; rm -r /tmp/agent/*'
+        //        sh 'rsync -avz --progress release/* /tmp/agent'
+        //        sh '/var/lib/jenkins/openITCOCKPIT-build/aptly.sh repo add -force-replace buster-agent-stable /tmp/agent/openitcockpit-agent_*amd64.deb; /var/lib/jenkins/openITCOCKPIT-build/aptly.sh repo add -force-replace focal-agent-stable /tmp/agent/openitcockpit-agent_*amd64.deb; /var/lib/jenkins/openITCOCKPIT-build/aptly.sh repo add -force-replace bionic-agent-stable /tmp/agent/openitcockpit-agent_*amd64.deb'
+        //        sh 'ssh -o StrictHostKeyChecking=no -i /var/lib/jenkins/.ssh/id_rsa oitc@172.16.101.32 "mkdir -p /var/www/openitcockpit_io/files/openitcockpit-agent"'
+        //        sh 'rsync -avz -e "ssh -o StrictHostKeyChecking=no -i /var/lib/jenkins/.ssh/id_rsa" --delete --progress release/* oitc@172.16.101.32:/var/www/openitcockpit_io/files/openitcockpit-agent'
+        //    }
+        //}
+        stage('Publish linux packages - Nightly 2.0') {
             when {
                 beforeAgent true
-                branch 'master'
-            }
-            environment {
-                VERSION = """${sh(
-                    returnStdout: true,
-                    script: 'cat version | xargs | tr -d \'\n\''
-                )}"""
-            }
-            steps {
-                script {
-                    unstash 'release'
-                }
-                sh 'mkdir -p /tmp/agent/test; rm -r /tmp/agent/*'
-                sh 'rsync -avz --progress release/* /tmp/agent'
-                sh '/var/lib/jenkins/openITCOCKPIT-build/aptly.sh repo add -force-replace buster-agent-stable /tmp/agent/openitcockpit-agent_*amd64.deb; /var/lib/jenkins/openITCOCKPIT-build/aptly.sh repo add -force-replace focal-agent-stable /tmp/agent/openitcockpit-agent_*amd64.deb; /var/lib/jenkins/openITCOCKPIT-build/aptly.sh repo add -force-replace bionic-agent-stable /tmp/agent/openitcockpit-agent_*amd64.deb'
-                sh 'ssh -o StrictHostKeyChecking=no -i /var/lib/jenkins/.ssh/id_rsa oitc@172.16.101.32 "mkdir -p /var/www/openitcockpit_io/files/openitcockpit-agent"'
-                sh 'rsync -avz -e "ssh -o StrictHostKeyChecking=no -i /var/lib/jenkins/.ssh/id_rsa" --delete --progress release/* oitc@172.16.101.32:/var/www/openitcockpit_io/files/openitcockpit-agent'
-            }
-        }
-        stage('Publish linux packages - Nightly') {
-            when {
-                beforeAgent true
-                branch 'development'
+                branch '2.0_build'
             }
             environment {
                 VERSION = """${sh(
@@ -81,17 +83,19 @@ pipeline {
                 sh 'rsync -avz --progress release/* /tmp/agent'
                 sh '/var/lib/jenkins/openITCOCKPIT-build/aptly.sh repo add -force-replace buster-agent-nightly /tmp/agent/openitcockpit-agent_*amd64.deb; /var/lib/jenkins/openITCOCKPIT-build/aptly.sh repo add -force-replace focal-agent-nightly /tmp/agent/openitcockpit-agent_*amd64.deb; /var/lib/jenkins/openITCOCKPIT-build/aptly.sh repo add -force-replace bionic-agent-nightly /tmp/agent/openitcockpit-agent_*amd64.deb'
                 sh 'ssh -o StrictHostKeyChecking=no -i /var/lib/jenkins/.ssh/id_rsa oitc@172.16.101.32 "mkdir -p /var/www/openitcockpit_io/files/openitcockpit-agent-nightly"'
-                sh 'rsync -avz -e "ssh -o StrictHostKeyChecking=no -i /var/lib/jenkins/.ssh/id_rsa" --delete --progress release/* oitc@172.16.101.32:/var/www/openitcockpit_io/files/openitcockpit-agent-nightly'
+                sh 'rsync -avz -e "ssh -o StrictHostKeyChecking=no -i /var/lib/jenkins/.ssh/id_rsa" --progress release/* oitc@172.16.101.32:/var/www/openitcockpit_io/files/openitcockpit-agent-nightly'
             }
         }
         stage('Build agent windows packages') {
             when {
                 beforeAgent true
                 anyOf{
-                    changeRequest target: 'master'
-                    branch 'master'
-                    changeRequest target: 'development'
-                    branch 'development'
+                    //changeRequest target: 'master'
+                    //branch 'master'
+                    //changeRequest target: 'development'
+                    //branch 'development'
+                    changeRequest target: '2.0_build'
+                    branch '2.0_build'
                 }
             }
             environment {
@@ -106,8 +110,8 @@ pipeline {
                    """
                 sh 'ssh -o StrictHostKeyChecking=no -i /var/lib/jenkins/.ssh/id_rsa kress@172.16.166.223 if exist openitcockpit-agent rmdir /Q /S openitcockpit-agent'
                 sh 'scp -o StrictHostKeyChecking=no -i /var/lib/jenkins/.ssh/id_rsa -r ./ kress@172.16.166.223:openitcockpit-agent'
-                sh 'ssh -o StrictHostKeyChecking=no -i /var/lib/jenkins/.ssh/id_rsa kress@172.16.166.223 powershell "cd openitcockpit-agent; python.exe -m venv ./python3-windows-env; ./python3-windows-env/Scripts/activate.bat; ./python3-windows-env/Scripts/pip.exe install -r requirements.txt servicemanager pywin32==225; ./python3-windows-env/Scripts/pyinstaller.exe oitc_agent.py --onefile; ./python3-windows-env/Scripts/deactivate.bat"'
-                sh 'ssh -o StrictHostKeyChecking=no -i /var/lib/jenkins/.ssh/id_rsa kress@172.16.166.223 powershell "cd openitcockpit-agent; mv ./dist/oitc_agent.exe executables/openitcockpit-agent-python3.exe; rm -r -fo ./dist; rm -r -fo ./build; rm -r -fo ./__pycache__; rm -r -fo ./oitc_agent.spec; rm -r -fo ./python3-windows-env"'
+                sh 'ssh -o StrictHostKeyChecking=no -i /var/lib/jenkins/.ssh/id_rsa kress@172.16.166.223 powershell "cd openitcockpit-agent; python.exe -m venv ./python3-windows-env; ./python3-windows-env/Scripts/activate.bat; ./python3-windows-env/Scripts/pip.exe install -r requirements.txt servicemanager pywin32==225; ./python3-windows-env/Scripts/pyinstaller.exe agent.py --onefile; ./python3-windows-env/Scripts/deactivate.bat"'
+                sh 'ssh -o StrictHostKeyChecking=no -i /var/lib/jenkins/.ssh/id_rsa kress@172.16.166.223 powershell "cd openitcockpit-agent; mv ./dist/agent.exe executables/openitcockpit-agent-python3.exe; rm -r -fo ./dist; rm -r -fo ./build; rm -r -fo ./__pycache__; rm -r -fo ./agent.spec; rm -r -fo ./python3-windows-env"'
                 sh 'ssh -o StrictHostKeyChecking=no -i /var/lib/jenkins/.ssh/id_rsa kress@172.16.166.223 powershell "openitcockpit-agent/packages/scripts/build_msi.bat"'
                 sh 'ssh -o StrictHostKeyChecking=no -i /var/lib/jenkins/.ssh/id_rsa kress@172.16.166.223 powershell "Rename-Item -Path openitcockpit-agent/msi/openitcockpit-agent.msi openitcockpit-agent-${VERSION}.msi"'
                 sh 'mkdir -p ./release'
@@ -119,29 +123,29 @@ pipeline {
                 }
             }
         }
-        stage('Publish windows package - Stable') {
+        //stage('Publish windows package - Stable') {
+        //    when {
+        //        beforeAgent true
+        //        branch 'master'
+        //    }
+        //    environment {
+        //        VERSION = """${sh(
+        //            returnStdout: true,
+        //            script: 'cat version | xargs | tr -d \'\n\''
+        //        )}"""
+        //    }
+        //    steps {
+        //        script {
+        //            unstash 'windowsrelease'
+        //        }
+        //        sh 'ssh -o StrictHostKeyChecking=no -i /var/lib/jenkins/.ssh/id_rsa oitc@172.16.101.32 "mkdir -p /var/www/openitcockpit_io/files/openitcockpit-agent"'
+        //        sh 'rsync -avz -e "ssh -o StrictHostKeyChecking=no -i /var/lib/jenkins/.ssh/id_rsa" --progress release/* oitc@172.16.101.32:/var/www/openitcockpit_io/files/openitcockpit-agent'
+        //    }
+        //}
+        stage('Publish windows package - Nightly 2.0') {
             when {
                 beforeAgent true
-                branch 'master'
-            }
-            environment {
-                VERSION = """${sh(
-                    returnStdout: true,
-                    script: 'cat version | xargs | tr -d \'\n\''
-                )}"""
-            }
-            steps {
-                script {
-                    unstash 'windowsrelease'
-                }
-                sh 'ssh -o StrictHostKeyChecking=no -i /var/lib/jenkins/.ssh/id_rsa oitc@172.16.101.32 "mkdir -p /var/www/openitcockpit_io/files/openitcockpit-agent"'
-                sh 'rsync -avz -e "ssh -o StrictHostKeyChecking=no -i /var/lib/jenkins/.ssh/id_rsa" --progress release/* oitc@172.16.101.32:/var/www/openitcockpit_io/files/openitcockpit-agent'
-            }
-        }
-        stage('Publish windows package - Nightly') {
-            when {
-                beforeAgent true
-                branch 'development'
+                branch '2.0_build'
             }
             environment {
                 VERSION = """${sh(
@@ -171,6 +175,12 @@ pipeline {
                 }
                 not {
                     changeRequest target: 'development'
+                }
+                not {
+                    branch '2.0_build'
+                }
+                not {
+                    changeRequest target: '2.0_build'
                 }
             }
             steps {
