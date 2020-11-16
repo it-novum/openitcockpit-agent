@@ -187,10 +187,6 @@ class Certificates:
                 return True
 
         # Check if CA certificate will expire soon
-        # todo remove me
-        # touch /Users/dziegler/git/openitcockpit-agent/doit
-        # rm touch /Users/dziegler/git/openitcockpit-agent/doit
-        exp = Filesystem.file_readable('/Users/dziegler/git/openitcockpit-agent/doit')
         if Filesystem.file_readable(self.Config.config['default']['autossl-ca-file']):
             self.agent_log.info('CA file %s found and readable' % self.Config.config['default']['autossl-ca-file'])
             with open(self.Config.config['default']['autossl-ca-file'], 'rb') as f:
@@ -204,8 +200,7 @@ class Certificates:
 
                 if datetime.date(int(exp_year), int(exp_month),
                                  int(exp_day)) - datetime.datetime.now().date() <= datetime.timedelta(
-                    self.days_until_ca_warning) or exp:
-                    exp = False
+                    self.days_until_ca_warning):
                     self.agent_log.warning("CA Certificate expires in %s on %s (DD-MM-YYYY)" % (
                         str(datetime.date(int(exp_year), int(exp_month),
                                           int(exp_day)) - datetime.datetime.now().date()).split(
