@@ -1,4 +1,4 @@
-# openitcockpit-agent 2.0
+# openITCOCKPIT Monitoring Agent 2.0
 Cross-Platform Monitoring Agent for openITCOCKPIT
 
 1. [Installation](#Installation)
