@@ -22,6 +22,9 @@ from OpenSSL.crypto import (dump_certificate_request, dump_privatekey, load_cert
 
 
 class Certificates:
+    RENEWAL_SUCESSFUL = 1
+    UNTRUSTED_AGENT = 2
+    RENEWAL_ERROR = 3
 
     def __init__(self, config, agent_log):
         self.Config: Config = config
@@ -226,10 +229,10 @@ class Certificates:
         trigger_reload = False
         if self.requires_new_certificate() is True:
             result = self._pull_crt_from_server(renew=False)
-            if result == 1:
+            if result == self.RENEWAL_SUCESSFUL:
                 trigger_reload = True
 
-            if result == 2:
+            if result == self.UNTRUSTED_AGENT:
                 # throw the UntrustedAgentException to the function the calls check_auto_certificate
                 # so it can set the certificate check interval to 60 seconds instead of 6 hours
                 raise UntrustedAgentException
@@ -237,10 +240,10 @@ class Certificates:
         if Filesystem.file_readable(self.Config.config['default']['autossl-crt-file']):
             if self.requires_certificate_renewal() is True:
                 result = self._pull_crt_from_server(renew=True)
-                if result == 1:
+                if result == self.RENEWAL_SUCESSFUL:
                     trigger_reload = True
 
-                if result == 2:
+                if result == self.UNTRUSTED_AGENT:
                     # throw the UntrustedAgentException to the function the calls check_auto_certificate
                     # so it can set the certificate check interval to 60 seconds instead of 6 hours
                     raise UntrustedAgentException
@@ -262,18 +265,18 @@ class Certificates:
         Returns
         -------
         int
-        1 = successful
-        2 = untrusted agent
-        3 = other error
+        1 = successful => self.RENEWAL_SUCESSFUL
+        2 = untrusted agent => self.UNTRUSTED_AGENT
+        3 = other error => self.RENEWAL_ERROR
         """
 
         # ONLY PULL cert if Agent is running in PUSH mode!!
         if self.Config.is_push_mode is False:
-            return 3
+            return self.RENEWAL_ERROR
 
         if self.certificate_check_lock.locked():
             self.agent_log.error('Function to pull a new certificate is locked by another thread!')
-            return 3
+            return self.RENEWAL_ERROR
 
         # with self.certificate_check_lock is a shortcut for:
         # self.certificate_check_lock.acquire()
@@ -302,7 +305,7 @@ class Certificates:
                     if self.Config.stacktrace:
                         traceback.print_exc()
 
-                print(data)
+                print(data) #todo remove print statement
                 response = requests.post(
                     self.Config.config['oitc']['url'].strip() + '/agentconnector/certificate.json',
                     data=data,
@@ -316,14 +319,14 @@ class Certificates:
                         self.agent_log.info(
                             'Add old certificate checksum to request or recreate Agent in openITCOCKPIT.'
                         )
-                        return False
+                        return self.RENEWAL_ERROR
 
                     if 'unknown' in jdata:
                         # self.agent_log.error(
                         #    'Agent state is untrusted! Try again in 1 minute to get a certificate from the server.'
                         # )
 
-                        return 2  # Agent not trusted yet
+                        return self.UNTRUSTED_AGENT
 
                     if 'signed' in jdata and 'ca' in jdata:
                         self.store_cert_file(jdata['signed'])
@@ -332,8 +335,7 @@ class Certificates:
                         self.agent_log.info('Signed certificate updated successfully')
 
                         # Successfully get PULLED a new certificate
-                        # return 1 to trigger a reload of the agent
-                        return 1
+                        return self.RENEWAL_SUCESSFUL
 
             except:
                 self.agent_log.error('An error occurred during autossl certificate renewal process')
@@ -347,7 +349,7 @@ class Certificates:
                 )
 
         # error
-        return 3
+        return self.RENEWAL_ERROR
 
     def get_cert_checksum(self) -> str:
         """Returns the current sha512 checksum of the agent certificate"""

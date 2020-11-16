@@ -9,7 +9,7 @@ from src.main_thread import MainThread
 
 
 class AgentRequestHandler(BaseHTTPRequestHandler):
-    # todo I don't like this very much
+    # todo I don't like this type of dependency injection very much
     check_store = None  # type: CheckResultStore
     config = None  # type: Config
     certificates = None  # type: Certificates

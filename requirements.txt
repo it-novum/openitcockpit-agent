@@ -5,3 +5,4 @@ pyopenssl
 requests
 pyinstaller
 jmxquery
+urllib3
