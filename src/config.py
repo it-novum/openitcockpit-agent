@@ -20,7 +20,6 @@ class Config:
 
         self.verbose = False
         self.stacktrace = False
-        self.added_oitc_parameter = 0
         self.configpath = ""
         self.enableSSL = False
         self.autossl = True
@@ -60,8 +59,6 @@ class Config:
 
         self.config = configparser.ConfigParser(allow_no_value=True)
 
-        # todo replace all self.config['default']['key'] = value calls with self.config.set('default', 'key', value)
-
         for opt, arg in opts:
             if opt in ("-c", "--config"):
                 self.configpath = str(arg)
@@ -82,86 +79,81 @@ class Config:
 
         self.build_autossl_defaults()
 
-        self.added_oitc_parameter = 0
-
         for opt, arg in opts:
             if opt in ("-h", "--help"):
                 help = Help()
                 help.print_help()
                 sys.exit(0)
             elif opt in ("-i", "--interval"):
-                self.config['default']['interval'] = str(arg)
+                self.config.set('default', 'interval', str(arg))
             elif opt in ("-p", "--port"):
-                self.config['default']['port'] = str(arg)
+                self.config.set('default', 'port', str(arg))
             elif opt in ("-a", "--address"):
-                self.config['default']['address'] = str(arg)
+                self.config.set('default', 'address', str(arg))
             elif opt == "--certfile":
-                self.config['default']['certfile'] = str(arg)
+                self.config.set('default', 'certfile', str(arg))
             elif opt == "--keyfile":
-                self.config['default']['keyfile'] = str(arg)
+                self.config.set('default', 'keyfile', str(arg))
             elif opt == "--try-autossl":
-                self.config['default']['try-autossl'] = "true"
+                self.config.set('default', 'try-autossl', 'true')
             elif opt == "--autossl-folder":
-                self.config['default']['autossl-folder'] = str(arg)
+                self.config.set('default', 'autossl-folder', str(arg))
             elif opt == "--autossl-csr-file":
-                self.config['default']['autossl-csr-file'] = str(arg)
+                self.config.set('default', 'autossl-csr-file', str(arg))
             elif opt == "--autossl-crt-file":
-                self.config['default']['autossl-crt-file'] = str(arg)
+                self.config.set('default', 'autossl-crt-file', str(arg))
             elif opt == "--autossl-key-file":
-                self.config['default']['autossl-key-file'] = str(arg)
+                self.config.set('default', 'autossl-key-file', str(arg))
             elif opt == "--autossl-ca-file":
-                self.config['default']['autossl-ca-file'] = str(arg)
+                self.config.set('default', 'autossl-ca-file', str(arg))
             elif opt == "--auth":
-                self.config['default']['auth'] = str(arg)
+                self.config.set('default', 'auth', str(arg))
             elif opt in ("-v", "--verbose"):
-                self.config['default']['verbose'] = "true"
+                self.config.set('default', 'verbose', 'true')
             elif opt in ("-s", "--stacktrace"):
-                self.config['default']['stacktrace'] = "true"
+                self.config.set('default', 'stacktrace', 'true')
             elif opt == "--config-update-mode":
-                self.config['default']['config-update-mode'] = "true"
+                self.config.set('default', 'config-update-mode', 'true')
             elif opt == "--temperature-fahrenheit":
-                self.config['default']['temperature-fahrenheit'] = "true"
+                self.config.set('default', 'temperature-fahrenheit', 'true')
             elif opt == "--dockerstats":
-                self.config['default']['dockerstats'] = "true"
+                self.config.set('default', 'dockerstats', 'true')
             elif opt == "--qemustats":
-                self.config['default']['qemustats'] = "true"
+                self.config.set('default', 'qemustats', 'true')
             elif opt == "--no-cpustats":
-                self.config['default']['cpustats'] = "false"
+                self.config.set('default', 'cpustats', 'false')
             elif opt == "--no-sensorstats":
-                self.config['default']['sensorstats'] = "false"
+                self.config.set('default', 'sensorstats', 'false')
             elif opt == "--no-processstats":
-                self.config['default']['processstats'] = "false"
+                self.config.set('default', 'processstats', 'false')
             elif opt == "--processstats-including-child-ids":
-                self.config['default']['processstats-including-child-ids'] = "true"
+                self.config.set('default', 'processstats-including-child-ids', 'true')
             elif opt == "--no-netstats":
-                self.config['default']['netstats'] = "false"
+                self.config.set('default', 'netstats', 'false')
             elif opt == "--no-diskstats":
-                self.config['default']['diskstats'] = "false"
+                self.config.set('default', 'diskstats', 'false')
             elif opt == "--no-netio":
-                self.config['default']['netio'] = "false"
+                self.config.set('default', 'netio', 'false')
             elif opt == "--no-diskio":
-                self.config['default']['diskio'] = "false"
+                self.config.set('default', 'diskio', 'false')
             elif opt == "--no-winservices":
-                self.config['default']['winservices'] = "false"
+                self.config.set('default', 'winservices', 'false')
             elif opt == "--oitc-hostuuid":
-                self.config['oitc']['hostuuid'] = str(arg)
-                self.added_oitc_parameter += 1
+                self.config.set('oitc', 'hostuuid', str(arg))
+                self.config.set('oitc', 'hostuuid', str(arg))
             elif opt == "--oitc-url":
-                self.config['oitc']['url'] = str(arg)
-                self.added_oitc_parameter += 1
+                self.config.set('oitc', 'url', str(arg))
             elif opt == "--oitc-apikey":
-                self.config['oitc']['apikey'] = str(arg)
-                self.added_oitc_parameter += 1
+                self.config.set('oitc', 'apikey', str(arg))
             elif opt == "--oitc-interval":
-                self.config['oitc']['interval'] = str(arg)
-                self.added_oitc_parameter += 1
+                self.config.set('oitc', 'interval', str(arg))
             elif opt == "--customchecks":
-                self.config['default']['customchecks'] = str(arg)
+                self.config.set('default', 'customchecks', str(arg))
 
         # loop again to consider default overwrite options
         for opt, arg in opts:
             if opt == "--disable-autossl":
-                self.config['default']['try-autossl'] = "false"
+                self.config.set('default', 'try-autossl', 'false')
                 break
 
         self.verbose = self.config.getboolean('default', 'verbose')
@@ -184,17 +176,18 @@ class Config:
             if self.push_config['url'] and self.push_config['apikey']:
                 self.is_push_mode = True
 
-        if self.config['default']['autossl-folder'] != "":
+        if self.config.get('default', 'autossl-folder', fallback='') != '':
             self.build_autossl_defaults()
 
         if 'auth' in self.config['default'] and str(self.config['default']['auth']).strip():
             if not self.is_base64(s=self.config['default']['auth']):
                 self.config['default']['auth'] = str(base64.b64encode(self.config['default']['auth'].encode()), "utf-8")
 
-        if self.config['default']['certfile'] != "" and self.config['default']['keyfile'] != "":
+        if self.config.get('default', 'certfile', fallback='') != '' and self.config.get('default', 'keyfile',
+                                                                                         fallback='') != '':
             try:
-                if Filesystem.file_readable(self.config['default']['certfile']) and Filesystem.file_readable(
-                        self.config['default']['keyfile']):
+                if Filesystem.file_readable(self.config.get('default', 'certfile')) and Filesystem.file_readable(
+                        self.config.get('default', 'keyfile')):
                     self.enableSSL = True
                 else:
                     self.ColorOutput.error('Could not read certificate or key file. Fall back to default http server.')
@@ -221,14 +214,21 @@ class Config:
         """
         operatingsystem = OperatingSystem()
 
-        #todo fix path for macos
+        # Default path for Linux systems
         etc_agent_path = '/etc/openitcockpit-agent/'
+
+        if operatingsystem.isMacos():
+            etc_agent_path = '/Applications/openitcockpit-agent/'
+
         if operatingsystem.isWindows():
             # todo read path from windows registry
             etc_agent_path = 'C:' + os.path.sep + 'Program Files' + os.path.sep + 'it-novum' + os.path.sep + 'openitcockpit-agent' + os.path.sep
 
         if self.config.get('default', 'autossl-folder', fallback='') != "":
-            etc_agent_path = self.config['default']['autossl-folder'] + os.path.sep
+            etc_agent_path = self.config.get('default', 'autossl-folder')
+
+        if etc_agent_path.endswith(os.path.sep) is False:
+            etc_agent_path = etc_agent_path + os.path.sep
 
         self.config.set('default', 'autossl-csr-file', etc_agent_path + 'agent.csr')
         self.config.set('default', 'autossl-crt-file', etc_agent_path + 'agent.crt')
