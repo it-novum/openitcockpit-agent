@@ -143,7 +143,6 @@ class Config:
                 self.config.set('default', 'winservices', 'false')
             elif opt == "--oitc-hostuuid":
                 self.config.set('oitc', 'hostuuid', str(arg))
-                self.config.set('oitc', 'hostuuid', str(arg))
             elif opt == "--oitc-url":
                 self.config.set('oitc', 'url', str(arg))
             elif opt == "--oitc-apikey":
