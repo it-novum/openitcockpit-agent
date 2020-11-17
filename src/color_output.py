@@ -1,6 +1,10 @@
 import threading
 
 from datetime import datetime
+from src.operating_system import OperatingSystem
+
+if sys.platform == 'win32' or sys.platform == 'win64':
+    import ctypes
 
 class ColorOutput:
 
@@ -17,6 +21,13 @@ class ColorOutput:
 
     def __init__(self):
         self.lock = threading.Lock()
+
+        operating_system = OperatingSystem()
+        if operating_system.isWindows():
+            # Enable ANSI color support on Windows 10
+            # This requires Windows 10 (1909)
+            kernel32 = ctypes.windll.kernel32
+            kernel32.SetConsoleMode(kernel32.GetStdHandle(-11), 7)
 
     def info(self, msg):
         self.print_with_time(self.CYAN + "[info] " + self.END + msg)
