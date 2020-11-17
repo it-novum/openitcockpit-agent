@@ -1,4 +1,5 @@
 import threading
+import sys
 
 from datetime import datetime
 from src.operating_system import OperatingSystem
