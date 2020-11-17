@@ -42,7 +42,9 @@ if __name__ == '__main__':
     main_thread = MainThread(config, agent_log)
     signal.signal(signal.SIGINT, main_thread.signal_handler)  # ^C
     signal.signal(signal.SIGTERM, main_thread.signal_handler)  # systemctl stop openitcockpit-agent
-    signal.signal(signal.SIGHUP, main_thread.signal_handler)  # systemctl reload openitcockpit-agent
+
+    if hasattr(signal, 'SIGHUP'):
+        signal.signal(signal.SIGHUP, main_thread.signal_handler)  # systemctl reload openitcockpit-agent
 
     thread_factory = ThreadFactory(config, agent_log, main_thread, certificates)
     operating_system = OperatingSystem()

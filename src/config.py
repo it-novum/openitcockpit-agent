@@ -7,6 +7,9 @@ import configparser
 import traceback
 import time
 
+if sys.platform == 'win32' or sys.platform == 'win64':
+    import winreg
+
 from src.color_output import ColorOutput
 from src.filesystem import Filesystem
 from src.help import Help
@@ -59,6 +62,8 @@ class Config:
             sys.exit(2)
 
         self.config = configparser.ConfigParser(allow_no_value=True)
+
+        # todo replace all self.config['default']['key'] = value calls with self.config.set('default', 'key', value)
 
         for opt, arg in opts:
             if opt in ("-c", "--config"):
@@ -219,17 +224,30 @@ class Config:
         """
         operatingsystem = OperatingSystem()
 
+        #todo fix path for macos
         etc_agent_path = '/etc/openitcockpit-agent/'
         if operatingsystem.isWindows():
+            # todo read path from windows registry
             etc_agent_path = 'C:' + os.path.sep + 'Program Files' + os.path.sep + 'it-novum' + os.path.sep + 'openitcockpit-agent' + os.path.sep
+            try:
+                registry_path = r'SOFTWARE\it-novum\InstalledProducts\openitcockpit-agent'
+                registry_key = winreg.OpenKey(winreg.HKEY_LOCAL_MACHINE, registry_path, 0, winreg.KEY_READ)
+                value, regtype = winreg.QueryValueEx(registry_key, 'InstallLocation')
+                winreg.CloseKey(registry_key)
 
-        if self.config['default']['autossl-folder'] != "":
+                # Use path from registry (this can be changed in the msi installer)
+                etc_agent_path = value
+            except:
+                print('Can not read path from registry. Using default one %s' % etc_agent_path)
+        
+
+        if self.config.get('default', 'autossl-folder', fallback='') != "":
             etc_agent_path = self.config['default']['autossl-folder'] + os.path.sep
 
-        self.config['default']['autossl-csr-file'] = etc_agent_path + 'agent.csr'
-        self.config['default']['autossl-crt-file'] = etc_agent_path + 'agent.crt'
-        self.config['default']['autossl-key-file'] = etc_agent_path + 'agent.key'
-        self.config['default']['autossl-ca-file'] = etc_agent_path + 'server_ca.crt'
+        self.config.set('default', 'autossl-csr-file', etc_agent_path + 'agent.csr')
+        self.config.set('default', 'autossl-crt-file', etc_agent_path + 'agent.crt')
+        self.config.set('default', 'autossl-key-file', etc_agent_path + 'agent.key')
+        self.config.set('default', 'autossl-ca-file', etc_agent_path + 'server_ca.crt')
 
     def get_custom_checks(self) -> dict:
         custom_checks_config_file = self.config.get('default', 'customchecks')

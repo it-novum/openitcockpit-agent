@@ -76,10 +76,18 @@ git clone https://github.com/it-novum/openitcockpit-agent.git
 cd openitcockpit-agent/
 ```
 
-2. Create new Python virtual environment
+2. Create new Python virtual environment on Linux or macOS
 ```
 python3 -m venv ./venv
 . ./venv/bin/activate
+```
+
+2. Create new Python virtual environment on Windows
+```
+Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser
+
+python3 -m venv ./venv
+. ./venv/Scripts/activate
 ```
 
 3. Install dependencies on Linux or macOS
@@ -89,7 +97,7 @@ pip install -r requirements.txt
 
 3. Install dependencies on Windows
 ```
-pip install -r requirements.txt servicemanager pywin32
+pip install -r requirements.txt servicemanager pywin32==226
 ```
 
 4. Copy example config

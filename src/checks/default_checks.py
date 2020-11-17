@@ -626,9 +626,11 @@ class DefaultChecks(Check):
                                                        event.StringInserts] if event.StringInserts else ''
                                     }
                                     windows_eventlog[logType].append(tmp_evt)
-                        except:
+                        
+                        except Exception as e:            
                             self.agent_log.error(
                                 "An error occured during windows eventlog check with log type %s!" % (logType))
+                            self.agent_log.error(str(e))
 
                             if self.Config.stacktrace:
                                 traceback.print_exc()

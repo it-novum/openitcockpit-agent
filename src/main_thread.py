@@ -26,8 +26,9 @@ class MainThread:
         if sig == signal.SIGINT or sig == signal.SIGTERM:
             self.loop = False
 
-        if sig == signal.SIGHUP:
-            self.trigger_reload()
+        if hasattr(signal, 'SIGHUP'):
+            if sig == signal.SIGHUP:
+                self.trigger_reload()
 
     def trigger_reload(self):
         """Call this function to trigger an reload of all threads"""
