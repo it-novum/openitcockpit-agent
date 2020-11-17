@@ -1,6 +1,6 @@
 import os
 from os import access, R_OK, W_OK
-from os.path import isfile
+from os.path import isfile, isdir
 
 
 class Filesystem:
@@ -27,3 +27,14 @@ class Filesystem:
 
         """
         return (isfile(path) and access(path, W_OK))
+
+    def dir_writeable(path):
+        """Function to check whether a directory is writeable or not
+
+        Parameters
+        ----------
+        path
+            Path to file
+
+        """
+        return (isdir(path) and access(path, W_OK))
