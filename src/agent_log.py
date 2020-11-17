@@ -52,10 +52,8 @@ class AgentLog:
     def _get_logfile_path(self) -> str:
         etc_agent_path = self.Config.get_etc_path()
 
-        logfile_path = etc_agent_path + 'agent.log'
-
-        if Filesystem.file_writeable(logfile_path):
-            return logfile_path
+        if Filesystem.dir_writeable(etc_agent_path):
+            return etc_agent_path + 'agent.log'
 
         # Default path is not writeable - store agent.log to current directory...
         return os.getcwd() + os.path.sep + 'agent.log'
