@@ -27,8 +27,11 @@ class ColorOutput:
         if operating_system.isWindows():
             # Enable ANSI color support on Windows 10
             # This requires Windows 10 (1909)
-            kernel32 = ctypes.windll.kernel32
-            kernel32.SetConsoleMode(kernel32.GetStdHandle(-11), 7)
+            try:
+                kernel32 = ctypes.windll.kernel32
+                kernel32.SetConsoleMode(kernel32.GetStdHandle(-11), 7)
+            except:
+                pass
 
     def info(self, msg):
         self.print_with_time(self.CYAN + "[info] " + self.END + msg)

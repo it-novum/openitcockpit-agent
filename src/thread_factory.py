@@ -16,6 +16,7 @@ from src.main_thread import MainThread
 from src.push_client import PushClient
 from src.certificates import Certificates
 from src.exceptions.untrusted_agent_exception import UntrustedAgentException
+from src.operating_system import OperatingSystem
 
 
 class ThreadFactory:
@@ -26,8 +27,8 @@ class ThreadFactory:
         self.main_thread: MainThread = main_thread
         self.certificates: Certificates = certificates
 
-
         self.check_store = CheckResultStore()
+        self.operating_system = OperatingSystem()
 
         self.loop_checks_thread = True
         self.loop_custom_checks_thread = True
@@ -92,7 +93,7 @@ class ThreadFactory:
                 QemuChecks(self.Config, self.agent_log, self.check_store, check_params)
             )
 
-        if (self.Config.config.getboolean('default', 'systemdservices')):
+        if (self.Config.config.getboolean('default', 'systemdservices') and self.operating_system.isLinux()):
             checks.append(
                 SystemdChecks(self.Config, self.agent_log, self.check_store, check_params),
             )
