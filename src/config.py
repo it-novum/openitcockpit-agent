@@ -29,6 +29,8 @@ class Config:
         self.temperatureIsFahrenheit = False
         self.is_push_mode = False
 
+        self.etc_agent_path = None
+
         self.config = configparser.ConfigParser(allow_no_value=True)
         self.customchecks = configparser.ConfigParser(allow_no_value=True)
 
@@ -80,6 +82,7 @@ class Config:
                     self.ColorOutput.info('Create new default agent configuration file "%s"' % (self.configpath))
                     self.config.write(configfile)
 
+        self.get_etc_path()
         self.build_autossl_defaults()
 
         for opt, arg in opts:
@@ -214,28 +217,7 @@ class Config:
             - macOS:          /Library/openitcockpit-agent/config.cnf
 
         """
-        operatingsystem = OperatingSystem()
-
-        # Default path for Linux systems
-        etc_agent_path = '/etc/openitcockpit-agent/'
-
-        if operatingsystem.isMacos():
-            etc_agent_path = '/Applications/openitcockpit-agent/'
-
-        if operatingsystem.isWindows():
-            # todo read path from windows registry
-            etc_agent_path = 'C:' + os.path.sep + 'Program Files' + os.path.sep + 'it-novum' + os.path.sep + 'openitcockpit-agent' + os.path.sep
-            try:
-                registry_path = r'SOFTWARE\it-novum\InstalledProducts\openitcockpit-agent'
-                registry_key = winreg.OpenKey(winreg.HKEY_LOCAL_MACHINE, registry_path, 0, winreg.KEY_READ)
-                value, regtype = winreg.QueryValueEx(registry_key, 'InstallLocation')
-                winreg.CloseKey(registry_key)
-
-                # Use path from registry (this can be changed in the msi installer)
-                etc_agent_path = value
-            except:
-                print('Can not read path from registry. Using default one %s' % etc_agent_path)
-        
+        etc_agent_path = self.get_etc_path()
 
         if self.config.get('default', 'autossl-folder', fallback='') != "":
             etc_agent_path = self.config.get('default', 'autossl-folder')
@@ -562,3 +544,32 @@ class Config:
             return base64.b64encode(base64.b64decode(s)) == s
         except Exception:
             return False
+
+    def get_etc_path(self) -> str:
+        if self.etc_agent_path is not None:
+            return self.etc_agent_path
+
+        operating_system = OperatingSystem()
+
+        # Default path for Linux systems
+        etc_agent_path = '/etc/openitcockpit-agent/'
+
+        if operating_system.isMacos():
+            etc_agent_path = '/Applications/openitcockpit-agent/'
+
+        if operating_system.isWindows():
+            # todo read path from windows registry
+            etc_agent_path = 'C:' + os.path.sep + 'Program Files' + os.path.sep + 'it-novum' + os.path.sep + 'openitcockpit-agent' + os.path.sep
+            try:
+                registry_path = r'SOFTWARE\it-novum\InstalledProducts\openitcockpit-agent'
+                registry_key = winreg.OpenKey(winreg.HKEY_LOCAL_MACHINE, registry_path, 0, winreg.KEY_READ)
+                value, regtype = winreg.QueryValueEx(registry_key, 'InstallLocation')
+                winreg.CloseKey(registry_key)
+
+                # Use path from registry (this can be changed in the msi installer)
+                etc_agent_path = value
+            except:
+                print('Can not read path from registry. Using default one %s' % etc_agent_path)
+
+        self.etc_agent_path = etc_agent_path
+        return self.etc_agent_path

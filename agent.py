@@ -35,7 +35,7 @@ if __name__ == '__main__':
     config = Config(agentVersion)
     config.load_configuration()
 
-    agent_log = AgentLog(Config=Config)
+    agent_log = AgentLog(Config=config)
 
     certificates = Certificates(config, agent_log)
 
