@@ -82,11 +82,11 @@ python3 -m venv ./venv
 . ./venv/bin/activate
 ```
 
-2. Create new Python virtual environment on Windows
+2. Create new Python virtual environment on Windows (via PowerShell)
 ```
 Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser
 
-python3 -m venv ./venv
+python -m venv ./venv
 . ./venv/Scripts/activate
 ```
 
