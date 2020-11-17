@@ -395,7 +395,6 @@ class DefaultChecks(Check):
                             traceback.print_exc()
 
                     if self.Config.config.getboolean('default', 'processstats-including-child-ids'):
-                        print('******************************************************')
                         try:
                             if callable(p.children):
                                 with self.suppress_stdout_stderr():
