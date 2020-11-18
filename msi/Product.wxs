@@ -103,12 +103,6 @@
               <File Id="oitcAgentExe"       Name="openitcockpit-agent-python3.exe" Source="..\executables\openitcockpit-agent-python3.exe">
                 <fire:FirewallException Id="FWX1" Name="openITCOCKPIT Agent" Scope="localSubnet"/>
               </File>
-
-
-              <ServiceInstall Id="openITCOCKPITAgent" Account="LocalSystem" Description="!(loc.ServiceDescription)" DisplayName="openITCOCKPIT Monitoring Agent" ErrorControl="normal" Arguments="start"
-                LoadOrderGroup="NetworkProvider" Name="openITCOCKPITAgent" Start="auto" Type="ownProcess" Vital="yes" />
-              <ServiceControl Id="ServiceControl" Name="openITCOCKPITAgent" Start="install" Stop="both" Remove="uninstall" Wait="yes" />
-              <RegistryValue Root="HKLM" Key="SYSTEM\CurrentControlSet\Services\openITCOCKPITAgent" Type="integer" Name="DelayedAutostart" Value="1"/>
             </Component>
 
             <Component Id="ExampleConfig" Guid="D2C72D55-FA35-4A53-9EC3-55EEE9FD5A5A" KeyPath="yes" NeverOverwrite="yes" Permanent="yes">
@@ -116,6 +110,13 @@
             </Component>
             <Component Id="ExampleCustomchecksConfig" Guid="5A4D7815-3952-4437-8AC0-CF8022704653" KeyPath="yes" NeverOverwrite="yes" Permanent="yes">
               <File Id="exampleAgentCustomchecksConfig" Name="customchecks.cnf" Source="..\example_customchecks.cnf" PatchIgnore="yes"/>
+            </Component>
+
+            <Component Id="ServiceComp" Guid="CA7377FB-31D3-40F7-9B74-68490D7285DA">
+              <ServiceInstall Id="openITCOCKPITAgent" Account="LocalSystem" Description="!(loc.ServiceDescription)" DisplayName="openITCOCKPIT Monitoring Agent" ErrorControl="normal" Arguments="start"
+                LoadOrderGroup="NetworkProvider" Name="openITCOCKPITAgent" Start="auto" Type="ownProcess" Vital="yes" />
+              <ServiceControl Id="ServiceControl" Name="openITCOCKPITAgent" Start="install" Stop="both" Remove="uninstall" Wait="yes" />
+              <RegistryValue Root="HKLM" Key="SYSTEM\CurrentControlSet\Services\openITCOCKPITAgent" Type="integer" Name="DelayedAutostart" Value="1"/>
             </Component>
 
           </Directory>
@@ -149,6 +150,7 @@
     </Feature>
 
     <Feature Id='ServiceAndRegister' Level='1'>
+      <ComponentRef Id='ServiceComp' />
       <ComponentRef Id="RegValInstallLocation_comp" />
     </Feature>
 
