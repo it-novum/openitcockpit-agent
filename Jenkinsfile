@@ -28,7 +28,7 @@ pipeline {
                 sh 'mkdir -p ./release'
                 
                 sh 'pip3 install -r requirements.txt'
-                sh 'pyinstaller agent.py --onefile'
+                sh 'pyinstaller src/agent_nix.py --onefile'
                 
                 sh 'mv ./dist/agent ./public/binaries/openitcockpit-agent-python3.linux.bin'
                 sh 'chmod +x ./public/binaries/openitcockpit-agent-python3.linux.bin'
@@ -106,12 +106,12 @@ pipeline {
             }
             steps {
                 sh """
-                    sed -i -e 's|/etc/openitcockpit-agent/customchecks.cnf|C:\\\\\\Program\\ Files\\\\\\it-novum\\\\\\openitcockpit-agent\\\\\\customchecks.cnf|g' example_config.cnf
+                    sed -i -e 's|/etc/openitcockpit-agent/customchecks.cnf|C:\\\\Program\\ Files\\\\it-novum\\\\openitcockpit-agent\\\\customchecks.cnf|g' example_config.cnf
                    """
                 sh 'ssh -o StrictHostKeyChecking=no -i /var/lib/jenkins/.ssh/id_rsa kress@172.16.166.223 if exist openitcockpit-agent rmdir /Q /S openitcockpit-agent'
                 sh 'scp -o StrictHostKeyChecking=no -i /var/lib/jenkins/.ssh/id_rsa -r ./ kress@172.16.166.223:openitcockpit-agent'
-                sh 'ssh -o StrictHostKeyChecking=no -i /var/lib/jenkins/.ssh/id_rsa kress@172.16.166.223 powershell "cd openitcockpit-agent; python.exe -m venv ./python3-windows-env; ./python3-windows-env/Scripts/activate.bat; ./python3-windows-env/Scripts/pip.exe install -r requirements.txt pywin32; ./python3-windows-env/Scripts/pyinstaller.exe agent.py --onefile; ./python3-windows-env/Scripts/deactivate.bat"'
-                sh 'ssh -o StrictHostKeyChecking=no -i /var/lib/jenkins/.ssh/id_rsa kress@172.16.166.223 powershell "cd openitcockpit-agent; mv ./dist/agent.exe executables/openitcockpit-agent-python3.exe; rm -r -fo ./dist; rm -r -fo ./build; rm -r -fo ./__pycache__; rm -r -fo ./agent.spec; rm -r -fo ./python3-windows-env"'
+                sh 'ssh -o StrictHostKeyChecking=no -i /var/lib/jenkins/.ssh/id_rsa kress@172.16.166.223 powershell "cd openitcockpit-agent; python.exe -m venv ./python3-windows-env; ./python3-windows-env/Scripts/activate.bat; ./python3-windows-env/Scripts/pip.exe install -r requirements.txt pywin32; $env:PYTHONAPTH="C:\\Users\\kress\\openitcockpit-agent"; ./python3-windows-env/Scripts/pyinstaller.exe src/agent_windows.py --onefile -n openitcockpit-agent-python3; ./python3-windows-env/Scripts/deactivate.bat"'
+                sh 'ssh -o StrictHostKeyChecking=no -i /var/lib/jenkins/.ssh/id_rsa kress@172.16.166.223 powershell "cd openitcockpit-agent; mv ./dist/openitcockpit-agent-python3.exe executables/openitcockpit-agent-python3.exe; rm -r -fo ./dist; rm -r -fo ./build; rm -r -fo ./__pycache__; rm -r -fo ./openitcockpit-agent-python3.spec; rm -r -fo ./python3-windows-env"'
                 sh 'ssh -o StrictHostKeyChecking=no -i /var/lib/jenkins/.ssh/id_rsa kress@172.16.166.223 powershell "openitcockpit-agent/packages/scripts/build_msi.bat"'
                 sh 'ssh -o StrictHostKeyChecking=no -i /var/lib/jenkins/.ssh/id_rsa kress@172.16.166.223 powershell "Rename-Item -Path openitcockpit-agent/msi/openitcockpit-agent.msi openitcockpit-agent-${VERSION}.msi"'
                 sh 'mkdir -p ./release'
