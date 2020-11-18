@@ -32,6 +32,13 @@ from src.thread_factory import ThreadFactory
 if __name__ == '__main__':
     agentVersion = "2.0.0"
 
+    operating_system = OperatingSystem()
+    if operating_system.isWindows():
+        print('Delay start by 30 seconds')
+        time.sleep(30)
+        print('Continue')
+
+
     config = Config(agentVersion)
     config.load_configuration()
 
@@ -47,7 +54,6 @@ if __name__ == '__main__':
         signal.signal(signal.SIGHUP, main_thread.signal_handler)  # systemctl reload openitcockpit-agent
 
     thread_factory = ThreadFactory(config, agent_log, main_thread, certificates)
-    operating_system = OperatingSystem()
 
     if config.autossl is True:
         pass # todo implement me
