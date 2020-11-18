@@ -100,7 +100,7 @@
             </Component>
 
             <Component Id="MainExecutable" Guid="EDD45F38-6647-4132-818F-D4D4C6F5535F" KeyPath="yes">
-              <File Id="oitcAgentExe"       Name="openitcockpit-agent-python3.exe" Source="..\executables\openitcockpit-agent-python3.exe">
+              <File Id="oitcAgentExe"       Name="openitcockpit-agent-python3.exe" Source="..\executables\openitcockpit-agent-python3.exe" KeyPath="yes">
                 <fire:FirewallException Id="FWX1" Name="openITCOCKPIT Agent" Scope="localSubnet"/>
               </File>
               <ServiceInstall Id="ServiceInstaller" Account="LocalSystem" Description="!(loc.ServiceDescription)" DisplayName="openITCOCKPIT Monitoring Agent" ErrorControl="normal"
@@ -108,7 +108,6 @@
                 <ServiceConfig DelayedAutoStart="yes" OnInstall="yes" OnReinstall ="yes" />
               </ServiceInstall>
               <ServiceControl Id="ServiceControl" Name="openITCOCKPITAgent" Start="install" Stop="both" Remove="uninstall" Wait="yes" />
-              
             </Component>
 
             <Component Id="ExampleConfig" Guid="D2C72D55-FA35-4A53-9EC3-55EEE9FD5A5A" KeyPath="yes" NeverOverwrite="yes" Permanent="yes">
