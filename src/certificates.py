@@ -126,10 +126,7 @@ class Certificates:
             return csr
         except:
             self.agent_log.error('An error occurred while creating a new Certificate Signing Request (CSR)')
-            traceback.print_exc()
-
-            if self.Config.stacktrace:
-                traceback.print_exc()
+            self.agent_log.stacktrace(traceback.format_exc())
 
             return False
 
@@ -295,8 +292,7 @@ class Certificates:
                 try:
                     urllib3.disable_warnings()
                 except:
-                    if self.Config.stacktrace:
-                        traceback.print_exc()
+                    self.agent_log.stacktrace(traceback.format_exc())
 
                 response = requests.post(
                     self.Config.config['oitc']['url'].strip() + '/agentconnector/certificate.json',
@@ -331,9 +327,7 @@ class Certificates:
 
             except:
                 self.agent_log.error('An error occurred during autossl certificate renewal process')
-
-                if self.Config.stacktrace:
-                    traceback.print_exc()
+                self.agent_log.stacktrace(traceback.format_exc())
 
             else:
                 self.agent_log.error(
@@ -376,7 +370,7 @@ class Certificates:
 
         except:
             self.agent_log.error("An error occurred while saving new agent certificate")
-            traceback.print_exc()
+            self.agent_log.stacktrace(traceback.format_exc())
 
             self.checksum_lock.release()
             return False
@@ -395,7 +389,7 @@ class Certificates:
 
         except:
             self.agent_log.error("An error occurred while saving new CA certificate")
-            traceback.print_exc()
+            self.agent_log.stacktrace(traceback.format_exc())
 
             self.checksum_lock.release()
             return False

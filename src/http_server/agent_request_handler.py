@@ -75,7 +75,7 @@ class AgentRequestHandler(BaseHTTPRequestHandler):
                             self.certificates.store_ca_file(jxdata['ca']):
                         update_sucessfully = True
             except:
-                traceback.print_exc()
+                self.agent_log.stacktrace(traceback.format_exc())
 
             if update_sucessfully is True:
                 response['success'] = True
@@ -105,9 +105,7 @@ class AgentRequestHandler(BaseHTTPRequestHandler):
                 self._process_get_request()
         except:
             self.agent_log.error('Error while processing GET request')
-            traceback.print_exc()
-            if self.config.stacktrace:
-                traceback.print_exc()
+            self.agent_log.stacktrace(traceback.format_exc())
 
     def do_POST(self):
         """
@@ -131,5 +129,4 @@ class AgentRequestHandler(BaseHTTPRequestHandler):
 
         except:
             self.agent_log.error('Error while processing POST request')
-            if self.config.stacktrace:
-                traceback.print_exc()
+            self.agent_log.stacktrace(traceback.format_exc())

@@ -66,9 +66,7 @@ class QemuChecks(Check):
 
         except:
             self.agent_log.error('An error occured while running the qemu status check!')
-
-            if self.Config.stacktrace:
-                traceback.print_exc()
+            self.agent_log.stacktrace(traceback.format_exc())
 
         if tmp_qemu_stats_result is not None and self.qemu_stats_data['returncode'] == 0:
             ordered_results = []

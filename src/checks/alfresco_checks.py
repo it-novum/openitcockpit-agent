@@ -72,16 +72,12 @@ class AlfrescoChecks(Check):
                 except subprocess.CalledProcessError as e:
                     alfrescostats = "An error occured during alfresco stats check while connecting to jmx!"
                     self.agent_log.error(alfrescostats)
-
-                    if self.Config.stacktrace:
-                        traceback.print_exc()
+                    self.agent_log.stacktrace(traceback.format_exc())
 
                 except:
                     alfrescostats = "An error occured during alfresco stats check!"
                     self.agent_log.error(alfrescostats)
-
-                    if self.Config.stacktrace:
-                        traceback.print_exc()
+                    self.agent_log.stacktrace(traceback.format_exc())
 
             else:
                 alfrescostats = 'JAVA instance not found! (' + self.Config.config['default']['alfresco-javapath'] + ')'
