@@ -136,14 +136,14 @@
     </Directory>
 
     <!-- Only create oitcAgentSvc on installation NOT on UPDATE or UNINSTALL -->
-    <CustomAction Id="InstallAgentService" Return="check" Impersonate="yes" Execute="deferred" Directory="INSTALLDIR"
+    <CustomAction Id="InstallAgentService" Return="check" Impersonate="no" Execute="deferred" Directory="INSTALLDIR"
         ExeCommand="&quot;[INSTALLDIR]openitcockpit-agent-python3.exe&quot; --startup delayed install" />
     <InstallExecuteSequence>
       <Custom Action="InstallAgentService" After="InstallFiles">NOT Installed AND NOT REMOVE</Custom>
     </InstallExecuteSequence>
 
     <!-- Only execute on REMOVE -->
-    <CustomAction Id="UnInstallAgentService" Return="check" Impersonate="yes" Execute="deferred" Directory="INSTALLDIR"
+    <CustomAction Id="UnInstallAgentService" Return="check" Impersonate="no" Execute="deferred" Directory="INSTALLDIR"
         ExeCommand="&quot;[INSTALLDIR]openitcockpit-agent-python3.exe&quot; remove" />
     <InstallExecuteSequence>
       <Custom Action="UnInstallAgentService" After="InstallInitialize">Installed AND REMOVE</Custom>
