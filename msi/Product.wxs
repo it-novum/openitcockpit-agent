@@ -103,6 +103,12 @@
               <File Id="oitcAgentExe"       Name="openitcockpit-agent-python3.exe" Source="..\executables\openitcockpit-agent-python3.exe">
                 <fire:FirewallException Id="FWX1" Name="openITCOCKPIT Agent" Scope="localSubnet"/>
               </File>
+              <ServiceInstall Id="ServiceInstaller" Account="LocalSystem" Description="!(loc.ServiceDescription)" DisplayName="openITCOCKPIT Monitoring Agent" ErrorControl="normal"
+                LoadOrderGroup="NetworkProvider" Name="openITCOCKPITAgent" Start="auto" Type="ownProcess" Vital="yes">
+                <ServiceConfig DelayedAutoStart="yes" OnInstall="yes" OnReinstall ="yes" />
+              </ServiceInstall>
+              <ServiceControl Id="ServiceControl" Name="openITCOCKPITAgent" Start="install" Stop="both" Remove="uninstall" Wait="yes" />
+              
             </Component>
 
             <Component Id="ExampleConfig" Guid="D2C72D55-FA35-4A53-9EC3-55EEE9FD5A5A" KeyPath="yes" NeverOverwrite="yes" Permanent="yes">
@@ -110,26 +116,6 @@
             </Component>
             <Component Id="ExampleCustomchecksConfig" Guid="5A4D7815-3952-4437-8AC0-CF8022704653" KeyPath="yes" NeverOverwrite="yes" Permanent="yes">
               <File Id="exampleAgentCustomchecksConfig" Name="customchecks.cnf" Source="..\example_customchecks.cnf" PatchIgnore="yes"/>
-            </Component>
-
-            <Component Id="ServiceComp" Guid="CA7377FB-31D3-40F7-9B74-68490D7285DA">
-              <Condition><![CDATA[(NETFRAMEWORK35 AND NOT WIX_IS_NETFRAMEWORK_45_OR_LATER_INSTALLED)]]></Condition>
-              <File Id="OitcAgentSvcExe"    Name="OitcAgentSvc.exe" Source="..\executables\OitcAgentSvc.exe" KeyPath="yes"  />
-
-              <ServiceInstall Id="ServiceInstaller" Account="LocalSystem" Description="!(loc.ServiceDescription)" DisplayName="oitcAgentSvc" ErrorControl="normal"
-                LoadOrderGroup="NetworkProvider" Name="oitcAgentSvc" Start="auto" Type="ownProcess" Vital="yes" />
-              <ServiceControl Id="ServiceControl" Name="oitcAgentSvc" Start="install" Stop="both" Remove="uninstall" Wait="yes" />
-
-            </Component>
-
-            <Component Id="ServiceComp4.5" Guid="6E1EEDCF-EC3E-41F9-9AEF-62D68B7F5E86">
-              <Condition><![CDATA[WIX_IS_NETFRAMEWORK_45_OR_LATER_INSTALLED]]></Condition>
-              <File Id="OitcAgentSvcExe4.5"    Name="OitcAgentSvc_4.5.exe" Source="..\executables\OitcAgentSvc_4.5.exe" KeyPath="yes"  />
-
-              <ServiceInstall Id="ServiceInstaller4.5" Account="LocalSystem" Description="!(loc.ServiceDescription)" DisplayName="oitcAgentSvc" ErrorControl="normal"
-                LoadOrderGroup="NetworkProvider" Name="oitcAgentSvc" Start="auto" Type="ownProcess" Vital="yes" />
-              <ServiceControl Id="ServiceControl4.5" Name="oitcAgentSvc" Start="install" Stop="both" Remove="uninstall" Wait="yes" />
-
             </Component>
 
           </Directory>
@@ -163,9 +149,6 @@
     </Feature>
 
     <Feature Id='ServiceAndRegister' Level='1'>
-      <ComponentRef Id='ServiceComp' />
-      <ComponentRef Id='ServiceComp4.5' />
-
       <ComponentRef Id="RegValInstallLocation_comp" />
     </Feature>
 

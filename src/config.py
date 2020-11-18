@@ -64,6 +64,10 @@ class Config:
 
         self.config = configparser.ConfigParser(allow_no_value=True)
 
+        operating_system = OperatingSystem()
+        if operating_system.isWindows():
+            self.configpath = self.get_etc_path() + 'config.cnf'
+
         for opt, arg in opts:
             if opt in ("-c", "--config"):
                 self.configpath = str(arg)
@@ -570,6 +574,9 @@ class Config:
                 etc_agent_path = value
             except:
                 print('Can not read path from registry. Using default one %s' % etc_agent_path)
+
+        if not etc_agent_path.endswith(os.path.sep):
+            etc_agent_path = etc_agent_path + os.path.sep
 
         self.etc_agent_path = etc_agent_path
         return self.etc_agent_path
