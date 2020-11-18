@@ -14,7 +14,7 @@
   <Product Id="*" Name="!(loc.ApplicationDisplayName)" Language="!(loc.Language)" Version="$(var.VersionNumber)"
     Manufacturer="!(loc.ManufacturerFullName)" UpgradeCode="$(var.UpgradeCode)" >
     
-    <Package Id="*" InstallerVersion="400" Compressed="yes" InstallScope="perMachine"
+    <Package Id="*" InstallerVersion="400" Compressed="yes" InstallScope="perMachine" InstallPrivileges="elevated"
       Description="!(loc.ProductDescription)" Comments="!(loc.Comments) $(var.VersionNumber)" />
 
     <!-- License agreement text: dummy. Real text is set in WXS file -->
@@ -112,13 +112,13 @@
               <File Id="exampleAgentCustomchecksConfig" Name="customchecks.cnf" Source="..\example_customchecks.cnf" PatchIgnore="yes"/>
             </Component>
 
-            <!--
-            <Component Id="ServiceComp" Guid="A3A1FAA3-2DB4-4919-9020-70A81E27141C" KeyPath="yes">
-              <ServiceInstall Id="ServiceInstaller" Account="LocalSystem" Description="!(loc.ServiceDescription)" DisplayName="openITCOCKPIT Monitoring Agent" ErrorControl="normal"
+
+            <Component Id="ServiceComp" Guid="A3A1FAA3-2DB4-4919-9020-70A81E27141C" KeyPath="yes" Directory="INSTALLDIR">
+              <ServiceInstall Id="ServiceInstaller" Account="NT AUTHORITY\LocalService" Description="!(loc.ServiceDescription)" DisplayName="openITCOCKPIT Monitoring Agent" ErrorControl="normal"
                 LoadOrderGroup="NetworkProvider" Name="openITCOCKPITAgent" Start="auto" Type="ownProcess" Vital="yes" />
               <ServiceControl Id="ServiceControl" Name="openITCOCKPITAgent" Start="install" Stop="both" Remove="uninstall" Wait="yes" />
             </Component>
-            -->
+
 
           </Directory>
         </Directory>
@@ -134,20 +134,6 @@
         </RegistryKey>
       </Component>
     </Directory>
-
-    <!-- Only create oitcAgentSvc on installation NOT on UPDATE or UNINSTALL -->
-    <CustomAction Id="InstallAgentService" Return="check" Impersonate="no" Execute="deferred" Directory="INSTALLDIR"
-        ExeCommand="&quot;[INSTALLDIR]openitcockpit-agent-python3.exe&quot; --startup delayed install" />
-    <InstallExecuteSequence>
-      <Custom Action="InstallAgentService" After="InstallFiles">NOT Installed AND NOT REMOVE</Custom>
-    </InstallExecuteSequence>
-
-    <!-- Only execute on REMOVE -->
-    <CustomAction Id="UnInstallAgentService" Return="check" Impersonate="no" Execute="deferred" Directory="INSTALLDIR"
-        ExeCommand="&quot;[INSTALLDIR]openitcockpit-agent-python3.exe&quot; remove" />
-    <InstallExecuteSequence>
-      <Custom Action="UnInstallAgentService" After="InstallInitialize">Installed AND REMOVE</Custom>
-    </InstallExecuteSequence>
 
     <Feature Id='MainDirAndExecutable' Level='1'>
       <ComponentRef Id="INSTALLDIR_comp" />
@@ -165,9 +151,8 @@
     </Feature>
 
     <Feature Id='ServiceAndRegister' Level='1'>
-      <!--
       <ComponentRef Id='ServiceComp' />
-      -->
+
       <ComponentRef Id="RegValInstallLocation_comp" />
     </Feature>
 
