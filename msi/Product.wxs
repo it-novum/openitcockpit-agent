@@ -105,7 +105,7 @@
               </File>
 
 
-              <ServiceInstall Id="openITCOCKPITAgent" Account="LocalSystem" Description="!(loc.ServiceDescription)" DisplayName="openITCOCKPIT Monitoring Agent" ErrorControl="normal"
+              <ServiceInstall Id="openITCOCKPITAgent" Account="LocalSystem" Description="!(loc.ServiceDescription)" DisplayName="openITCOCKPIT Monitoring Agent" ErrorControl="normal" Arguments="start"
                 LoadOrderGroup="NetworkProvider" Name="openITCOCKPITAgent" Start="auto" Type="ownProcess" Vital="yes" />
               <ServiceControl Id="ServiceControl" Name="openITCOCKPITAgent" Start="install" Stop="both" Remove="uninstall" Wait="yes" />
               <RegistryValue Root="HKLM" Key="SYSTEM\CurrentControlSet\Services\openITCOCKPITAgent" Type="integer" Name="DelayedAutostart" Value="1"/>
