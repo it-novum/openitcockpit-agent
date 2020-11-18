@@ -39,8 +39,7 @@ class PushClient:
             try:
                 urllib3.disable_warnings()
             except:
-                if self.Config.stacktrace:
-                    traceback.print_exc()
+                self.agent_log.stacktrace(traceback.format_exc())
 
             self.agent_log.verbose('Sending POST request with check results to %s' % self.Config.push_config['url'])
 
@@ -71,6 +70,4 @@ class PushClient:
         except Exception as e:
             self.agent_log.error('An error occurred while sending check results to openITCOCKPIT instance!')
             self.agent_log.error(str(e))
-
-            if self.Config.stacktrace:
-                traceback.print_exc()
+            self.agent_log.stacktrace(traceback.format_exc())

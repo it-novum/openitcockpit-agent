@@ -81,3 +81,7 @@ class AgentLog:
 
         self.ColorOutput.verbose(msg)
         self.logfile.debug(msg)
+
+    def stacktrace(self, msg):
+        self.ColorOutput.error(msg)
+        self.logfile.error(msg)

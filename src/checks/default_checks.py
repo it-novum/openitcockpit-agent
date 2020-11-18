@@ -88,9 +88,7 @@ class DefaultChecks(Check):
             uptime = int(time.time() - psutil.boot_time())
         except:
             self.agent_log.error("Could not get system uptime!")
-
-            if self.Config.stacktrace:
-                traceback.print_exc()
+            self.agent_log.stacktrace(traceback.format_exc())
 
         # totalCpus = psutil.cpu_count()
         # physicalCpus = psutil.cpu_count(logical=False)
@@ -119,9 +117,7 @@ class DefaultChecks(Check):
                     ))
             except:
                 self.agent_log.error("Could not get system disks!")
-
-                if self.Config.stacktrace:
-                    traceback.print_exc()
+                self.agent_log.stacktrace(traceback.format_exc())
 
         diskIO = None
         if hasattr(psutil, "disk_io_counters") and self.Config.config.getboolean('default', 'diskio'):
@@ -180,9 +176,7 @@ class DefaultChecks(Check):
                 self.cached_diskIO = diskIO
             except:
                 self.agent_log.error("Could not get disk io stats!")
-
-                if self.Config.stacktrace:
-                    traceback.print_exc()
+                self.agent_log.stacktrace(traceback.format_exc())
 
         netIO = None
         if hasattr(psutil, "net_io_counters") and self.Config.config.getboolean('default', 'netio'):
@@ -248,9 +242,7 @@ class DefaultChecks(Check):
                 self.cached_netIO = netIO
             except:
                 self.agent_log.error("Could not get network io stats!")
-
-                if self.Config.stacktrace:
-                    traceback.print_exc()
+                self.agent_log.stacktrace(traceback.format_exc())
 
         net_stats = None
         if hasattr(psutil, "net_if_stats") and self.Config.config.getboolean('default', 'netstats'):
@@ -258,9 +250,7 @@ class DefaultChecks(Check):
                 net_stats = {device: data._asdict() for device, data in psutil.net_if_stats().items()}
             except:
                 self.agent_log.error("Could not get network device stats!")
-
-                if self.Config.stacktrace:
-                    traceback.print_exc()
+                self.agent_log.stacktrace(traceback.format_exc())
 
         sensors = {}
         if self.Config.config.getboolean('default', 'sensorstats'):
@@ -276,9 +266,7 @@ class DefaultChecks(Check):
                     sensors['temperatures'] = {}
             except:
                 self.agent_log.error("Could not get temperature sensor data!")
-
-                if self.Config.stacktrace:
-                    traceback.print_exc()
+                self.agent_log.stacktrace(traceback.format_exc())
 
             try:
                 if hasattr(psutil, "sensors_fans") and self.operating_system.isWindows() is False:
@@ -291,9 +279,7 @@ class DefaultChecks(Check):
                     sensors['fans'] = {}
             except:
                 self.agent_log.error("Could not get fans sensor data!")
-
-                if self.Config.stacktrace:
-                    traceback.print_exc()
+                self.agent_log.stacktrace(traceback.format_exc())
 
             try:
                 if hasattr(psutil, "sensors_battery"):
@@ -306,9 +292,7 @@ class DefaultChecks(Check):
                     sensors['battery'] = {}
             except:
                 self.agent_log.error("Could not get battery sensor data!")
-
-                if self.Config.stacktrace:
-                    traceback.print_exc()
+                self.agent_log.stacktrace(traceback.format_exc())
 
         pids = psutil.pids()
 
@@ -320,9 +304,7 @@ class DefaultChecks(Check):
                 system_load_avg = os.getloadavg()
         except:
             self.agent_log.error("Could not get average system load!")
-
-            if self.Config.stacktrace:
-                traceback.print_exc()
+            self.agent_log.stacktrace(traceback.format_exc())
 
         users = []
         try:
@@ -330,9 +312,7 @@ class DefaultChecks(Check):
                 users = [user._asdict() for user in psutil.users()]
         except:
             self.agent_log.error("Could not get users, connected to the system!")
-
-            if self.Config.stacktrace:
-                traceback.print_exc()
+            self.agent_log.stacktrace(traceback.format_exc())
 
         # processes = [ psutil.Process(pid).as_dict() for pid in pids ]
         processes = []
@@ -349,18 +329,14 @@ class DefaultChecks(Check):
                         tmpProcessList.append(p)
                     except:
                         self.agent_log.verbose("'%s' Process is not allowing us to get the CPU usage!" % str(pid))
-
-                        if self.Config.stacktrace:
-                            traceback.print_exc()
+                        #self.agent_log.stacktrace(traceback.format_exc())
 
 
                 except psutil.NoSuchProcess:
                     continue
                 except:
                     self.agent_log.error("An error occured during process check!")
-
-                    if self.Config.stacktrace:
-                        traceback.print_exc()
+                    self.agent_log.stacktrace(traceback.format_exc())
 
         for p in tmpProcessList:
             try:
@@ -554,9 +530,7 @@ class DefaultChecks(Check):
                 continue
             except:
                 self.agent_log.error("An error occured during process check!")
-
-                if self.Config.stacktrace:
-                    traceback.print_exc()
+                self.agent_log.stacktrace(traceback.format_exc())
 
         windows_services = []
         windows_eventlog = {}
@@ -567,9 +541,7 @@ class DefaultChecks(Check):
                         windows_services.append(win_process.as_dict())
                 except:
                     self.agent_log.error("An error occured during windows services check!")
-
-                    if self.Config.stacktrace:
-                        traceback.print_exc()
+                    self.agent_log.stacktrace(traceback.format_exc())
 
             if self.Config.config.getboolean('default', 'wineventlog'):
                 try:
@@ -631,15 +603,11 @@ class DefaultChecks(Check):
                             self.agent_log.error(
                                 "An error occured during windows eventlog check with log type %s!" % (logType))
                             self.agent_log.error(str(e))
-
-                            if self.Config.stacktrace:
-                                traceback.print_exc()
+                            self.agent_log.stacktrace(traceback.format_exc())
 
                 except:
                     self.agent_log.error("An error occured during windows eventlog check!")
-
-                    if self.Config.stacktrace:
-                        traceback.print_exc()
+                    self.agent_log.stacktrace(traceback.format_exc())
 
         try:
             agent = {
