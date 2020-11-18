@@ -97,7 +97,7 @@ pip install -r requirements.txt
 
 3. Install dependencies on Windows
 ```
-pip install -r requirements.txt servicemanager pywin32==226
+pip install -r requirements.txt pywin32
 ```
 
 4. Copy example config

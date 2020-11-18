@@ -7,7 +7,10 @@ class LinuxService(AgentService):
         self.init_service()
         signal.signal(signal.SIGINT, self.main_thread.signal_handler)  # ^C
         signal.signal(signal.SIGTERM, self.main_thread.signal_handler)  # systemctl stop openitcockpit-agent
-        signal.signal(signal.SIGHUP, self.main_thread.signal_handler)  # systemctl reload openitcockpit-agent
+
+        # Check for SIGHUP so we can run the Linux Version on Windows inside an IDE
+        if hasattr(signal, 'SIGHUP'):
+            signal.signal(signal.SIGHUP, self.main_thread.signal_handler)  # systemctl reload openitcockpit-agent
 
         # Endless loop until we get a signal to stop caught by main_thread.signal_handler
         while self.main_thread.loop is True:
