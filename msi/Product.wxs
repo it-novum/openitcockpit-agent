@@ -124,20 +124,6 @@
         </Directory>
       </Directory>
 
-      <!-- Only create oitcAgentSvc on installation NOT on UPDATE or UNINSTALL -->
-      <CustomAction Id="InstallAgentService" Return="check" Impersonate="yes" Execute="deferred" Directory="INSTALLDIR"
-        ExeCommand="&quot;[INSTALLDIR]openitcockpit-agent-python3.exe&quot; --startup delayed install" />
-      <InstallExecuteSequence>
-        <Custom Action="InstallAgentService" After="InstallFiles">NOT Installed AND NOT REMOVE</Custom>
-      </InstallExecuteSequence>
-
-      <!-- Only execute on REMOVE -->
-      <CustomAction Id="UnInstallAgentService" Return="check" Impersonate="yes" Execute="deferred" Directory="INSTALLDIR"
-        ExeCommand="&quot;[INSTALLDIR]openitcockpit-agent-python3.exe&quot; remove" />
-      <InstallExecuteSequence>
-        <Custom Action="UnInstallAgentService" After="InstallInitialize">Installed AND REMOVE</Custom>
-      </InstallExecuteSequence>
-
       <!-- Registry entries -->
       <Component Id="RegValInstallLocation_comp" Guid="65992395-B61F-42D6-8684-E5DED99EF7A6">
         <!-- Do NOT use the application's default registry key here, because THIS key will be removed on uninstall
@@ -148,6 +134,20 @@
         </RegistryKey>
       </Component>
     </Directory>
+
+    <!-- Only create oitcAgentSvc on installation NOT on UPDATE or UNINSTALL -->
+    <CustomAction Id="InstallAgentService" Return="check" Impersonate="yes" Execute="deferred" Directory="INSTALLDIR"
+        ExeCommand="&quot;[INSTALLDIR]openitcockpit-agent-python3.exe&quot; --startup delayed install" />
+    <InstallExecuteSequence>
+      <Custom Action="InstallAgentService" After="InstallFiles">NOT Installed AND NOT REMOVE</Custom>
+    </InstallExecuteSequence>
+
+    <!-- Only execute on REMOVE -->
+    <CustomAction Id="UnInstallAgentService" Return="check" Impersonate="yes" Execute="deferred" Directory="INSTALLDIR"
+        ExeCommand="&quot;[INSTALLDIR]openitcockpit-agent-python3.exe&quot; remove" />
+    <InstallExecuteSequence>
+      <Custom Action="UnInstallAgentService" After="InstallInitialize">Installed AND REMOVE</Custom>
+    </InstallExecuteSequence>
 
     <Feature Id='MainDirAndExecutable' Level='1'>
       <ComponentRef Id="INSTALLDIR_comp" />
