@@ -113,7 +113,7 @@
             </Component>
 
 
-            <Component Id="ServiceComp" Guid="A3A1FAA3-2DB4-4919-9020-70A81E27141C" KeyPath="yes" Directory="INSTALLDIR">
+            <Component Id="ServiceComp" Guid="A3A1FAA3-2DB4-4919-9020-70A81E27141C" KeyPath="yes">
               <ServiceInstall Id="ServiceInstaller" Account="NT AUTHORITY\LocalService" Description="!(loc.ServiceDescription)" DisplayName="openITCOCKPIT Monitoring Agent" ErrorControl="normal"
                 LoadOrderGroup="NetworkProvider" Name="openITCOCKPITAgent" Start="auto" Type="ownProcess" Vital="yes" />
               <ServiceControl Id="ServiceControl" Name="openITCOCKPITAgent" Start="install" Stop="both" Remove="uninstall" Wait="yes" />
