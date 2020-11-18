@@ -1,5 +1,5 @@
 <?xml version='1.0' encoding='UTF-8'?>
-<Wix xmlns='http://schemas.microsoft.com/wix/2006/wi' xmlns:netfx="http://schemas.microsoft.com/wix/NetFxExtension" xmlns:fire="http://schemas.microsoft.com/wix/FirewallExtension">
+<Wix xmlns='http://schemas.microsoft.com/wix/2006/wi' xmlns:netfx="http://schemas.microsoft.com/wix/NetFxExtension" xmlns:fire="http://schemas.microsoft.com/wix/FirewallExtension" xmlns:util="http://schemas.microsoft.com/wix/WixUtilExtension">
 
   <!--
     Many thanks to:
@@ -105,7 +105,7 @@
               </File>
               <ServiceInstall Id="ServiceInstaller" Account="LocalSystem" Description="!(loc.ServiceDescription)" DisplayName="openITCOCKPIT Monitoring Agent" ErrorControl="normal"
                 LoadOrderGroup="NetworkProvider" Name="openITCOCKPITAgent" Start="auto" Type="ownProcess" Vital="yes">
-                <ServiceConfig DelayedAutoStart="yes" OnInstall="yes" OnReinstall ="yes" />
+                <util:ServiceConfig DelayedAutoStart="yes" OnInstall="yes" OnReinstall ="yes" />
               </ServiceInstall>
               <ServiceControl Id="ServiceControl" Name="openITCOCKPITAgent" Start="install" Stop="both" Remove="uninstall" Wait="yes" />
             </Component>
