@@ -11,8 +11,8 @@ import win32timezone
 
 class OITCService(win32serviceutil.ServiceFramework, AgentService):
     _svc_name_ = "openITCOCKPITAgent"
-    _svc_display_name_ = "openITCOCKPIT Agent"
-    _svc_description_ = ""
+    _svc_display_name_ = "openITCOCKPIT Monitoring Agent"
+    _svc_description_ = "openITCOCKPIT Monitoring Agent and remote plugin executor."
 
     def __init__(self, args):
         win32serviceutil.ServiceFramework.__init__(self, args)
