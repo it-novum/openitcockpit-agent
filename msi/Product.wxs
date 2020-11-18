@@ -112,11 +112,10 @@
               <File Id="exampleAgentCustomchecksConfig" Name="customchecks.cnf" Source="..\example_customchecks.cnf" PatchIgnore="yes"/>
             </Component>
 
-            <Component Id="ServiceComp" Guid="CA7377FB-31D3-40F7-9B74-68490D7285DA">
-              <ServiceInstall Id="openITCOCKPITAgent" Account="LocalSystem" Description="!(loc.ServiceDescription)" DisplayName="openITCOCKPIT Monitoring Agent" ErrorControl="normal"
+            <Component Id="ServiceComp" Guid="A3A1FAA3-2DB4-4919-9020-70A81E27141C">
+              <ServiceInstall Id="ServiceInstaller" Account="LocalSystem" Description="!(loc.ServiceDescription)" DisplayName="openITCOCKPIT Monitoring Agent" ErrorControl="normal"
                 LoadOrderGroup="NetworkProvider" Name="openITCOCKPITAgent" Start="auto" Type="ownProcess" Vital="yes" />
               <ServiceControl Id="ServiceControl" Name="openITCOCKPITAgent" Start="install" Stop="both" Remove="uninstall" Wait="yes" />
-              <RegistryValue Root="HKLM" Key="SYSTEM\CurrentControlSet\Services\openITCOCKPITAgent" Type="integer" Name="DelayedAutostart" Value="1"/>
             </Component>
 
           </Directory>
