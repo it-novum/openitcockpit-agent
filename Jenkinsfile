@@ -28,9 +28,9 @@ pipeline {
                 sh 'mkdir -p ./release'
                 
                 sh 'pip3 install -r requirements.txt'
-                sh 'pyinstaller src/agent_nix.py --onefile'
+                sh 'pyinstaller src/agent_nix.py -n openitcockpit-agent-python3 --onefile'
                 
-                sh 'mv ./dist/agent ./public/binaries/openitcockpit-agent-python3.linux.bin'
+                sh 'mv ./dist/openitcockpit-agent-python3 ./public/binaries/openitcockpit-agent-python3.linux.bin'
                 sh 'chmod +x ./public/binaries/openitcockpit-agent-python3.linux.bin'
                 sh '/bin/cp -f ./public/binaries/openitcockpit-agent-python3.linux.bin executables'
                 sh '/bin/bash -c "source /etc/profile.d/rvm.sh && rvm use 2.7 --default && ./packages/scripts/build_linux_ci.sh"'
