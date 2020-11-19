@@ -99,12 +99,6 @@
               <!--<RemoveFile Id="RemoveFilesFromAppDirectory" Name="*.*" On="uninstall" />-->
             </Component>
 
-            <Component Id="MainExecutable" Guid="EDD45F38-6647-4132-818F-D4D4C6F5535F" KeyPath="yes">
-              <File Id="oitcAgentExe"       Name="openitcockpit-agent-python3.exe" Source="..\executables\openitcockpit-agent-python3.exe">
-                <fire:FirewallException Id="FWX1" Name="openITCOCKPIT Agent" Scope="localSubnet"/>
-              </File>
-            </Component>
-
             <Component Id="ExampleConfig" Guid="D2C72D55-FA35-4A53-9EC3-55EEE9FD5A5A" KeyPath="yes" NeverOverwrite="yes" Permanent="yes">
               <File Id="exampleAgentConfig" Name="config.cnf" Source="..\example_config.cnf" Vital="yes" PatchIgnore="yes"/>
             </Component>
@@ -112,11 +106,30 @@
               <File Id="exampleAgentCustomchecksConfig" Name="customchecks.cnf" Source="..\example_customchecks.cnf" PatchIgnore="yes"/>
             </Component>
 
+           <Component Id="MainExecutable" Guid="EDD45F38-6647-4132-818F-D4D4C6F5535F" KeyPath="yes">
+              <File Id="oitcAgentExe"       Name="openitcockpit-agent-python3.exe" Source="..\executables\openitcockpit-agent-python3.exe">
+                <fire:FirewallException Id="FWX1" Name="openITCOCKPIT Agent" Scope="localSubnet"/>
+              </File>
 
-            <Component Id="ServiceComp" Guid="A3A1FAA3-2DB4-4919-9020-70A81E27141C" KeyPath="yes">
-              <ServiceInstall Id="ServiceInstaller" Account="NT AUTHORITY\LocalService" Description="!(loc.ServiceDescription)" DisplayName="openITCOCKPIT Monitoring Agent" ErrorControl="normal"
-                LoadOrderGroup="NetworkProvider" Name="openITCOCKPITAgent" Start="auto" Type="ownProcess" Vital="yes" />
-              <ServiceControl Id="ServiceControl" Name="openITCOCKPITAgent" Start="install" Stop="both" Remove="uninstall" Wait="yes" />
+              <ServiceInstall
+                Id="openITCOCKPITAgentSvc"
+                Type="ownProcess"
+                Vital="yes"
+                Name="openITCOCKPITAgent"
+                DisplayName="openITCOCKPIT Monitoring Agent"
+                Description="!(loc.ServiceDescription)"
+                Start="auto"
+                Account="[SERVICEACCOUNT]"
+                Password="[SERVICEPASSWORD]"
+                ErrorControl="normal"
+                Interactive="no"/>
+                <ServiceControl Id="StartOpenITCOCKPITAgentSvc"
+                    Start="install"
+                    Stop="both"
+                    Remove="uninstall"
+                    Name="openITCOCKPITAgent"
+                    Wait="yes" />
+
             </Component>
 
 
@@ -137,7 +150,6 @@
 
     <Feature Id='MainDirAndExecutable' Level='1'>
       <ComponentRef Id="INSTALLDIR_comp" />
-      <ComponentRef Id='MainExecutable' />
     </Feature>
 
     <Feature Id='MainConfig' Level='1'>
@@ -151,7 +163,7 @@
     </Feature>
 
     <Feature Id='ServiceAndRegister' Level='1'>
-      <ComponentRef Id='ServiceComp' />
+      <ComponentRef Id='MainExecutable' />
 
       <ComponentRef Id="RegValInstallLocation_comp" />
     </Feature>
