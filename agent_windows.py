@@ -1,3 +1,9 @@
+# This is the entry point of the openITCOCKPIT Monitoring Agent on Windows Systems
+# and if the agent is running as an Windows Service.
+#
+# If you want to run the agent on Linux or inside of an IDE like VS Code or PyCharm use the agent_nix.py file
+# EVEN if you are using Windows
+
 from src.agent_generic import AgentService
 
 import servicemanager

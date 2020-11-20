@@ -1,3 +1,9 @@
+# This is the entry point of the openITCOCKPIT Monitoring Agent on Linux and macOS
+#
+# If you want to run the agent on Linux or inside of an IDE like VS Code or PyCharm use the agent_nix.py file
+# EVEN if you are using Windows.
+# DO NOT USE agent_windows.py in your IDE, it's not made for it!
+
 import signal
 import time
 from src.agent_generic import AgentService
