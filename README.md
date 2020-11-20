@@ -15,19 +15,18 @@ Customer documentation: [https://docs.it-novum.com/display/ODE/openITCOCKPIT+Age
 
 ## Installation
 
-## Productive installation
+### Supported and tested operating systems
+- Windows 8.1, Windows 10, Windows Server 2016, Windows Server 2019 (x64)
+- macOS 10.14 (Mojave), 10.15 (Catalina) (x64)
+- Ubuntu 14, 16, 18, 20 (x64)
+- Debian 8, 9, 10 (x64)
+- openSUSE Leap 42.3 (x64)
+- CentOS 7 (x64)
+- Arch Linux (2019.08.01) (x64)
 
-Require glibc >= 2.17
+On Linux based systems the openITCOCKPIT Monitoring Agent requires `glibc >= 2.17`
 
-Supported & tested systems:
-- macOS 10.14 (Mojave), 10.15 (Catalina)
-- Ubuntu 14, 16, 18, 20
-- Debian 8, 9, 10
-- openSUSE Leap 42.3
-- CentOS 7
-- Arch Linux (2019.08.01)
-- Windows 8.1, Windows 10, Windows Server 2016, Windows Server 2019
-
+Your system or architecture is not in the list? Please see [Build instructions](#Build-instructions) to build the agent for your system.
 
 ### Packages
 
@@ -53,22 +52,29 @@ Uninstall:  `rpm -e openitcockpit-agent`
 
 #### macOS
 
+##### GUI
 Install with double clicking the pkg installer file.
+ADD SCREENSHOT
 
-Install `sudo installer -pkg openitcockpit-agent-1.*.pkg -target / -verbose`
+##### CLI
+Install `sudo installer -pkg openitcockpit-agent*.pkg -target / -verbose`
 
 Uninstall `sudo installer -pkg openitcockpit-agent-uninstaller*.pkg -target / -verbose`
 
 #### Windows
 
+##### GUI
+ADD SCREENSHOT
 Install with double clicking the msi installer file.
 
-Automated install:  `msiexec.exe /i openitcockpit-agent.msi INSTALLDIR="C:\Program Files\it-novum\openitcockpit-agent\" /qn`
+##### CLI
+Automated install:  `msiexec.exe /i openitcockpit-agent*.msi INSTALLDIR="C:\Program Files\it-novum\openitcockpit-agent\" /qn`
 
 Uninstall using the windows built-in graphical software manager.
 
 
 ## Developer installation
+do you want to modify the source code of the openITCOCKPIT Monitoring Agent? If yes follow this guide to getting started. 
 
 1. Clone this repository
 ```
@@ -366,6 +372,9 @@ JSON Example (file: new_config.json) for update mode and http://address:port/con
 ---
 
 ## Build instructions
+Do you want to build your own executable of the openITCOCKPIT Agent (for an ARM based architecture for example),
+or run the python code itself?
+If yes, please follow the instructions
 
 Clone this repository to your filesystem and run the following commands in the repository folder
 
@@ -419,6 +428,17 @@ python.exe -m venv ./python3-windows-env
 mv .\dist\openitcockpit-agent-python3.exe executables\openitcockpit-agent-python3.exe
 ```
 
+#### Run Windows binary
+```
+.\executables\openitcockpit-agent-python3.exe debug
+```
+
+##### Run Windows binary as service
+```
+.\executables\openitcockpit-agent-python3.exe --startup delayed install
+```
+
+
 ### Build macOS binary
 
 Make sure python3 is installed
@@ -435,12 +455,20 @@ pip3 install -r requirements.txt
 pyinstaller src/agent_nix.py -n openitcockpit-agent-python3 --onefile
 ./python3-macos-env/bin/deactivate
 
-
-
-
 mv ./dist/openitcockpit-agent-python3 ./executables/openitcockpit-agent-python3.macos.bin
 ```
 
+### Run from python source code (Linux and macOS)
+```
+pip install -r requirements.txt
+python src/agent_nix.py -c <FULL_PATH_TO>/config.cnf
+```
+
+### Run from python source code (Windows)
+```
+pip install -r requirements.txt pywin32
+python src/agent_nix.py -c <FULL_PATH_TO>/config.cnf
+```
 
 #### Test packages
 
