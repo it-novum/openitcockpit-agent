@@ -354,7 +354,7 @@ cd openitcockpit-agent
 ```
 yum install python38-devel python38-pip libffi-devel gcc glibc ruby-devel make rpm-build rubygems rpm bsdtar
 python3 -m venv ./python3-centos-env
-./python3-centos-env/bin/activate
+source ./python3-centos-env/bin/activate
 pip3 install -r requirements.txt
 pyinstaller src/agent_nix.py -n openitcockpit-agent-python3 --onefile
 ./python3-centos-env/bin/deactivate
@@ -362,6 +362,20 @@ pyinstaller src/agent_nix.py -n openitcockpit-agent-python3 --onefile
 mv ./dist/openitcockpit-agent-python3 ./executables/openitcockpit-agent-python3.linux.bin
 ```
 
+### Build Linux binary on Ubuntu 20.04
+
+```
+yum install python38-devel python38-pip libffi-devel gcc glibc ruby-devel make rpm-build rubygems rpm bsdtar
+apt-get install python3 python3-venv python3-pip python3-dev gcc build-essential
+
+python3 -m venv ./python3-ubuntu-env
+source ./python3-ubuntu-env/bin/activate
+pip3 install -r requirements.txt
+pyinstaller src/agent_nix.py -n openitcockpit-agent-python3 --onefile
+./python3-ubuntu-env/bin/deactivate
+
+mv ./dist/openitcockpit-agent-python3 ./executables/openitcockpit-agent-python3.linux.bin
+```
 
 ### Linux ARM64 on Debian 9 (Beta)
 

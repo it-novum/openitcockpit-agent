@@ -81,7 +81,7 @@ class AgentService:
             self.thread_factory.shutdown_all_threads()
 
             # Set main_thread.join_threads back to False
-            # so we are not in an endloess loop of spawning and joining threads
+            # so we are not in an endless loop of spawning and joining threads
             self.main_thread.disable_reload_trigger()
 
             # All threads are stopped.
