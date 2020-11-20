@@ -160,6 +160,80 @@ pipeline {
                 sh 'rsync -avz -e "ssh -o StrictHostKeyChecking=no -i /var/lib/jenkins/.ssh/id_rsa" --progress release/* oitc@172.16.101.32:/var/www/openitcockpit_io/files/openitcockpit-agent-nightly-2.0'
             }
         }
+        stage('Build agent macOS packages') {
+            when {
+                beforeAgent true
+                anyOf{
+                    changeRequest target: 'master'
+                    branch 'master'
+                    changeRequest target: 'development'
+                    branch 'development'
+                }
+            }
+            environment {
+                VERSION = """${sh(
+                    returnStdout: true,
+                    script: 'cat version | xargs | tr -d \'\n\''
+                )}"""
+            }
+            steps {
+                sh """
+                    sed -i -e 's|/etc/openitcockpit-agent/customchecks.cnf|/Applications/openitcockpit-agent/customchecks.cnf|g' example_config.cnf
+                   """
+
+                sh 'ssh -o StrictHostKeyChecking=no -i /var/lib/jenkins/.ssh/id_rsa admin@itsm-mojave.oitc.itn "rm -rf openitcockpit-agent-packages"'
+                sh 'ssh -o StrictHostKeyChecking=no -i /var/lib/jenkins/.ssh/id_rsa admin@itsm-mojave.oitc.itn "mkdir -p openitcockpit-agent-packages/openitcockpit-agent"'
+                sh 'scp -o StrictHostKeyChecking=no -i /var/lib/jenkins/.ssh/id_rsa -r ./ admin@itsm-mojave.oitc.itn:openitcockpit-agent-packages/openitcockpit-agent'
+                sh 'ssh -o StrictHostKeyChecking=no -i /var/lib/jenkins/.ssh/id_rsa admin@itsm-mojave.oitc.itn "cd openitcockpit-agent-packages/openitcockpit-agent; /usr/local/bin/python3 -m venv ./python3-macos-env; source ./python3-macos-env/bin/activate; rm ./python3-macos-env/bin/python3; cp /usr/local/bin/python3 ./python3-macos-env/bin; ./python3-macos-env/bin/python3 -m pip install -r requirements.txt pyinstaller; ./python3-macos-env/bin/python3 ./python3-macos-env/bin/pyinstaller oitc_agent.py --onefile; deactivate"'
+                sh 'ssh -o StrictHostKeyChecking=no -i /var/lib/jenkins/.ssh/id_rsa admin@itsm-mojave.oitc.itn "cd openitcockpit-agent-packages/openitcockpit-agent; mv ./dist/oitc_agent ./executables/openitcockpit-agent-python3.macos.bin; chmod +x ./executables/openitcockpit-agent-python3.macos.bin; rm -r ./python3-macos-env ./dist ./build ./__pycache__ oitc_agent.spec; cd ..; ./openitcockpit-agent/packages/scripts/build_macos.sh; rm -r package_osx package_osx_uninstaller"'
+                sh 'mkdir -p ./release'
+                sh 'scp -o StrictHostKeyChecking=no -i /var/lib/jenkins/.ssh/id_rsa admin@itsm-mojave.oitc.itn:openitcockpit-agent-packages/openitcockpit-agent-${VERSION}.pkg ./release'
+                sh 'scp -o StrictHostKeyChecking=no -i /var/lib/jenkins/.ssh/id_rsa admin@itsm-mojave.oitc.itn:openitcockpit-agent-packages/openitcockpit-agent-uninstaller-${VERSION}.pkg ./release'
+                sh 'ssh -o StrictHostKeyChecking=no -i /var/lib/jenkins/.ssh/id_rsa admin@itsm-mojave.oitc.itn "rm -rf openitcockpit-agent-packages"'
+                archiveArtifacts artifacts: 'release/**', fingerprint: true
+                script {
+                    stash includes: 'release/**', name: 'macosrelease'
+                }
+            }
+        }
+        stage('Publish macOS package - Stable') {
+            when {
+                beforeAgent true
+                branch 'master'
+            }
+            environment {
+                VERSION = """${sh(
+                    returnStdout: true,
+                    script: 'cat version | xargs | tr -d \'\n\''
+                )}"""
+            }
+            steps {
+                script {
+                    unstash 'macosrelease'
+                }
+                sh 'ssh -o StrictHostKeyChecking=no -i /var/lib/jenkins/.ssh/id_rsa oitc@172.16.101.32 "mkdir -p /var/www/openitcockpit_io/files/openitcockpit-agent"'
+                sh 'rsync -avz -e "ssh -o StrictHostKeyChecking=no -i /var/lib/jenkins/.ssh/id_rsa" --progress release/* oitc@172.16.101.32:/var/www/openitcockpit_io/files/openitcockpit-agent'
+            }
+        }
+        stage('Publish macOS package - Nightly') {
+            when {
+                beforeAgent true
+                branch 'development'
+            }
+            environment {
+                VERSION = """${sh(
+                    returnStdout: true,
+                    script: 'cat version | xargs | tr -d \'\n\''
+                )}"""
+            }
+            steps {
+                script {
+                    unstash 'macosrelease'
+                }
+                sh 'ssh -o StrictHostKeyChecking=no -i /var/lib/jenkins/.ssh/id_rsa oitc@172.16.101.32 "mkdir -p /var/www/openitcockpit_io/files/openitcockpit-agent-nightly"'
+                sh 'rsync -avz -e "ssh -o StrictHostKeyChecking=no -i /var/lib/jenkins/.ssh/id_rsa" --progress release/* oitc@172.16.101.32:/var/www/openitcockpit_io/files/openitcockpit-agent-nightly'
+            }
+        }
         stage('Nothing done') {
             when {
                 beforeAgent true
