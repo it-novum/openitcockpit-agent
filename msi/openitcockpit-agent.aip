@@ -18,7 +18,7 @@
     <ROW Property="DialogBitmap" Value="dialog" MultiBuildValue="DefaultBuild:Dialog.bmp" Type="1" MsiKey="DialogBitmap"/>
     <ROW Property="Manufacturer" Value="it-novum"/>
     <ROW Property="ProductCode" Value="1031:{D055B6F9-D527-4772-B38E-82594C8ECC02} 1033:{D055B6F9-D527-4772-B38E-82594C8ECC02} " Type="16"/>
-    <ROW Property="ProductLanguage" Value="1033"/>
+    <ROW Property="ProductLanguage" Value="1031"/>
     <ROW Property="ProductName" Value="openitcockpit-agent"/>
     <ROW Property="ProductVersion" Value="2.0.0" Type="32"/>
     <ROW Property="SecureCustomProperties" Value="OLDPRODUCTS;AI_NEWERPRODUCTFOUND;UPGRADE_1"/>
