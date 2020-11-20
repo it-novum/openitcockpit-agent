@@ -30,7 +30,6 @@ class LinuxService(AgentService):
             # Do not use signal.pause() because it will block the internen reload which does not send any kernel signals
             # This the win32event.WaitForSingleObject(self.hWaitStop, 5000) way
             signal.sigtimedwait(sigset, 5)
-            print("LOOP")
 
         self.cleanup()
 
