@@ -68,23 +68,6 @@ Uninstall
 sudo pacman -R openitcockpit-agent
 ```
 
-#### macOS
-
-##### GUI
-Install with double clicking the pkg installer file.
-ADD SCREENSHOT
-
-##### CLI
-Install
-```
-sudo installer -pkg openitcockpit-agent*.pkg -target / -verbose
-```
-
-Uninstall
-```
-sudo installer -pkg openitcockpit-agent-uninstaller*.pkg -target / -verbose
-```
-
 #### Windows
 
 ##### GUI
@@ -100,6 +83,23 @@ msiexec.exe /i openitcockpit-agent*.msi INSTALLDIR="C:\Program Files\it-novum\op
 
 Uninstall using the windows built-in graphical software manager.
 
+#### macOS
+
+##### GUI
+Install with double clicking the pkg installer file.
+
+![openITCOCKPIT Monitoring Agent PKG installer](images/pkg_install_macos.png)
+
+##### CLI
+Install
+```
+sudo installer -pkg openitcockpit-agent*.pkg -target / -verbose
+```
+
+Uninstall
+```
+sudo installer -pkg openitcockpit-agent-uninstaller*.pkg -target / -verbose
+```
 
 ## Developer installation
 do you want to modify the source code of the openITCOCKPIT Monitoring Agent? If yes follow this guide to getting started. 

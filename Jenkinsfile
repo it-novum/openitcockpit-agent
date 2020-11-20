@@ -219,9 +219,7 @@ pipeline {
         //}
         stage('Publish macOS package - Nightly 2.0') {
             when {
-                //beforeAgent true
-                //branch 'development'
-                changeRequest target: '2.0_build'
+                beforeAgent true
                 branch '2.0_build'
             }
             environment {
