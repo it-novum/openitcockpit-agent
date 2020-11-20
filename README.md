@@ -34,21 +34,39 @@ Please visit the [release page](https://github.com/it-novum/openitcockpit-agent/
 
 #### Debian / Ubuntu
 
-Install: `sudo apt install ./openitcockpit-agent_*_amd64.deb`
+Install
+```
+sudo apt install ./openitcockpit-agent_*_amd64.deb
+```
 
-Uninstall: `sudo apt remove openitcockpit-agent`
+Uninstall
+```
+sudo apt remove openitcockpit-agent
+```
 
-#### Arch
+#### Red Hat Linux / CentOS / openSUSE
 
-Install: `sudo pacman -U openitcockpit-agent-*-x86_64.pkg.tar.xz`
+Install
+```
+rpm -i openitcockpit-agent-*.x86_64.rpm
+```
 
-Uninstall: `sudo pacman -R openitcockpit-agent`
+Uninstall:
+```
+rpm -e openitcockpit-agent
+```
 
-#### CentOS / openSUSE
+#### Arch Linux 
 
-Install:  `rpm -i openitcockpit-agent-*.x86_64.rpm`
+Install
+```
+sudo pacman -U openitcockpit-agent-*-x86_64.pkg.tar.xz
+```
 
-Uninstall:  `rpm -e openitcockpit-agent`
+Uninstall
+```
+sudo pacman -R openitcockpit-agent
+```
 
 #### macOS
 
@@ -57,18 +75,28 @@ Install with double clicking the pkg installer file.
 ADD SCREENSHOT
 
 ##### CLI
-Install `sudo installer -pkg openitcockpit-agent*.pkg -target / -verbose`
+Install
+```
+sudo installer -pkg openitcockpit-agent*.pkg -target / -verbose
+```
 
-Uninstall `sudo installer -pkg openitcockpit-agent-uninstaller*.pkg -target / -verbose`
+Uninstall
+```
+sudo installer -pkg openitcockpit-agent-uninstaller*.pkg -target / -verbose
+```
 
 #### Windows
 
 ##### GUI
-ADD SCREENSHOT
 Install with double clicking the msi installer file.
 
+![openITCOCKPIT Monitoring Agent MSI installer](images/msi_install.png)
+
 ##### CLI
-Automated install:  `msiexec.exe /i openitcockpit-agent*.msi INSTALLDIR="C:\Program Files\it-novum\openitcockpit-agent\" /qn`
+Automated install:
+```
+msiexec.exe /i openitcockpit-agent*.msi INSTALLDIR="C:\Program Files\it-novum\openitcockpit-agent\" /qn
+```
 
 Uninstall using the windows built-in graphical software manager.
 
