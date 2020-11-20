@@ -21,13 +21,13 @@ keyfile =
 try-autossl = true
 
 # File paths used for autossl (default: /etc/openitcockpit-agent/... or C:\Program Files\openitcockpit-agent\...):
-# Example: /etc/openitcockpit/agent.csr
+# Example: /etc/openitcockpit-agent/agent.csr
 autossl-csr-file = 
-# Example: /etc/openitcockpit/agent.crt
+# Example: /etc/openitcockpit-agent/agent.crt
 autossl-crt-file = 
-# Example: /etc/openitcockpit/agent.key
+# Example: /etc/openitcockpit-agent/agent.key
 autossl-key-file = 
-# Example: /etc/openitcockpit/server_ca.crt
+# Example: /etc/openitcockpit-agent/server_ca.crt
 autossl-ca-file = 
 
 # Print most messages

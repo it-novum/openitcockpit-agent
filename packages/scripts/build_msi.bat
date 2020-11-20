@@ -1,5 +1,4 @@
 cd openitcockpit-agent
 set /p version=<version
-cd msi
-"C:/Program Files (x86)/WiX Toolset v3.11/bin/candle.exe" -v -arch x64 Product.wxs WixUi_Main.wxs LicenseAgreementDlg_HK.wxs -dVersionNumber="%version%" -ext WixNetFxExtension -ext WixFirewallExtension
-"C:/Program Files (x86)/WiX Toolset v3.11/bin/light.exe" Product.wixobj WixUi_Main.wixobj LicenseAgreementDlg_HK.wixobj -o openitcockpit-agent.msi -loc Product_en-us.wxl -ext WixUIExtension -ext WixNetFxExtension -ext WixFirewallExtension -sw1076
+"C:\Program Files (x86)\Caphyon\Advanced Installer 17.6\bin\x86\advinst.exe" /edit "C:\Users\kress\openitcockpit-agent-2.0\msi\openitcockpit-agent.aip" \SetVersion "%version%"
+"C:\Program Files (x86)\Caphyon\Advanced Installer 17.6\bin\x86\advinst.exe" /build "C:\Users\kress\openitcockpit-agent-2.0\msi\openitcockpit-agent.aip"

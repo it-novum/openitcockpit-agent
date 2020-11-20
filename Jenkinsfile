@@ -106,17 +106,16 @@ pipeline {
             }
             steps {
                 sh """
-                    sed -i -e 's|/etc/openitcockpit-agent/customchecks.cnf|C:\\\\Program\\ Files\\\\it-novum\\\\openitcockpit-agent\\\\customchecks.cnf|g' example_config.cnf
+                    sed -i -e 's|/etc/openitcockpit-agent/|C:\\\\Program\\ Files\\\\it-novum\\\\openitcockpit-agent\\\\|g' example_config.cnf
                    """
-                sh 'ssh -o StrictHostKeyChecking=no -i /var/lib/jenkins/.ssh/id_rsa kress@172.16.166.223 if exist openitcockpit-agent rmdir /Q /S openitcockpit-agent'
-                sh 'scp -o StrictHostKeyChecking=no -i /var/lib/jenkins/.ssh/id_rsa -r ./ kress@172.16.166.223:openitcockpit-agent'
-                sh 'ssh -o StrictHostKeyChecking=no -i /var/lib/jenkins/.ssh/id_rsa kress@172.16.166.223 powershell "cd openitcockpit-agent; python.exe -m venv ./python3-windows-env; ./python3-windows-env/Scripts/activate.bat; ./python3-windows-env/Scripts/pip.exe install -r requirements.txt pywin32; ./python3-windows-env/Scripts/pyinstaller.exe src/agent_windows.py --onefile -n openitcockpit-agent-python3; ./python3-windows-env/Scripts/deactivate.bat"'
-                sh 'ssh -o StrictHostKeyChecking=no -i /var/lib/jenkins/.ssh/id_rsa kress@172.16.166.223 powershell "cd openitcockpit-agent; mv ./dist/openitcockpit-agent-python3.exe executables/openitcockpit-agent-python3.exe; rm -r -fo ./dist; rm -r -fo ./build; rm -r -fo ./__pycache__; rm -r -fo ./openitcockpit-agent-python3.spec; rm -r -fo ./python3-windows-env"'
-                sh 'ssh -o StrictHostKeyChecking=no -i /var/lib/jenkins/.ssh/id_rsa kress@172.16.166.223 powershell "openitcockpit-agent/packages/scripts/build_msi.bat"'
-                sh 'ssh -o StrictHostKeyChecking=no -i /var/lib/jenkins/.ssh/id_rsa kress@172.16.166.223 powershell "Rename-Item -Path openitcockpit-agent/msi/openitcockpit-agent.msi openitcockpit-agent-${VERSION}.msi"'
+                sh 'ssh -o StrictHostKeyChecking=no -i /var/lib/jenkins/.ssh/id_rsa kress@172.16.166.223 if exist openitcockpit-agent-2.0 rmdir /Q /S openitcockpit-agent-2.0'
+                sh 'scp -o StrictHostKeyChecking=no -i /var/lib/jenkins/.ssh/id_rsa -r ./ kress@172.16.166.223:openitcockpit-agent-2.0'
+                sh 'ssh -o StrictHostKeyChecking=no -i /var/lib/jenkins/.ssh/id_rsa kress@172.16.166.223 powershell "cd openitcockpit-agent-2.0; python.exe -m venv ./python3-windows-env; ./python3-windows-env/Scripts/activate.bat; ./python3-windows-env/Scripts/pip.exe install -r requirements.txt pywin32; ./python3-windows-env/Scripts/pyinstaller.exe src/agent_windows.py --onefile -n openitcockpit-agent-python3; ./python3-windows-env/Scripts/deactivate.bat"'
+                sh 'ssh -o StrictHostKeyChecking=no -i /var/lib/jenkins/.ssh/id_rsa kress@172.16.166.223 powershell "cd openitcockpit-agent-2.0; mv ./dist/openitcockpit-agent-python3.exe executables/openitcockpit-agent-python3.exe; rm -r -fo ./dist; rm -r -fo ./build; rm -r -fo ./__pycache__; rm -r -fo ./openitcockpit-agent-python3.spec; rm -r -fo ./python3-windows-env"'
+                sh 'ssh -o StrictHostKeyChecking=no -i /var/lib/jenkins/.ssh/id_rsa kress@172.16.166.223 powershell "openitcockpit-agent-2.0/packages/scripts/build_msi.bat"'
                 sh 'mkdir -p ./release'
-                sh 'scp -o StrictHostKeyChecking=no -i /var/lib/jenkins/.ssh/id_rsa kress@172.16.166.223:openitcockpit-agent/msi/openitcockpit-agent-${VERSION}.msi ./release'
-                sh 'ssh -o StrictHostKeyChecking=no -i /var/lib/jenkins/.ssh/id_rsa kress@172.16.166.223 powershell "rm -r -fo openitcockpit-agent"'
+                sh 'scp -o StrictHostKeyChecking=no -i /var/lib/jenkins/.ssh/id_rsa kress@172.16.166.223:openitcockpit-agent-2.0/executables/openitcockpit-agent-${VERSION}-amd64.msi ./release'
+                sh 'ssh -o StrictHostKeyChecking=no -i /var/lib/jenkins/.ssh/id_rsa kress@172.16.166.223 powershell "rm -r -fo openitcockpit-agent-2.0"'
                 archiveArtifacts artifacts: 'release/**', fingerprint: true
                 script {
                     stash includes: 'release/**', name: 'windowsrelease'
