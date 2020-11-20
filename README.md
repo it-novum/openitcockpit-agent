@@ -41,7 +41,7 @@ sudo apt install ./openitcockpit-agent_*_amd64.deb
 
 Uninstall
 ```
-sudo apt remove openitcockpit-agent
+sudo apt-get purge openitcockpit-agent
 ```
 
 #### Red Hat Linux / CentOS / openSUSE
@@ -357,7 +357,7 @@ python3 -m venv ./python3-centos-env
 source ./python3-centos-env/bin/activate
 pip3 install -r requirements.txt
 pyinstaller src/agent_nix.py -n openitcockpit-agent-python3 --onefile
-./python3-centos-env/bin/deactivate
+deactivate
 
 mv ./dist/openitcockpit-agent-python3 ./executables/openitcockpit-agent-python3.linux.bin
 ```
@@ -372,7 +372,7 @@ python3 -m venv ./python3-ubuntu-env
 source ./python3-ubuntu-env/bin/activate
 pip3 install -r requirements.txt
 pyinstaller src/agent_nix.py -n openitcockpit-agent-python3 --onefile
-./python3-ubuntu-env/bin/deactivate
+deactivate
 
 mv ./dist/openitcockpit-agent-python3 ./executables/openitcockpit-agent-python3.linux.bin
 ```
@@ -383,11 +383,11 @@ mv ./dist/openitcockpit-agent-python3 ./executables/openitcockpit-agent-python3.
 apt-get install python3-pip python3-venv build-essential libssl-dev libffi-dev python-dev zlib1g-dev
 python3 -m venv ./python3-linux-env
 
-./python3-linux-env/bin/activate
+source ./python3-linux-env/bin/activate
 ./python3-linux-env/bin/pip install wheel
 ./python3-linux-env/bin/pip install -r requirements.txt cryptography
 sudo ./python3-linux-env/bin/python3 ./python3-linux-env/bin/pyinstaller src/agent_nix.py -n openitcockpit-agent-python3 --onefile
-./python3-linux-env/bin/deactivate
+deactivate
 sudo mv ./dist/openitcockpit-agent-python3 ./executables/openitcockpit-agent-python3-arm64.bin
 sudo rm -r ./dist ./build ./__pycache__ openitcockpit-agent-python3.spec
 sudo chmod +x ./executables/openitcockpit-agent-python3-arm64.bin

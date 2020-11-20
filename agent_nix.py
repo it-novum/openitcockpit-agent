@@ -25,7 +25,11 @@ class LinuxService(AgentService):
 
             # Do not use signal.pause() because it will block the internen reload which does not send any kernel signals
             # This the win32event.WaitForSingleObject(self.hWaitStop, 5000) way
-            signal.sigtimedwait((), 5)
+            if hasattr(signal, 'sigtimedwait'):
+                signal.sigtimedwait((), 5)
+            else:
+                # macOS has no signal.sigtimedwait
+                time.sleep(5)
 
         self.cleanup()
 
