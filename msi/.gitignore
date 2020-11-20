@@ -1,7 +1,1 @@
-*.wixobj
-*.msi
-OitcAgentSvc/.vs
-OitcAgentSvc/OitcAgentSvc/bin
-OitcAgentSvc/OitcAgentSvc/obj
-OitcAgentSvc/OitcAgentSvc/bin/*
-OitcAgentSvc/OitcAgentSvc/obj/*
+openitcockpit-agent-cache
