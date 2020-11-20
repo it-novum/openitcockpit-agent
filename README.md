@@ -270,77 +270,15 @@ curl -d @new_config.json http://0.0.0.0:3333 -u user:pass
 
 ---
 
-## Sample files
+## Configuration files
 
-Sample config file (with default script values):
-```
-[default]
-  interval = 30
-  port = 3333
-  address = 0.0.0.0
-  certfile = 
-  keyfile = 
-  try-autossl = true
-  autossl-csr-file = 
-  autossl-crt-file = 
-  autossl-key-file = 
-  autossl-ca-file = 
-  verbose = false
-  stacktrace = false
-  config-update-mode = false
-  auth = 
-  customchecks = 
-  temperature-fahrenheit = false
-  dockerstats = false
-  qemustats = false
-  cpustats = true
-  sensorstats = true
-  processstats = true
-  processstats-including-child-ids = false
-  netstats = true
-  diskstats = true
-  netio = true
-  diskio = true
-  winservices = true
-  systemdservices = true
-  
-  alfrescostats = false
-  alfresco-jmxuser = monitorRole
-  alfresco-jmxpassword = change_asap
-  alfresco-jmxaddress = 0.0.0.0
-  alfresco-jmxport = 50500
-  alfresco-jmxpath = /alfresco/jmxrmi
-  alfresco-jmxquery = 
-  alfresco-javapath = /usr/bin/java
+Please see the two example configuration files:
+ - [config.cnf](https://github.com/it-novum/openitcockpit-agent/blob/development/example_config.cnf)
+ - [customchecks.cnf](https://github.com/it-novum/openitcockpit-agent/blob/development/example_customchecks.cnf)
 
-[oitc]
-  hostuuid = 
-  url = 
-  apikey = 
-  interval = 60
-  enabled = false
-```
-
-Sample config file for custom check commands:
-```
-[default]
-  # max_worker_threads should be increased with increasing number of custom checks
-  # but consider: each thread needs (a bit) memory
-  max_worker_threads = 8
-[username]
-  command = whoami
-  interval = 30
-  timeout = 5
-  enabled = true
-[uname]
-  command = uname -a
-  interval = 15
-  timeout = 5
-  enabled = false
-```
-
-JSON Example (file: new_config.json) for update mode and http://address:port/config result:
-```
+### Query current configuration from Agent as JSON
+API Endpoint: `GET http://agent-address:port/config`
+```json
 {
     "config": {
         "interval": 15,
