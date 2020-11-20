@@ -4,7 +4,7 @@ Cross-Platform Monitoring Agent for openITCOCKPIT
 1. [Installation](#Installation)
 2. [Usage](#Usage)
 3. [Sample files](#Sample-files)
-4. [Agent build instructions](#Agent-build-instructions)
+4. [Build instructions](#Build-instructions)
 5. [Export documentation as html](#Export-documentation-as-html)
 
 ---
@@ -365,7 +365,7 @@ JSON Example (file: new_config.json) for update mode and http://address:port/con
 
 ---
 
-## Package build instructions
+## Build instructions
 
 Clone this repository to your filesystem and run the following commands in the repository folder
 
@@ -374,120 +374,52 @@ git clone https://github.com/it-novum/openitcockpit-agent.git
 cd openitcockpit-agent
 ```
 
-### Python 3 - CentOS
+### Build Linux binary on CentOS 7
 
 ```
-yum install python36 python36-pip python36-devel
+yum install python38-devel python38-pip libffi-devel gcc glibc ruby-devel make rpm-build rubygems rpm bsdtar
 python3 -m venv ./python3-centos-env
-source ./python3-centos-env/bin/activate
-./python3-centos-env/bin/pip install -r requirements.txt pyinstaller
-./python3-centos-env/bin/python3 ./python3-centos-env/bin/pyinstaller oitc_agent.py --onefile
-deactivate
+./python3-centos-env/bin/activate
+pip3 install -r requirements.txt
+pyinstaller src/agent_nix.py -n openitcockpit-agent-python3 --onefile
+./python3-centos-env/bin/deactivate
 
-mv ./dist/oitc_agent ./executables/openitcockpit-agent-python3-old_glibc_centos.run
-rm -r ./dist ./build ./__pycache__ oitc_agent.spec
-chmod +x ./executables/openitcockpit-agent-python3-old_glibc_centos.run
-
-zip -rq ./environments/python3-centos-env.zip python3-centos-env
-rm -rf python3-centos-env
+mv ./dist/openitcockpit-agent-python3 ./executables/openitcockpit-agent-python3.linux.bin
 ```
 
-### Python 3 - Linux
 
-##### Create python virtual environment
-Make sure pip for python3 is installed
-
-```
-apt install python3-pip
-python3 -m venv ./python3-linux-env
-source ./python3-linux-env/bin/activate
-./python3-linux-env/bin/pip install -r requirements.txt pyinstaller
-deactivate
-
-zip -rq ./environments/python3-linux-env.zip python3-linux-env
-```
-
-#### Build executable with pyinstaller
-
-```
-apt install unzip
-unzip -q ./environments/python3-linux-env.zip
-
-source ./python3-linux-env/bin/activate
-sudo ./python3-linux-env/bin/python3 ./python3-linux-env/bin/pyinstaller oitc_agent.py --onefile
-deactivate
-sudo mv ./dist/oitc_agent ./executables/openitcockpit-agent-python3.run
-sudo rm -r ./dist ./build ./__pycache__ oitc_agent.spec
-sudo chmod +x ./executables/openitcockpit-agent-python3.run
-
-sudo rm -rf python3-linux-env
-```
-
-### Python 3 - Linux ARM64 on Debian 9
+### Linux ARM64 on Debian 9 (Beta)
 
 ```
 apt-get install python3-pip python3-venv build-essential libssl-dev libffi-dev python-dev zlib1g-dev
 python3 -m venv ./python3-linux-env
 
-source ./python3-linux-env/bin/activate
+./python3-linux-env/bin/activate
 ./python3-linux-env/bin/pip install wheel
 ./python3-linux-env/bin/pip install -r requirements.txt cryptography
-sudo ./python3-linux-env/bin/python3 ./python3-linux-env/bin/pyinstaller oitc_agent.py --onefile
-deactivate
-sudo mv ./dist/oitc_agent ./executables/openitcockpit-agent-python3-arm64.run
-sudo rm -r ./dist ./build ./__pycache__ oitc_agent.spec
-sudo chmod +x ./executables/openitcockpit-agent-python3-arm64.run
+sudo ./python3-linux-env/bin/python3 ./python3-linux-env/bin/pyinstaller src/agent_nix.py -n openitcockpit-agent-python3 --onefile
+./python3-linux-env/bin/deactivate
+sudo mv ./dist/openitcockpit-agent-python3 ./executables/openitcockpit-agent-python3-arm64.bin
+sudo rm -r ./dist ./build ./__pycache__ openitcockpit-agent-python3.spec
+sudo chmod +x ./executables/openitcockpit-agent-python3-arm64.bin
 ```
 
-### Python 3 - Windows
+### Build Windows binary
 
-#### Using a real Windows
+Make sure python 3.9.x is installed. [Download](https://www.python.org/downloads/windows/)
 
-Make sure python3 and pip for python3 is installed
-
-Download & install latest python version (3.x) from https://www.python.org/downloads/windows/
-
-Run powershell as Administrator and execute the following commands
-
-##### Create python virtual environment and build executable with pyinstaller on windows
-
+Run via PowerShell
 ```
-cd /
 python.exe -m venv ./python3-windows-env
 .\python3-windows-env\Scripts\activate.bat
-.\python3-windows-env\Scripts\pip.exe install configparser psutil>=5.5.0 servicemanager pywinservicemanager pyinstaller pycryptodome pyopenssl
-.\python3-windows-env\Scripts\pyinstaller.exe oitc_agent.py --onefile
+.\python3-windows-env\Scripts\pip.exe install -r requirements.txt pywin32
+.\python3-windows-env\Scripts\pyinstaller.exe src\agent_windows.py --onefile -n openitcockpit-agent-python3
 .\python3-windows-env\Scripts\deactivate.bat
 
-mv .\dist\oitc_agent.exe .\openitcockpit-agent-python3.exe
-
-rm -r -fo .\dist
-rm -r -fo .\build
-rm -r -fo .\__pycache__
-rm -r -fo .\oitc_agent.spec
-# rm -r -fo .\python3-windows-env
+mv .\dist\openitcockpit-agent-python3.exe executables\openitcockpit-agent-python3.exe
 ```
 
-#### Build executable with pyinstaller on linux
-
-```
-apt install unzip
-unzip -q ./environments/python3-wine-env.zip
-
-wine cmd
-./python3-wine-env/Scripts/activate.bat
-./python3-wine-env/Scripts/pyinstaller.exe oitc_agent.py --onefile
-./python3-wine-env/Scripts/deactivate.bat
-exit
-
-sudo mv ./dist/oitc_agent.exe ./executables/openitcockpit-agent-python3.exe
-sudo rm -r ./dist ./build ./__pycache__ oitc_agent.spec
-sudo chmod +x ./executables/openitcockpit-agent-python3.exe
-
-sudo rm -rf python3-wine-env
-```
-
-### Python 3 - macOS
+### Build macOS binary
 
 Make sure python3 is installed
 
@@ -496,56 +428,25 @@ brew install python
 # export PATH="/usr/local/opt/python/libexec/bin:$PATH"
 ```
 
-##### Create python virtual environment
-
 ```
 python3 -m venv ./python3-macos-env
-source ./python3-macos-env/bin/activate
-./python3-macos-env/bin/python3 -m pip install -r requirements.txt pyinstaller
-deactivate
-zip -rq ./environments/python3-macos-env.zip python3-macos-env
-rm -rf python3-macos-env
+./python3-macos-env/bin/activate
+pip3 install -r requirements.txt
+pyinstaller src/agent_nix.py -n openitcockpit-agent-python3 --onefile
+./python3-macos-env/bin/deactivate
+
+
+
+
+mv ./dist/openitcockpit-agent-python3 ./executables/openitcockpit-agent-python3.macos.bin
 ```
 
-#### Build executable with pyinstaller on macOS
-
-```
-unzip -q ./environments/python3-macos-env.zip
-source ./python3-macos-env/bin/activate
-
-./python3-macos-env/bin/python3 ./python3-macos-env/bin/pyinstaller oitc_agent.py --onefile
-deactivate
-
-mv ./dist/oitc_agent ./executables/openitcockpit-agent-python3.macos
-rm -r ./dist ./build ./__pycache__ oitc_agent.spec
-chmod +x ./executables/openitcockpit-agent-python3.macos
-
-rm -rf python3-macos-env
-```
 
 #### Test packages
 
 ```
 sudo installer -pkg openitcockpit-agent-*.pkg -target / -verbose -dumplog
 sudo installer -pkg openitcockpit-agent-uninstaller*.pkg -target / -verbose -dumplog
-```
-
-#### Complete package build script
-
-```
-python3 -m venv ./python3-macos-env
-source ./python3-macos-env/bin/activate
-rm ./python3-macos-env/bin/python3
-cp /usr/local/bin/python3 ./python3-macos-env/bin
-./python3-macos-env/bin/python3 -m pip install -r requirements.txt pyinstaller
-./python3-macos-env/bin/python3 ./python3-macos-env/bin/pyinstaller oitc_agent.py --onefile
-deactivate
-mv ./dist/oitc_agent ./executables/openitcockpit-agent-python3.macos.bin
-chmod +x ./executables/openitcockpit-agent-python3.macos.bin
-rm -r ./python3-macos-env ./dist ./build ./__pycache__ oitc_agent.spec
-cd ..
-./openitcockpit-agent/packages/scripts/build_macos.sh
-rm -r package_osx package_osx_uninstaller
 ```
 
 
