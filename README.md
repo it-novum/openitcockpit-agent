@@ -102,7 +102,7 @@ sudo installer -pkg openitcockpit-agent-uninstaller*.pkg -target / -verbose
 ```
 
 ## Developer installation
-do you want to modify the source code of the openITCOCKPIT Monitoring Agent? If yes follow this guide to getting started. 
+Do you want to modify the source code of the openITCOCKPIT Monitoring Agent? If yes follow this guide to getting started. 
 
 1. Clone this repository
 ```
@@ -138,6 +138,8 @@ pip install -r requirements.txt pywin32
 ```
 cp example_config.cnf config.cnf
 ```
+
+The entry point of the Agent for developing and debugging is always the file `agent_nix.py` (even on Windows!).
 
 ### Visual Studio Code 
 
