@@ -8,10 +8,10 @@
             "name": "Run Agent",
             "type": "python",
             "request": "launch",
-            "program": "agent.py",
+            "program": "agent_nix.py",
             "args": [
                 "-c",
-                "config.cnf"
+                "/Users/dziegler/git/openitcockpit-agent/config.cnf"
             ],
             "console": "integratedTerminal"
         }

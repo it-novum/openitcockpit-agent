@@ -149,6 +149,10 @@ Free Download: [https://code.visualstudio.com/](https://code.visualstudio.com/)
  - [Python extension for Visual Studio Code](https://marketplace.visualstudio.com/items?itemName=ms-python.python)
 
 #### Setup Debugger
+Open up `.vscode/launch.json` and set the full path to `config.cnf`
+![VSCode launch.json](images/vscode_launch.png)
+
+Configure the debugger and run the Agent
 ![VSCode debugger python](images/vscode_python_debugger.png)
 
 ### PyCharm Community 
@@ -164,11 +168,11 @@ Free Download: [https://www.jetbrains.com/pycharm/download/](https://www.jetbrai
 
 ## Usage
 
-Default: ```python agent.py```
+Default: ```python agent_nix.py```
 
-Custom: ```python oitc_agent.py -v -i <check interval seconds> -p <port number> -a <ip address> -c <config path> --certfile <certfile path> --keyfile <keyfile path> --auth <user>:<password> --oitc-url <url> --oitc-apikey <api key> --oitc-interval <seconds>```
+Custom: ```python agent_nix.py -v -i <check interval seconds> -p <port number> -a <ip address> -c <config path> --certfile <certfile path> --keyfile <keyfile path> --auth <user>:<password> --oitc-url <url> --oitc-apikey <api key> --oitc-interval <seconds>```
 
-Windows: ```python.exe agent.py```
+Windows: ```python.exe agent_nix.py```
 
 #### Pull mode (publish data as json via a web server)
 
