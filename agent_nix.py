@@ -23,7 +23,7 @@ class LinuxService(AgentService):
         while self.main_thread.loop is True:
             self.main_loop()
 
-            # Do not use signal.pause() because it will block the internen reload which does not send any kernel signals
+            # Do not use signal.pause() because it will block the internal reload which does not send any kernel signals
             # This the win32event.WaitForSingleObject(self.hWaitStop, 5000) way
             if hasattr(signal, 'sigtimedwait'):
                 signal.sigtimedwait((), 5)
