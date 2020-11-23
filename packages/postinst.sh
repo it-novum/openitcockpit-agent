@@ -43,8 +43,8 @@ fi
 
 if [ -f /Applications/openitcockpit-agent/openitcockpit-agent-python3.macos.bin ]; then
     if [ -f /Applications/openitcockpit-agent/com.it-novum.openitcockpit.agent.plist ]; then
-        if [ -d /Library/LaunchDaemons/ ]; then
-            ln -s /Applications/openitcockpit-agent/com.it-novum.openitcockpit.agent.plist /Library/LaunchDaemons/
+        if [ -d /Library/LaunchDaemons/ ] && [ ! -f /Library/LaunchDaemons/com.it-novum.openitcockpit.agent.plist ]; then
+            ln -s /Applications/openitcockpit-agent/com.it-novum.openitcockpit.agent.plist /Library/LaunchDaemons/com.it-novum.openitcockpit.agent.plist
         fi
     fi
 

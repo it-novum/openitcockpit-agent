@@ -5,6 +5,7 @@ Cross-Platform Monitoring Agent for openITCOCKPIT
 2. [Usage](#Usage)
 3. [Sample files](#Sample-files)
 4. [Build instructions](#Build-instructions)
+4.1. [Release a new version](#release-a-new-version-it-novum)
 5. [Export documentation as html](#Export-documentation-as-html)
 
 ---

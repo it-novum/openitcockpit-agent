@@ -52,7 +52,11 @@ if [ -f /Applications/openitcockpit-agent/openitcockpit-agent-python3.macos.bin 
         /bin/launchctl unload -F /Applications/openitcockpit-agent/com.it-novum.openitcockpit.agent.plist
     fi
     set -e
-    
+
+    if [ -f /Library/LaunchDaemons/com.it-novum.openitcockpit.agent.plist ]; then
+        rm /Library/LaunchDaemons/com.it-novum.openitcockpit.agent.plist
+    fi
+
     rm /Applications/openitcockpit-agent/openitcockpit-agent-python3.macos.bin
     
     if [ -f /Applications/openitcockpit-agent/com.it-novum.openitcockpit.agent.plist ]; then
