@@ -46,8 +46,7 @@ class AgentService:
         self.thread_factory = ThreadFactory(self.config, self.agent_log, self.main_thread, self.certificates)
 
         if self.config.autossl is True:
-            pass  # todo implement me
-            # certificates.check_auto_certificate()
+            self.certificates.check_auto_certificate()
 
     def main_loop(self):
         if self.main_thread.spawn_threads is True:

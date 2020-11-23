@@ -562,7 +562,6 @@ class Config:
             etc_agent_path = '/Applications/openitcockpit-agent/'
 
         if operating_system.isWindows():
-            # todo read path from windows registry
             etc_agent_path = 'C:' + os.path.sep + 'Program Files' + os.path.sep + 'it-novum' + os.path.sep + 'openitcockpit-agent' + os.path.sep
             try:
                 registry_path = r'SOFTWARE\it-novum\InstalledProducts\openitcockpit-agent'
