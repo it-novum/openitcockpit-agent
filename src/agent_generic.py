@@ -32,7 +32,7 @@ from src.thread_factory import ThreadFactory
 class AgentService:
 
     def init_service(self):
-        agentVersion = "2.0.0"
+        agentVersion = "2.0.1"
 
         self.config = Config(agentVersion)
         self.config.load_configuration()
