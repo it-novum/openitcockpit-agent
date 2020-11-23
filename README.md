@@ -463,6 +463,14 @@ sudo installer -pkg openitcockpit-agent-*.pkg -target / -verbose -dumplog
 sudo installer -pkg openitcockpit-agent-uninstaller*.pkg -target / -verbose -dumplog
 ```
 
+## Release a new version (it-novum)
+1. Increase version number in `src/agent_generic.py`
+2. Increase version number in `version` file - **set both to the same number**
+3. Push to `development` branch and Jenkins will build and publish a new **stable** release for all supported platforms.
+
+3. Push to `development` branch and Jenkins will build and publish a new **nightly** release for all supported platforms.
+
+To build MSI packages a _Professional_ License of _Advanced Installer_ is required.
 
 ---
 
