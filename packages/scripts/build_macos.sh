@@ -24,10 +24,10 @@ cp openitcockpit-agent/packages/init/com.it-novum.openitcockpit.agent.plist pack
 
 # MacOS x64 Installer (only runs on macOS)
 /usr/local/lib/ruby/gems/2.7.0/bin/fpm -s dir -t osxpkg -C package_osx --name openitcockpit-agent --vendor "it-novum GmbH" --license "Apache License Version 2.0" --config-files Applications/openitcockpit-agent --architecture native --maintainer "<daniel.ziegler@it-novum.com>" --description "openITCOCKPIT Monitoring Agent and remote plugin executor." --url "https://openitcockpit.io" --before-install openitcockpit-agent/packages/preinst.sh --after-install openitcockpit-agent/packages/postinst.sh --version "$version"
-mv openitcockpit-agent-${version}.pkg openitcockpit-agent-${version}-amd64.pkg
+mv openitcockpit-agent-${version}.pkg openitcockpit-agent-${version}-darwin-amd64.pkg
 
 mkdir -p package_osx_uninstaller
 
 # MacOS x64 Uninstaller (only runs on macOS)
 /usr/local/lib/ruby/gems/2.7.0/bin/fpm -s dir -t osxpkg -C package_osx_uninstaller --name openitcockpit-agent-uninstaller --vendor "it-novum GmbH" --license "Apache License Version 2.0" --config-files Applications/openitcockpit-agent --architecture native --maintainer "<daniel.ziegler@it-novum.com>" --description "openITCOCKPIT Monitoring Agent and remote plugin executor." --url "https://openitcockpit.io" --before-install openitcockpit-agent/packages/prerm.sh --version "$version" --osxpkg-payload-free
-mv openitcockpit-agent-uninstaller-${version}.pkg openitcockpit-agent-uninstaller-${version}-amd64.pkg
+mv openitcockpit-agent-uninstaller-${version}.pkg openitcockpit-agent-uninstaller-${version}-darwin-amd64.pkg

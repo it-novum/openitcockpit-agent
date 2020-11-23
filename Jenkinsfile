@@ -180,7 +180,7 @@ pipeline {
             }
             steps {
                 sh """
-                    sed -i -e 's|/etc/openitcockpit-agent/|/Applications/openitcockpit-agent/|g' example_config.cnf
+                    sed -i -e 's|C:\\\\Program\\ Files\\\\it-novum\\\\openitcockpit-agent\\\\|/Applications/openitcockpit-agent/|g' example_config.cnf
                    """
 
                 sh 'ssh -o StrictHostKeyChecking=no -i /var/lib/jenkins/.ssh/id_rsa admin@itsm-mojave.oitc.itn "rm -rf openitcockpit-agent-packages-2.0"'
@@ -189,8 +189,8 @@ pipeline {
                 sh 'ssh -o StrictHostKeyChecking=no -i /var/lib/jenkins/.ssh/id_rsa admin@itsm-mojave.oitc.itn "cd openitcockpit-agent-packages-2.0/openitcockpit-agent; /usr/local/bin/python3 -m venv ./python3-macos-env; source ./python3-macos-env/bin/activate; rm ./python3-macos-env/bin/python3; cp /usr/local/bin/python3 ./python3-macos-env/bin; ./python3-macos-env/bin/python3 -m pip install -r requirements.txt pyinstaller; ./python3-macos-env/bin/python3 ./python3-macos-env/bin/pyinstaller agent_nix.py -n openitcockpit-agent-python3 --onefile; deactivate"'
                 sh 'ssh -o StrictHostKeyChecking=no -i /var/lib/jenkins/.ssh/id_rsa admin@itsm-mojave.oitc.itn "cd openitcockpit-agent-packages-2.0/openitcockpit-agent; mv ./dist/openitcockpit-agent-python3 ./executables/openitcockpit-agent-python3.macos.bin; chmod +x ./executables/openitcockpit-agent-python3.macos.bin; rm -r ./python3-macos-env ./dist ./build ./__pycache__ openitcockpit-agent-python3.spec; cd ..; ./openitcockpit-agent/packages/scripts/build_macos.sh; rm -r package_osx package_osx_uninstaller"'
                 sh 'mkdir -p ./release'
-                sh 'scp -o StrictHostKeyChecking=no -i /var/lib/jenkins/.ssh/id_rsa admin@itsm-mojave.oitc.itn:openitcockpit-agent-packages-2.0/openitcockpit-agent-${VERSION}-amd64.pkg ./release'
-                sh 'scp -o StrictHostKeyChecking=no -i /var/lib/jenkins/.ssh/id_rsa admin@itsm-mojave.oitc.itn:openitcockpit-agent-packages-2.0/openitcockpit-agent-uninstaller-${VERSION}-amd64.pkg ./release'
+                sh 'scp -o StrictHostKeyChecking=no -i /var/lib/jenkins/.ssh/id_rsa admin@itsm-mojave.oitc.itn:openitcockpit-agent-packages-2.0/openitcockpit-agent-${VERSION}-darwin-amd64.pkg ./release'
+                sh 'scp -o StrictHostKeyChecking=no -i /var/lib/jenkins/.ssh/id_rsa admin@itsm-mojave.oitc.itn:openitcockpit-agent-packages-2.0/openitcockpit-agent-uninstaller-${VERSION}-darwin-amd64.pkg ./release'
                 sh 'ssh -o StrictHostKeyChecking=no -i /var/lib/jenkins/.ssh/id_rsa admin@itsm-mojave.oitc.itn "rm -rf openitcockpit-agent-packages-2.0"'
                 archiveArtifacts artifacts: 'release/**', fingerprint: true
                 script {

@@ -35,5 +35,14 @@ if [ -f /Applications/openitcockpit-agent/openitcockpit-agent-python3.macos.bin 
         /bin/launchctl stop com.it-novum.openitcockpit.agent
         /bin/launchctl unload -F /Applications/openitcockpit-agent/com.it-novum.openitcockpit.agent.plist
     fi
+
+    # Keep configs on Updates
+    if [ -f /Applications/openitcockpit-agent/config.cnf ]; then
+        cp /Applications/openitcockpit-agent/config.cnf /Applications/openitcockpit-agent/config.cnf.old
+    fi
+
+    if [ -f /Applications/openitcockpit-agent/customchecks.cnf ]; then
+        cp /Applications/openitcockpit-agent/customchecks.cnf /Applications/openitcockpit-agent/customchecks.cnf.old
+    fi
     
 fi

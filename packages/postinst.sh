@@ -56,7 +56,16 @@ if [ -f /Applications/openitcockpit-agent/openitcockpit-agent-python3.macos.bin 
         enableConfig="1"
     fi
     set -e
-    
+
+    # Keep configs on Updates
+    if [ -f /Applications/openitcockpit-agent/config.cnf.old ]; then
+        cp /Applications/openitcockpit-agent/config.cnf.old /Applications/openitcockpit-agent/config.cnf
+    fi
+
+    if [ -f /Applications/openitcockpit-agent/customchecks.cnf.old ]; then
+        cp /Applications/openitcockpit-agent/customchecks.cnf.old /Applications/openitcockpit-agent/customchecks.cnf
+    fi
+
     if [ "$enableConfig" == "1" ]; then
         /bin/launchctl load /Library/LaunchDaemons/com.it-novum.openitcockpit.agent.plist
     fi
