@@ -3,6 +3,7 @@ from src.check_result_store import CheckResultStore
 
 import subprocess
 import time
+import shlex
 
 
 class CustomCheck:
@@ -27,9 +28,11 @@ class CustomCheck:
             'last_updated_timestamp': 0
         }
 
+        command_as_list = shlex.split(self.custom_check['command'])
+
         try:
             result = subprocess.run(
-                self.custom_check['command'],
+                command_as_list,
                 capture_output=True,
                 shell=True,
                 timeout=self.timeout
@@ -65,6 +68,7 @@ class CustomCheck:
             self.agent_log.error(
                 'Command line: %s' % (self.custom_check['command'])
             )
+            self.agent_log.stacktrace(traceback.format_exc())
 
         self.check_store.store_custom_check(self.custom_check['name'], check_result.copy())
 
