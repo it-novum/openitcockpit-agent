@@ -218,7 +218,7 @@ class Config:
 
             - Windows:        C:\Program Files\openitcockpit-agent\config.cnf
             - Linux:          /etc/openitcockpit-agent/config.cnf
-            - macOS:          /Library/openitcockpit-agent/config.cnf
+            - macOS:          /Applications/openitcockpit-agent/config.cnf
 
         """
         etc_agent_path = self.get_etc_path()
