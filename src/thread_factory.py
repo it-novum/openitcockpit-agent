@@ -227,8 +227,6 @@ class ThreadFactory:
         if interval <= 0:
             interval = 21600
 
-        orig_interval = interval
-
         check_autossl_counter = 0
 
         while self.loop_autossl_thread is True:
@@ -238,7 +236,7 @@ class ThreadFactory:
                     trigger_reload = self.certificates.check_auto_certificate()
 
                     # No Exception so no new certificate. Use the normal check interval
-                    interval = orig_interval
+                    interval = 21600
                     check_autossl_counter = 0
 
                     if trigger_reload is True:
@@ -268,8 +266,7 @@ class ThreadFactory:
                 check_autossl_counter += 1
                 time.sleep(1)
 
-    # 21600
-    def spawn_autossl_thread(self, interval=15):
+    def spawn_autossl_thread(self, interval=21600):
         # 21600 => check certificate age 4 times a day
 
         # Start a new thread to handle auto ssl renewal in PUSH Mode
