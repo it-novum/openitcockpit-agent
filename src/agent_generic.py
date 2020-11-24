@@ -1,5 +1,4 @@
-
-#!/usr/bin/python
+# !/usr/bin/python
 
 #    Copyright 2020, it-novum GmbH
 #    Licensed under the Apache License, Version 2.0 (the "License");
@@ -28,6 +27,8 @@ from src.config import Config
 from src.agent_log import AgentLog
 from src.certificates import Certificates
 from src.thread_factory import ThreadFactory
+from src.exceptions.untrusted_agent_exception import UntrustedAgentException
+
 
 class AgentService:
 
@@ -46,7 +47,16 @@ class AgentService:
         self.thread_factory = ThreadFactory(self.config, self.agent_log, self.main_thread, self.certificates)
 
         if self.config.autossl is True:
-            self.certificates.check_auto_certificate()
+            try:
+                self.certificates.check_auto_certificate()
+
+                # 21600 => check certificate age 4 times a day
+                self.autossl_update_interval = 21600
+            except UntrustedAgentException:
+                self.autossl_update_interval = 60
+                self.agent_log.error(
+                    'Agent state is untrusted! Set autossl retry interval to 60 seconds'
+                )
 
     def main_loop(self):
         if self.main_thread.spawn_threads is True:
@@ -71,7 +81,7 @@ class AgentService:
 
                 if self.config.autossl:
                     # Start a new thread to check for certificate renewal
-                    self.thread_factory.spawn_autossl_thread()
+                    self.thread_factory.spawn_autossl_thread(self.autossl_update_interval)
 
             # All threads got spawned
             self.main_thread.spawn_threads = False
@@ -96,5 +106,3 @@ class AgentService:
         self.thread_factory.shutdown_all_threads()
 
         self.agent_log.info("Agent stopped")
-
-
