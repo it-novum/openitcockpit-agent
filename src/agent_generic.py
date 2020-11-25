@@ -33,7 +33,7 @@ from src.exceptions.untrusted_agent_exception import UntrustedAgentException
 class AgentService:
 
     def init_service(self):
-        agentVersion = "2.0.1"
+        agentVersion = "2.0.2"
 
         self.config = Config(agentVersion)
         self.config.load_configuration()

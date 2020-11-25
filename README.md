@@ -363,7 +363,7 @@ yum install python38-devel python38-pip libffi-devel gcc glibc ruby-devel make r
 python3 -m venv ./python3-centos-env
 source ./python3-centos-env/bin/activate
 pip3 install -r requirements.txt
-pyinstaller src/agent_nix.py -n openitcockpit-agent-python3 --onefile
+pyinstaller agent_nix.py -n openitcockpit-agent-python3 --onefile
 deactivate
 
 mv ./dist/openitcockpit-agent-python3 ./executables/openitcockpit-agent-python3.linux.bin
@@ -378,7 +378,7 @@ apt-get install python3 python3-venv python3-pip python3-dev gcc build-essential
 python3 -m venv ./python3-ubuntu-env
 source ./python3-ubuntu-env/bin/activate
 pip3 install -r requirements.txt
-pyinstaller src/agent_nix.py -n openitcockpit-agent-python3 --onefile
+pyinstaller agent_nix.py -n openitcockpit-agent-python3 --onefile
 deactivate
 
 mv ./dist/openitcockpit-agent-python3 ./executables/openitcockpit-agent-python3.linux.bin
@@ -393,7 +393,7 @@ python3 -m venv ./python3-linux-env
 source ./python3-linux-env/bin/activate
 ./python3-linux-env/bin/pip install wheel
 ./python3-linux-env/bin/pip install -r requirements.txt cryptography
-sudo ./python3-linux-env/bin/python3 ./python3-linux-env/bin/pyinstaller src/agent_nix.py -n openitcockpit-agent-python3 --onefile
+sudo ./python3-linux-env/bin/python3 ./python3-linux-env/bin/pyinstaller agent_nix.py -n openitcockpit-agent-python3 --onefile
 deactivate
 sudo mv ./dist/openitcockpit-agent-python3 ./executables/openitcockpit-agent-python3-arm64.bin
 sudo rm -r ./dist ./build ./__pycache__ openitcockpit-agent-python3.spec
@@ -439,7 +439,7 @@ brew install python
 python3 -m venv ./python3-macos-env
 ./python3-macos-env/bin/activate
 pip3 install -r requirements.txt
-pyinstaller src/agent_nix.py -n openitcockpit-agent-python3 --onefile
+pyinstaller agent_nix.py -n openitcockpit-agent-python3 --onefile
 ./python3-macos-env/bin/deactivate
 
 mv ./dist/openitcockpit-agent-python3 ./executables/openitcockpit-agent-python3.macos.bin
@@ -448,13 +448,13 @@ mv ./dist/openitcockpit-agent-python3 ./executables/openitcockpit-agent-python3.
 ### Run from python source code (Linux and macOS)
 ```
 pip install -r requirements.txt
-python src/agent_nix.py -c <FULL_PATH_TO>/config.cnf
+python agent_nix.py -c <FULL_PATH_TO>/config.cnf
 ```
 
 ### Run from python source code (Windows)
 ```
 pip install -r requirements.txt pywin32
-python src/agent_nix.py -c <FULL_PATH_TO>/config.cnf
+python agent_nix.py -c <FULL_PATH_TO>/config.cnf
 ```
 
 #### Test packages

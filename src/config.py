@@ -171,7 +171,7 @@ class Config:
         self.temperatureIsFahrenheit = self.config.getboolean('default', 'temperature-fahrenheit')
 
         # Determine if the Agent should run in PUSH mode
-        if self.config.getboolean('oitc', 'enabled') is True:
+        if self.config.getboolean('oitc', 'enabled', fallback=False) is True:
             self.push_config = {
                 'url': self.config.get('oitc', 'url').strip(),
                 'apikey': self.config.get('oitc', 'apikey').strip(),
