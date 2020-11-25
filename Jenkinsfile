@@ -16,20 +16,19 @@ pipeline {
             }
             agent {
                 docker { 
-                    image 'srvitsmdrone01.master.dns:5000/openitcockpit-agent-centos7:latest'
+                    image 'srvitsmdrone01.master.dns:5000/openitcockpit-agent-centos7-python39:latest'
                     registryUrl 'http://srvitsmdrone01.master.dns:5000'
                     args '-u root --privileged'
                 }
             }
             steps {
-                sh 'yum -y install centos-release-scl'
-                sh 'yum -y install rh-python38 rh-python38-python-devel rh-python38-python-pip rh-python38-python-pip-wheel libffi-devel gcc glibc ruby-devel make rpm-build rubygems rpm bsdtar'
+                sh 'yum -y install libffi-devel gcc glibc ruby-devel make rpm-build rubygems rpm bsdtar'
                 sh '/bin/bash -c "source /etc/profile.d/rvm.sh && rvm use 2.7 --default && gem install --no-document fpm"'
                 sh 'mkdir -p ./public/{packages,binaries}'
                 sh 'mkdir -p ./release'
 
-                sh 'source /opt/rh/rh-python38/enable && pip3 install -r requirements.txt'
-                sh 'source /opt/rh/rh-python38/enable && pyinstaller agent_nix.py -n openitcockpit-agent-python3 --onefile'
+                sh 'LD_LIBRARY_PATH=/usr/local/lib${LD_LIBRARY_PATH:+:${LD_LIBRARY_PATH}} pip3.9 install -r requirements.txt'
+                sh 'LD_LIBRARY_PATH=/usr/local/lib${LD_LIBRARY_PATH:+:${LD_LIBRARY_PATH}} pyinstaller agent_nix.py -n openitcockpit-agent-python3 --onefile'
                 
                 sh 'mv ./dist/openitcockpit-agent-python3 ./public/binaries/openitcockpit-agent-python3.linux.bin'
                 sh 'chmod +x ./public/binaries/openitcockpit-agent-python3.linux.bin'
