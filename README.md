@@ -4,9 +4,10 @@ Cross-Platform Monitoring Agent for openITCOCKPIT
 1. [Installation](#Installation)
 2. [Usage](#Usage)
 3. [Sample files](#Sample-files)
-4. [Build instructions](#Build-instructions)
-4.1. [Release a new version](#release-a-new-version-it-novum)
-5. [Export documentation as html](#Export-documentation-as-html)
+4. [Define custom checks](#Define-custom-checks)
+5. [Build instructions](#Build-instructions)
+    - [Release a new version](#release-a-new-version-it-novum)
+6. [Export documentation as html](#Export-documentation-as-html)
 
 ---
 
@@ -340,6 +341,83 @@ API Endpoint: `GET http://agent-address:port/config`
         }
     }
 }
+```
+
+## Define custom checks
+
+openITCOCKPIT Monitoring Agent is 100% compatible to the
+[Monitoring Plugins Development Guidelines](https://www.monitoring-plugins.org/doc/guidelines.html)
+So you can use all monitoring plugins that work with: Naemon, Nagios, Shinken, Icinga 1 and Sensu
+
+Custom checks will not get executed through an shell and have to be an execute file like a binary or a script.
+
+### Windows PowerShell example
+
+Example PowerShell script to run as custom check
+```powershell
+write-host "There are a total of $($args.count) arguments"
+exit 1
+```
+
+Definition in `customchecks.cnf`
+```
+[check_powershell_script]
+  command = powershell.exe -nologo -noprofile -File "C:\checks\powershell_example_plugin.ps1" arg1 arg2
+  interval = 15
+  timeout = 10
+  enabled = true
+```
+
+### Windows binary example
+
+Example binary (.exe) to run as custom check
+```cpp
+#include <iostream>
+#include <stdlib.h>
+
+int main(int argc,char* argv[]) {
+  printf("This is an C++ example binary with. Number of arguments passed: %d", argc);
+  exit(1);
+  return 1;
+}
+```
+
+Definition in `customchecks.cnf`
+```
+[check_binary]
+  command = "C:\checks\check_dummy.exe" foo bar
+  interval = 15
+  timeout = 10
+  enabled = true
+```
+
+### Linux/macOS bash example
+
+Example bash script to run as custom check
+```sh
+#!/bin/bash
+echo "There are a total of ${#} arguments"
+exit 1
+```
+
+Definition in `customchecks.cnf`
+```
+[check_bash_script]
+  command = /opt/checks/bash_example_plugin.sh arg1 arg2
+  interval = 15
+  timeout = 10
+  enabled = true
+```
+
+### Linux/macOS binary example
+
+Definition in `customchecks.cnf`
+```
+[check_binary]
+  command = /usr/lib/nagios/plugins/check_users -w 5 -c 10
+  interval = 15
+  timeout = 10
+  enabled = true
 ```
 
 ---

@@ -22,13 +22,14 @@ pipeline {
                 }
             }
             steps {
-                sh 'yum -y install python38-devel python38-pip libffi-devel gcc glibc ruby-devel make rpm-build rubygems rpm bsdtar'
+                sh 'yum -y install centos-release-scl'
+                sh 'yum -y install rh-python38 rh-python38-python-devel rh-python38-python-pip rh-python38-python-pip-wheel libffi-devel gcc glibc ruby-devel make rpm-build rubygems rpm bsdtar'
                 sh '/bin/bash -c "source /etc/profile.d/rvm.sh && rvm use 2.7 --default && gem install --no-document fpm"'
                 sh 'mkdir -p ./public/{packages,binaries}'
                 sh 'mkdir -p ./release'
-                
-                sh 'pip3 install -r requirements.txt'
-                sh 'pyinstaller agent_nix.py -n openitcockpit-agent-python3 --onefile'
+
+                sh 'source /opt/rh/rh-python38/enable && pip3 install -r requirements.txt'
+                sh 'source /opt/rh/rh-python38/enable && pyinstaller agent_nix.py -n openitcockpit-agent-python3 --onefile'
                 
                 sh 'mv ./dist/openitcockpit-agent-python3 ./public/binaries/openitcockpit-agent-python3.linux.bin'
                 sh 'chmod +x ./public/binaries/openitcockpit-agent-python3.linux.bin'

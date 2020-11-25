@@ -53,6 +53,7 @@ class CustomCheck:
         # Try to run the command
         try:
             self.agent_log.debug('Execute command %s' % (str(command_as_list)))
+
             result = subprocess.run(
                 command_as_list,
                 capture_output=True,
