@@ -49,23 +49,29 @@ class PushClient:
             # For production
             url = self.Config.push_config['url'] + '/agentconnector/updateCheckdata.json'
 
-            response = requests.post(
-                url,
-                data=data,
-                headers=headers,
-                verify=False
-            )
+            try:
+                response = requests.post(
+                    url,
+                    data=data,
+                    headers=headers,
+                    verify=False
+                )
 
-            # response_body = response.content.decode('utf-8')
-            # print(response_body)
+                # response_body = response.content.decode('utf-8')
+                # print(response_body)
 
-            if response.content.decode('utf-8').strip() != '':
-                response_data = json.loads(response.content.decode('utf-8'))
+                if response.content.decode('utf-8').strip() != '':
+                    response_data = json.loads(response.content.decode('utf-8'))
 
-                if 'receivedChecks' in response_data:
-                    self.agent_log.verbose('openITCOCKPIT processed %d check results' % response_data['receivedChecks'])
-                    if response_data['receivedChecks'] == 0:
-                        self.agent_log.info('Agent maybe not trusted yet or no checks have been defined')
+                    if 'receivedChecks' in response_data:
+                        self.agent_log.verbose('openITCOCKPIT processed %d check results' % response_data['receivedChecks'])
+                        if response_data['receivedChecks'] == 0:
+                            self.agent_log.info('Agent maybe not trusted yet or no checks have been defined')
+
+            except Exception as e:
+                self.agent_log.error('An error occurred while sending check results to openITCOCKPIT instance!')
+                self.agent_log.error(str(e))
+                self.agent_log.stacktrace(traceback.format_exc())
 
         except Exception as e:
             self.agent_log.error('An error occurred while sending check results to openITCOCKPIT instance!')
