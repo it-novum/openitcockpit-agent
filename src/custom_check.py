@@ -57,7 +57,8 @@ class CustomCheck:
                 command_as_list,
                 capture_output=True,
                 shell=False,  # It looks like PyInstaller will set this to False anyway
-                timeout=self.timeout
+                timeout=self.timeout,
+                stdin=subprocess.DEVNULL
             )
 
             check_result = self._build_checkresult(
