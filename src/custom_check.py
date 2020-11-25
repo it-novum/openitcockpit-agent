@@ -108,6 +108,6 @@ class CustomCheck:
             'result': output,
             'error': error_output,
             'returncode': returncode,
-            'last_updated': time.ctime(0),
+            'last_updated': time.ctime(),
             'last_updated_timestamp': round(time.time())
         }
