@@ -16,6 +16,8 @@
 
 #[check_users]
    # Run check_users on a Linux, Unix or macOS system
+   # The command will net get executed through a shell. If you want to execute something like "cat error.log | grep error | wc -l"
+   # you have to create a bash script
 #  command = /usr/lib/nagios/plugins/check_users -w 5 -c 10
 #  interval = 30
 #  timeout = 5
@@ -30,6 +32,7 @@
 
 #[check_powershell_script]
    # This example shows the execution of a PowerShell Script on Windows
+   # The command will net get executed through a shell.
 #  command = powershell.exe -File "C:\example_script.ps1"
 #  interval = 60
 #  timeout = 10
