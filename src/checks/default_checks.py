@@ -547,12 +547,13 @@ class DefaultChecks(Check):
                 try:
                     server = 'localhost'  # name of the target computer to get event logs
                     logTypes = []
-                    if self.Config.config.get('default', 'wineventlog-logtypes') != "":
-                        for logtype in self.Config.config.get('default', 'wineventlog-logtypes').split(','):
+                    fallback_logtypes = 'System, Application, Security'
+                    if self.Config.config.get('default', 'wineventlog-logtypes', fallback=fallback_logtypes) != "":
+                        for logtype in self.Config.config.get('default', 'wineventlog-logtypes', fallback=fallback_logtypes).split(','):
                             if logtype.strip() != '':
                                 logTypes.append(logtype.strip())
                     else:
-                        logTypes = ['System', 'Application', 'Security', 'openITCOCKPIT Agent']
+                        logTypes = ['System', 'Application', 'Security']
 
                     evt_dict = {
                         win32con.EVENTLOG_AUDIT_FAILURE: 'EVENTLOG_AUDIT_FAILURE',  # 16 -> critical
