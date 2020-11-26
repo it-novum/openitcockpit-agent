@@ -75,13 +75,22 @@ class AgentLog:
         self.logfile.debug(msg)
 
     def verbose(self, msg):
-        # todo replace this with an spam loglevel or so
-        if "is not allowing us to" in msg:
-            return
-
         self.ColorOutput.verbose(msg)
         self.logfile.debug(msg)
 
     def stacktrace(self, msg):
         self.ColorOutput.error(msg)
         self.logfile.error(msg)
+
+    def psutil_access_denied(self, pid, name, type: str):
+        process = ""
+        if (pid is not None) and (name is not None):
+            process = "%s [PID: %s]" % (name, pid)
+        elif (pid is not None):
+            process = "%s" % (pid)
+        elif (name is not None):
+            process = "%s" % (name)
+
+        msg = 'psutil access denied: Process %s is not allowing us to get %s' % (process, type)
+        #self.ColorOutput.warning(msg)
+        #self.logfile.warning(msg)

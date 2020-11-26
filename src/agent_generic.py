@@ -33,9 +33,9 @@ from src.exceptions.untrusted_agent_exception import UntrustedAgentException
 class AgentService:
 
     def init_service(self):
-        agentVersion = "2.0.2"
+        agent_version = "2.0.3"
 
-        self.config = Config(agentVersion)
+        self.config = Config(agent_version)
         self.config.load_configuration()
 
         self.agent_log = AgentLog(Config=self.config)
@@ -64,7 +64,7 @@ class AgentService:
             if self.config.is_push_mode:
                 mode = 'push'
 
-            self.agent_log.info('Agent is running in %s mode' % mode)
+            self.agent_log.info('Agent version %s is running in %s mode' % (self.config.agent_version, mode))
 
             # Start the web server in a separate thread
             self.thread_factory.spawn_webserver_thread()

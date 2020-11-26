@@ -9,7 +9,7 @@
   max_worker_threads = 8
 
 [check_whoami]
-  command = whoami
+  command = /usr/bin/whoami
   interval = 60
   timeout = 5
   enabled = false

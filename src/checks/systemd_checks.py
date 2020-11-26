@@ -93,7 +93,7 @@ class SystemdChecks(Check):
                                 tmp_dict['desc'] = service_description.strip()
                                 systemd_services.append(tmp_dict)
                             except:
-                                self.agent_log.error("An error occured while processing the systemd check output!")
+                                self.agent_log.error("An error occurred while processing the systemd check output!")
                                 self.agent_log.stacktrace(traceback.format_exc())
 
                     self.systemd_services_data['result'] = systemd_services
@@ -101,7 +101,7 @@ class SystemdChecks(Check):
                     self.systemd_services_data['last_updated'] = time.ctime()
 
             except:
-                self.agent_log.error('An error occured while running the systemd status check!')
+                self.agent_log.error('An error occurred while running the systemd status check!')
                 self.agent_log.stacktrace(traceback.format_exc())
 
         del self.systemd_services_data['running']

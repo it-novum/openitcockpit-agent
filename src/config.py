@@ -18,8 +18,8 @@ from src.operating_system import OperatingSystem
 
 class Config:
 
-    def __init__(self, agentVersion):
-        self.agentVersion = agentVersion
+    def __init__(self, agent_version: str):
+        self.agent_version = agent_version
 
         self.verbose = False
         self.stacktrace = False

@@ -560,3 +560,10 @@ pip3 install pdoc3
 pdoc . --html --output-dir docs
 rm -r ./__pycache__
 ```
+
+# Debugging
+
+## Query the Agent using curl
+```
+curl -k -v https://xxx.xxx.xxx.xxx:3333 --cacert /opt/openitc/agent/server_ca.pem --key /opt/openitc/agent/server_ca.key --cert /opt/openitc/agent/server_ca.pem
+```

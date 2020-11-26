@@ -78,7 +78,7 @@ class DockerChecks(Check):
                 self.docker_stats_data['returncode'] = 124
 
         except:
-            self.agent_log.error('An error occured while running the docker status check!')
+            self.agent_log.error('An error occurred while running the docker status check!')
             self.agent_log.stacktrace(traceback.format_exc())
 
         if tmp_docker_stats_result != '' and self.docker_stats_data['returncode'] == 0:
@@ -111,7 +111,7 @@ class DockerChecks(Check):
                             sorted_cl_data.append(tmp_dict)
                     except:
                         self.agent_log.error(
-                            "An error occured while processing the docker check output! Seems like there are no docker containers.")
+                            "An error occurred while processing the docker check output! Seems like there are no docker containers.")
                         self.agent_log.stacktrace(traceback.format_exc())
 
             for cl_data in sorted_cl_data:
