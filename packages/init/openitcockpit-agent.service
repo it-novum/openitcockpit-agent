@@ -8,6 +8,7 @@ User=root
 Type=simple
 Restart=on-failure
 ExecStart=/usr/bin/openitcockpit-agent-python3.linux.bin --config /etc/openitcockpit-agent/config.cnf
+ExecReload=/bin/kill -HUP $MAINPID
 StandardOutput=journal
 StandardError=inherit
 
