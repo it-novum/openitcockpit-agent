@@ -38,3 +38,15 @@ class Filesystem:
 
         """
         return (isdir(path) and access(path, W_OK))
+
+    
+    def file_exists(file):
+        """Function to check whether a file exists or not
+
+        Parameters
+        ----------
+        file
+            Path to file
+
+        """
+        return isfile(file)
