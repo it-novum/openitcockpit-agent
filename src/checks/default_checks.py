@@ -377,7 +377,8 @@ class DefaultChecks(Check):
                                     if hasattr(p, 'io_counters'):
                                         process[attr] = p.io_counters.__dict__
                                 else:
-                                    process[attr] = getattr(p, attr)()
+                                    if hasattr(p, attr):
+                                        process[attr] = getattr(p, attr)()
                             except psutil.AccessDenied as e:
                                 self.agent_log.psutil_access_denied(
                                     pid=e.pid,
