@@ -72,7 +72,7 @@ class DefaultChecks(Check):
         # if verbose:
         #    print_lock.acquire()
 
-        if self.Config.config.getboolean('default', 'cpustats'):
+        if self.Config.config.getboolean('default', 'cpustats', fallback=True):
             # CPU #
             cpuTotalPercentage = psutil.cpu_percent()
             cpuPercentage = psutil.cpu_percent(interval=0, percpu=True)
@@ -294,8 +294,6 @@ class DefaultChecks(Check):
                 self.agent_log.error("Could not get battery sensor data!")
                 self.agent_log.stacktrace(traceback.format_exc())
 
-        pids = psutil.pids()
-
         system_load_avg = []
         try:
             if hasattr(psutil, "getloadavg"):
@@ -314,242 +312,122 @@ class DefaultChecks(Check):
             self.agent_log.error("Could not get users, connected to the system!")
             self.agent_log.stacktrace(traceback.format_exc())
 
-        # processes = [ psutil.Process(pid).as_dict() for pid in pids ]
         processes = []
-
-        tmpProcessList = []
-
         if self.Config.config.getboolean('default', 'processstats'):
-            for pid in pids:
+            for pid in psutil.pids():
                 try:
+                    process = {
+                        'pid': pid,
+                        'ppid': None,
+                        'status': "",
+                        'username': "",
+                        'nice': None,  # rename later to nice_level for legacy reasons
+                        'name': "",
+                        'exe': "",  # rename later to exec for legacy reasons
+                        'cmdline': "",
+                        'cpu_percent': None,
+                        'memory_info': {},  # rename later to memory
+                        'memory_percent': None,
+                        'num_fds': {},
+                        'io_counters': {},
+                        'open_files': "",
+                        'children': []
+                    }
+
+                    # Rename the fields to be backwards compatible to version 1.x
+                    rename = {
+                        'nice': 'nice_level',
+                        'exe': 'exec',
+                        'memory_info': 'memory'
+                    }
+
                     p = psutil.Process(pid)
-                    try:
-                        cpu_percent = p.cpu_percent(interval=None)
+                    with p.oneshot():
+                        if pid not in (0, 1, 2):
+                            try:
+                                parent = p.parent()
+                                if hasattr(parent, 'pid'):
+                                    process['ppid'] = p.parent().pid
+                            except:
+                                pass
 
-                        tmpProcessList.append(p)
-                    except:
-                        self.agent_log.verbose("'%s' Process is not allowing us to get the CPU usage!" % str(pid))
-                        #self.agent_log.stacktrace(traceback.format_exc())
+                        if self.Config.config.getboolean('default', 'processstats-including-child-ids', fallback=False):
+                            try:
+                                with self.suppress_stdout_stderr():
+                                    for child in p.children(recursive=True):
+                                        process['children'].append(child.pid)
+                            except psutil.AccessDenied as e:
+                                self.agent_log.psutil_access_denied(
+                                    pid=e.pid,
+                                    name=e.name,
+                                    type="child process IDs"
+                                )
+                            except:
+                                self.agent_log.stacktrace(traceback.format_exc())
 
+                        attributes = ['nice', 'name', 'username', 'exe', 'cmdline', 'cpu_percent', 'memory_info',
+                                      'memory_percent', 'num_fds', 'open_files', 'io_counters']
+                        for attr in attributes:
+                            try:
+                                if attr == 'cpu_percent':
+                                    process[attr] = p.cpu_percent(interval=None)
+                                elif attr == 'memory_info':
+                                    process[attr] = p.memory_info()._asdict()
+                                elif attr == 'io_counters':
+                                    if hasattr(p, 'io_counters'):
+                                        process[attr] = p.io_counters.__dict__
+                                else:
+                                    process[attr] = getattr(p, attr)()
+                            except psutil.AccessDenied as e:
+                                self.agent_log.psutil_access_denied(
+                                    pid=e.pid,
+                                    name=e.name,
+                                    type=attr
+                                )
+                            except:
+                                self.agent_log.stacktrace(traceback.format_exc())
+
+                    for key_to_rename in rename:
+                        rename_to = rename[key_to_rename]
+
+                        value_to_move = process.pop(key_to_rename)
+                        process[rename_to] = value_to_move
+
+                    process['name'] = process['name'][:1000]
+                    process['exec'] = process['exec'][:1000]
+                    process['cmdline'] = process['cmdline'][:1000]
+
+                    processes.append(process)
 
                 except psutil.NoSuchProcess:
                     continue
-                except:
-                    self.agent_log.error("An error occured during process check!")
-                    self.agent_log.stacktrace(traceback.format_exc())
 
-        for p in tmpProcessList:
-            try:
-
-                pid = p.pid
-                ppid = None
-                status = ""
-                username = ""
-                nice = None
-                name = ""
-                exe = ""
-                cmdline = ""
-                cpu_percent = None
-                memory_info = {}
-                memory_percent = None
-                num_fds = {}
-                io_counters = {}
-                open_files = ""
-                children = []
-
-                if pid not in (1, 2):
-                    try:
-                        if callable(p.parent):
-                            ppid = p.parent().pid
-                    except (psutil.NoSuchProcess, ProcessLookupError):
-                        continue
-                    except AttributeError:
-                        self.agent_log.verbose(
-                            "'%s' Process is not allowing us to get the parent process id!" % (str(pid)))
-
-                        if self.Config.stacktrace:
-                            traceback.print_exc()
-
-                    if self.Config.config.getboolean('default', 'processstats-including-child-ids'):
-                        try:
-                            if callable(p.children):
-                                with self.suppress_stdout_stderr():
-                                    for child in p.children(recursive=True):
-                                        children.append(child.pid)
-                        except:
-                            self.agent_log.verbose(
-                                "'%s' Process is not allowing us to get the child process ids!" % (str(pid)))
-
-                            if self.Config.stacktrace:
-                                traceback.print_exc()
-
-                try:
-                    nice = p.nice()
-                except (psutil.NoSuchProcess, ProcessLookupError):
-                    continue
-                except:
-                    self.agent_log.verbose(
-                        "'%s' Process is not allowing us to get the nice option!" % (name if name != "" else str(pid)))
-
-                    if self.Config.stacktrace:
-                        traceback.print_exc()
-
-                try:
-                    name = p.name()
-                except (psutil.NoSuchProcess, ProcessLookupError):
-                    continue
-                except:
-                    self.agent_log.verbose(
-                        "'%s' Process is not allowing us to get the name option!" % (name if name != "" else str(pid)))
-
-                    if self.Config.stacktrace:
-                        traceback.print_exc()
-
-                try:
-                    username = p.username()
-                except (psutil.NoSuchProcess, ProcessLookupError):
-                    continue
-                except:
-                    self.agent_log.verbose("'%s' Process is not allowing us to get the username option!" % (
-                        name if name != "" else str(pid)))
-
-                    if self.Config.stacktrace:
-                        traceback.print_exc()
-
-                try:
-                    exe = p.exe()
-                except (psutil.NoSuchProcess, ProcessLookupError):
-                    continue
-                except:
-                    self.agent_log.verbose(
-                        "'%s' Process is not allowing us to get the exec option!" % (name if name != "" else str(pid)))
-
-                    if self.Config.stacktrace:
-                        traceback.print_exc()
-
-                try:
-                    cmdline = p.cmdline()
-                except (psutil.NoSuchProcess, ProcessLookupError):
-                    continue
-                except:
-                    self.agent_log.verbose("'%s' Process is not allowing us to get the cmdline option!" % (
-                        name if name != "" else str(pid)))
-
-                    if self.Config.stacktrace:
-                        traceback.print_exc()
-
-                try:
-                    cpu_percent = p.cpu_percent(interval=None)
-                except (psutil.NoSuchProcess, ProcessLookupError):
-                    continue
-                except:
-                    self.agent_log.verbose(
-                        "'%s' Process is not allowing us to get the CPU usage!" % (name if name != "" else str(pid)))
-
-                    if self.Config.stacktrace:
-                        traceback.print_exc()
-
-                try:
-                    memory_info = p.memory_info()._asdict()
-                except (psutil.NoSuchProcess, ProcessLookupError):
-                    continue
-                except:
-                    self.agent_log.verbose("'%s' Process is not allowing us to get memory usage information!" % (
-                        name if name != "" else str(pid)))
-
-                    if self.Config.stacktrace:
-                        traceback.print_exc()
-
-                try:
-                    memory_percent = p.memory_percent()
-                except (psutil.NoSuchProcess, ProcessLookupError):
-                    continue
-                except:
-                    self.agent_log.verbose("'%s' Process is not allowing us to get the percent of memory usage!" % (
-                        name if name != "" else str(pid)))
-
-                    if self.Config.stacktrace:
-                        traceback.print_exc()
-
-                try:
-                    num_fds = p.num_fds()
-                except (psutil.NoSuchProcess, ProcessLookupError):
-                    continue
-                except:
-                    self.agent_log.verbose("'%s' Process is not allowing us to get the num_fds option!" % (
-                        name if name != "" else str(pid)))
-
-                    if self.Config.stacktrace:
-                        traceback.print_exc()
-
-                try:
-                    io_counters = p.io_counters.__dict__
-                except (psutil.NoSuchProcess, ProcessLookupError):
-                    continue
-                except:
-                    self.agent_log.verbose(
-                        "'%s' Process is not allowing us to get the IO counters!" % (name if name != "" else str(pid)))
-
-                    if self.Config.stacktrace:
-                        traceback.print_exc()
-
-                try:
-                    open_files = p.open_files()
-                except (psutil.NoSuchProcess, ProcessLookupError):
-                    continue
                 except psutil.AccessDenied:
-                    self.agent_log.verbose("'%s' Process is not allowing us to get the open_files option!" % (
-                        name if name != "" else str(pid)))
+                    continue
 
-                    if self.Config.stacktrace:
-                        traceback.print_exc()
-
-                name = name[:1000]
-                exe = exe[:1000]
-                cmdline = cmdline[:1000]
-
-                process = {
-                    'name': name,
-                    'exec': exe,
-                    'cmdline': cmdline,
-                    'pid': pid,
-                    'ppid': ppid,
-                    'children': children,
-                    'status': status,
-                    'username': username,
-                    'cpu_percent': cpu_percent,
-                    'memory': memory_info,
-                    'memory_percent': memory_percent,
-                    'num_fds': num_fds,
-                    'open_files': open_files,
-                    'io_counters': io_counters,
-                    'nice_level': nice
-                }
-                processes.append(process)
-            except psutil.NoSuchProcess:
-                continue
-            except:
-                self.agent_log.error("An error occured during process check!")
-                self.agent_log.stacktrace(traceback.format_exc())
+                except:
+                    self.agent_log.error("An error occurred during process check!")
+                    self.agent_log.stacktrace(traceback.format_exc())
 
         windows_services = []
         windows_eventlog = {}
         if self.operating_system.isWindows() is True:
-            if self.Config.config.getboolean('default', 'winservices'):
+            if self.Config.config.getboolean('default', 'winservices', fallback=True):
                 try:
                     for win_process in psutil.win_service_iter():
                         windows_services.append(win_process.as_dict())
                 except:
-                    self.agent_log.error("An error occured during windows services check!")
+                    self.agent_log.error("An error occurred during windows services check!")
                     self.agent_log.stacktrace(traceback.format_exc())
 
-            if self.Config.config.getboolean('default', 'wineventlog'):
+            if self.Config.config.getboolean('default', 'wineventlog', fallback=True):
                 try:
                     server = 'localhost'  # name of the target computer to get event logs
                     logTypes = []
                     fallback_logtypes = 'System, Application, Security'
                     if self.Config.config.get('default', 'wineventlog-logtypes', fallback=fallback_logtypes) != "":
-                        for logtype in self.Config.config.get('default', 'wineventlog-logtypes', fallback=fallback_logtypes).split(','):
+                        for logtype in self.Config.config.get('default', 'wineventlog-logtypes',
+                                                              fallback=fallback_logtypes).split(','):
                             if logtype.strip() != '':
                                 logTypes.append(logtype.strip())
                     else:
@@ -599,15 +477,15 @@ class DefaultChecks(Check):
                                                        event.StringInserts] if event.StringInserts else ''
                                     }
                                     windows_eventlog[logType].append(tmp_evt)
-                        
-                        except Exception as e:            
+
+                        except Exception as e:
                             self.agent_log.error(
-                                "An error occured during windows eventlog check with log type %s!" % (logType))
+                                "An error occurred during windows eventlog check with log type %s!" % (logType))
                             self.agent_log.error(str(e))
                             self.agent_log.stacktrace(traceback.format_exc())
 
                 except:
-                    self.agent_log.error("An error occured during windows eventlog check!")
+                    self.agent_log.error("An error occurred during windows eventlog check!")
                     self.agent_log.stacktrace(traceback.format_exc())
 
         try:
@@ -618,7 +496,7 @@ class DefaultChecks(Check):
                 'system_uptime': uptime,
                 'kernel_version': platform.release(),
                 'mac_version': platform.mac_ver()[0],
-                'agent_version': self.Config.agentVersion,
+                'agent_version': self.Config.agent_version,
                 'temperature_unit': 'F' if self.Config.temperatureIsFahrenheit else 'C'
             }
         except:
@@ -626,7 +504,7 @@ class DefaultChecks(Check):
                 'last_updated': time.ctime(),
                 'last_updated_timestamp': round(time.time()),
                 'system_uptime': uptime,
-                'agent_version': self.Config.agentVersion,
+                'agent_version': self.Config.agent_version,
                 'temperature_unit': 'F' if self.Config.temperatureIsFahrenheit else 'C'
             }
 
@@ -650,8 +528,6 @@ class DefaultChecks(Check):
 
             'memory': memory._asdict(),
             'swap': swap._asdict(),
-
-            # 'processes': processes
         }
 
         if self.Config.config.getboolean('default', 'diskstats'):
@@ -669,7 +545,7 @@ class DefaultChecks(Check):
         if self.Config.config.getboolean('default', 'sensorstats'):
             out['sensors'] = sensors
 
-        if self.Config.config.getboolean('default', 'cpustats'):
+        if self.Config.config.getboolean('default', 'cpustats', fallback=True):
             out['cpu_total_percentage'] = cpuTotalPercentage
             out['cpu_percentage'] = cpuPercentage
             out['cpu_total_percentage_detailed'] = cpuTotalPercentageDetailed
@@ -704,7 +580,7 @@ class DefaultChecks(Check):
         # if self.Config.verbose:
         #    print_lock.release()
 
-        return out
+        return out.copy()
 
     def wrapdiff(self, last, curr):
         """ Function to calculate the difference between last and curr

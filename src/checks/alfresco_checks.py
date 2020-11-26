@@ -70,12 +70,12 @@ class AlfrescoChecks(Check):
                         })
 
                 except subprocess.CalledProcessError as e:
-                    alfrescostats = "An error occured during alfresco stats check while connecting to jmx!"
+                    alfrescostats = "An error occurred during alfresco stats check while connecting to jmx!"
                     self.agent_log.error(alfrescostats)
                     self.agent_log.stacktrace(traceback.format_exc())
 
                 except:
-                    alfrescostats = "An error occured during alfresco stats check!"
+                    alfrescostats = "An error occurred during alfresco stats check!"
                     self.agent_log.error(alfrescostats)
                     self.agent_log.stacktrace(traceback.format_exc())
 
