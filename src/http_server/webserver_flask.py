@@ -192,10 +192,3 @@ class WebserverFlask:
             self.Config.config.getint('default', 'interval', fallback=5)
         ))
 
-    def loop(self):
-        print('starting server')
-        self.srv.serve_forever()
-
-    def shutdown(self):
-        print('shutdown server')
-        # self.srv.shutdown()
