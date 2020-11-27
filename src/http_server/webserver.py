@@ -74,3 +74,18 @@ class Webserver:
                 self.Config.config.getint('default', 'port', fallback=3333),
                 self.Config.config.getint('default', 'interval', fallback=5)
             ))
+
+    def loop(self):
+        self.httpd.timeout = 10
+        self.httpd.handle_timeout = lambda: (_ for _ in ()).throw(TimeoutError())
+
+        self.run_loop = True
+
+        try:
+            while self.run_loop:
+                self.httpd.handle_request()
+        except TimeoutError:
+            print("HTTP SERVER Timeout")
+    
+    def shutdown(self):
+        self.run_loop = False

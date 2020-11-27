@@ -64,11 +64,13 @@ class ThreadFactory:
         self.webserver.start_webserver()
 
         # Start the web server in a separate thread
-        self.webserver_thread = threading.Thread(target=self.webserver.httpd.serve_forever, daemon=True)
+        #self.webserver_thread = threading.Thread(target=self.webserver.httpd.serve_forever, daemon=True)
+        self.webserver_thread = threading.Thread(target=self.webserver.loop, daemon=True)
         self.webserver_thread.start()
 
     def shutdown_webserver_thread(self):
-        self.webserver.httpd.shutdown()
+        #self.webserver.httpd.shutdown()
+        self.webserver.shutdown()
         self.webserver_thread.join()
 
     def _loop_checks_thread(self):
