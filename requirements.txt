@@ -6,3 +6,4 @@ requests~=2.24.0
 pyinstaller
 jmxquery
 urllib3
+flask
