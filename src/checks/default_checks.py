@@ -385,7 +385,12 @@ class DefaultChecks(Check):
                                     name=e.name,
                                     type=attr
                                 )
-                            except:
+                            except OSError:
+                                # Mostlikely this is the process "Registry" on Windows
+                                # OSError: [WinError 1168] Element nicht gefunden: '(originated from NtQueryInformationProcess(ProcessBasicInformation))'
+                                pass
+                            except Exception as err:
+                                #print(type(err))
                                 self.agent_log.stacktrace(traceback.format_exc())
 
                     for key_to_rename in rename:

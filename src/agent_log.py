@@ -52,11 +52,14 @@ class AgentLog:
     def _get_logfile_path(self) -> str:
         etc_agent_path = self.Config.get_etc_path()
 
-        if Filesystem.dir_writeable(etc_agent_path):
-            return etc_agent_path + 'agent.log'
+        try:
+            with open(etc_agent_path + 'agent.log', 'a') as f:
+                # File is writable
+                return etc_agent_path + 'agent.log'
 
-        # Default path is not writeable - store agent.log to current directory...
-        return os.getcwd() + os.path.sep + 'agent.log'
+        except IOError:
+            # Default path is not writeable - store agent.log to current directory...
+            return os.getcwd() + os.path.sep + 'agent.log'
 
     def info(self, msg):
         self.ColorOutput.info(msg)

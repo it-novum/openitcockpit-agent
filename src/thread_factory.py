@@ -8,6 +8,7 @@ from src.checks.systemd_checks import SystemdChecks
 from src.checks.docker_checks import DockerChecks
 from src.checks.qemu_checks import QemuChecks
 from src.http_server.webserver import Webserver
+from src.http_server.webserver_flask import WebserverFlask
 from src.custom_check import CustomCheck
 from src.config import Config
 from src.agent_log import AgentLog
@@ -60,15 +61,19 @@ class ThreadFactory:
             pass
 
     def spawn_webserver_thread(self):
-        self.webserver = Webserver(self.Config, self.agent_log, self.check_store, self.main_thread, self.certificates)
+        self.webserver = WebserverFlask(self.Config, self.agent_log, self.check_store, self.main_thread, self.certificates)
         self.webserver.start_webserver()
 
         # Start the web server in a separate thread
-        self.webserver_thread = threading.Thread(target=self.webserver.httpd.serve_forever, daemon=True)
+
+
+        self.webserver_thread = threading.Thread(target=self.webserver.srv.serve_forever, daemon=True)
+        #self.webserver_thread = threading.Thread(target=self.webserver.loop, daemon=True)
         self.webserver_thread.start()
 
     def shutdown_webserver_thread(self):
-        self.webserver.httpd.shutdown()
+        self.webserver.srv.shutdown()
+        #self.webserver.shutdown()
         self.webserver_thread.join()
 
     def _loop_checks_thread(self):

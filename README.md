@@ -157,6 +157,11 @@ Open up `.vscode/launch.json` and set the full path to `config.cnf`
 Configure the debugger and run the Agent
 ![VSCode debugger python](images/vscode_python_debugger.png)
 
+Ignore changes in `launch.json`:
+```
+git update-index --assume-unchanged .vscode/launch.json
+```
+
 ### PyCharm Community 
 
 Free Download: [https://www.jetbrains.com/pycharm/download/](https://www.jetbrains.com/pycharm/download/)
@@ -165,6 +170,7 @@ Free Download: [https://www.jetbrains.com/pycharm/download/](https://www.jetbrai
 ![Setup PyCharm debugger](images/setup_pycharm_debugger.png)
 
 ![run Pycharm debugger](images/run_pycharm_debugger.png)
+
 
 ---
 
