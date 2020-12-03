@@ -93,7 +93,7 @@ class Certificates:
             req.set_pubkey(key)
 
             # b'sha512' will throw an error so we pass a string even if the function docs says it wants a byte string
-            req.sign(key, b'sha512')
+            req.sign(key, 'sha512')
 
             ssl_paths = [
                 self.Config.config['default']['autossl-csr-file'],
