@@ -14,7 +14,7 @@ class Filesystem:
             Path to file
 
         """
-        return (isfile(path) and access(path, R_OK))
+        return isfile(path) and access(path, R_OK)
 
     def file_writeable(path):
         """Function to check whether a file is writeable or not
@@ -25,7 +25,7 @@ class Filesystem:
             Path to file
 
         """
-        return (isfile(path) and access(path, W_OK))
+        return isfile(path) and access(path, W_OK)
 
     def dir_writeable(path):
         """Function to check whether a directory is writeable or not
@@ -36,7 +36,7 @@ class Filesystem:
             Path to file
 
         """
-        return (isdir(path) and access(path, W_OK))
+        return isdir(path) and access(path, W_OK)
 
     def file_exists(file):
         """Function to check whether a file exists or not

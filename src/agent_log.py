@@ -84,12 +84,12 @@ class AgentLog:
 
     def psutil_access_denied(self, pid, name, type: str):
         process = ""
-        if (pid is not None) and (name is not None):
+        if pid is not None and name is not None:
             process = "%s [PID: %s]" % (name, pid)
-        elif (pid is not None):
-            process = "%s" % (pid)
-        elif (name is not None):
-            process = "%s" % (name)
+        elif pid is not None:
+            process = "%s" % pid
+        elif name is not None:
+            process = "%s" % name
 
         msg = 'psutil access denied: Process %s is not allowing us to get %s' % (process, type)
         # self.ColorOutput.warning(msg)

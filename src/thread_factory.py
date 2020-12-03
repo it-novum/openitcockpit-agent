@@ -1,4 +1,4 @@
-import concurrent.futures
+from concurrent.futures import ThreadPoolExecutor
 import threading
 import time
 
@@ -87,41 +87,41 @@ class ThreadFactory:
             DefaultChecks(self.Config, self.agent_log, self.check_store, check_params),
         ]
 
-        if (self.Config.config.getboolean('default', 'dockerstats')):
+        if self.Config.config.getboolean('default', 'dockerstats'):
             checks.append(
                 DockerChecks(self.Config, self.agent_log, self.check_store, check_params)
             )
 
-        if (self.Config.config.getboolean('default', 'qemustats')):
+        if self.Config.config.getboolean('default', 'qemustats'):
             checks.append(
                 QemuChecks(self.Config, self.agent_log, self.check_store, check_params)
             )
 
-        if (self.Config.config.getboolean('default', 'systemdservices') and self.operating_system.isLinux()):
+        if self.Config.config.getboolean('default', 'systemdservices') and self.operating_system.isLinux():
             checks.append(
                 SystemdChecks(self.Config, self.agent_log, self.check_store, check_params),
             )
 
-        if (self.Config.config.getboolean('default', 'alfrescostats')):
+        if self.Config.config.getboolean('default', 'alfrescostats'):
             checks.append(
                 AlfrescoChecks(self.Config, self.agent_log, self.check_store, check_params),
             )
 
         check_interval = self.Config.config.getint('default', 'interval', fallback=5)
-        if (check_interval <= 0):
+        if check_interval <= 0:
             self.agent_log.info('check_interval <= 0. Using 5 seconds as check_interval for now.')
             check_interval = 5
 
         # Run checks on agent startup
         check_interval_counter = check_interval
         while self.loop_checks_thread:
-            if (check_interval_counter >= check_interval):
+            if check_interval_counter >= check_interval:
                 # Execute checks
                 # print('run checks')
                 check_interval_counter = 1
 
                 # Execute all checks in a separate thread managed by ThreadPoolExecutor
-                with concurrent.futures.ThreadPoolExecutor(max_workers=5) as executor:
+                with ThreadPoolExecutor(max_workers=5) as executor:
                     i = 0
                     for check in checks:
                         self.agent_log.debug('Starting new Default Checks Thread %d' % i)
@@ -157,7 +157,7 @@ class ThreadFactory:
         while self.loop_custom_checks_thread:
 
             # Execute all custom checks in a separate thread managed by ThreadPoolExecutor
-            with concurrent.futures.ThreadPoolExecutor(max_workers=worker) as executor:
+            with ThreadPoolExecutor(max_workers=worker) as executor:
                 i = 0
                 for key in self.custom_checks:
                     custom_check = self.custom_checks[key]
@@ -206,7 +206,7 @@ class ThreadFactory:
         push_client = PushClient(self.Config, self.agent_log, self.check_store, self.certificates)
 
         while self.loop_check_result_push_thread:
-            if (push_interval_counter >= push_interval):
+            if push_interval_counter >= push_interval:
 
                 # Push checks results to openITCOCKPIT Server
                 push_interval_counter = 1
@@ -234,7 +234,7 @@ class ThreadFactory:
         check_autossl_counter = 0
 
         while self.loop_autossl_thread:
-            if (check_autossl_counter >= interval):
+            if check_autossl_counter >= interval:
 
                 try:
                     trigger_reload = self.certificates.check_auto_certificate()

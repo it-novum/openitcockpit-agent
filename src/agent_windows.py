@@ -13,7 +13,7 @@ import win32service
 import win32serviceutil
 import win32timezone
 
-from src.agent_generic import AgentService
+from agent_generic import AgentService
 
 _ = win32timezone.DLLCache  # to keep the import
 

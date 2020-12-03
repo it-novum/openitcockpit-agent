@@ -42,7 +42,7 @@ class WebserverFlask:
             self.enable_ssl = True
 
         self.protocol = 'http'
-        if (self.enable_ssl):
+        if self.enable_ssl:
             self.protocol = 'https'
 
         self.server_address = {
@@ -178,7 +178,8 @@ class WebserverFlask:
             self.server_address['address'],
             self.server_address['port'],
             self.app,
-            ssl_context=self.ssl_context
+            ssl_context=self.ssl_context,
+            threaded=True
         )
         self.ctx = self.app.app_context()
         self.ctx.push()

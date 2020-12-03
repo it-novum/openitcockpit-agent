@@ -7,7 +7,7 @@
 import signal
 import time
 
-from src.agent_generic import AgentService
+from agent_generic import AgentService
 
 
 class LinuxService(AgentService):
