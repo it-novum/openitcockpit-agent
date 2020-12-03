@@ -523,7 +523,9 @@ brew install python
 python3 -m venv ./python3-macos-env
 ./python3-macos-env/bin/activate
 pip3 install -r requirements.txt
-pyinstaller agent_nix.py -n openitcockpit-agent-python3 --onefile
+cd src
+pyinstaller agent_nix.py --distpath ../dist -n openitcockpit-agent-python3 --onefile
+cd ..
 ./python3-macos-env/bin/deactivate
 
 mv ./dist/openitcockpit-agent-python3 ./executables/openitcockpit-agent-python3.macos.bin
