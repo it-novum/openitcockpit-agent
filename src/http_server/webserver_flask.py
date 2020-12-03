@@ -1,11 +1,11 @@
-from src.filesystem import Filesystem
-from src.config import Config
-from src.agent_log import AgentLog
-from src.check_result_store import CheckResultStore
-from src.http_server.daemon_threaded_http_server import DaemonThreadedHTTPServer
-from src.http_server.agent_request_handler import AgentRequestHandler
-from src.certificates import Certificates
-from src.main_thread import MainThread
+from filesystem import Filesystem
+from config import Config
+from agent_log import AgentLog
+from check_result_store import CheckResultStore
+from http_server.daemon_threaded_http_server import DaemonThreadedHTTPServer
+from http_server.agent_request_handler import AgentRequestHandler
+from certificates import Certificates
+from main_thread import MainThread
 import ssl
 import json
 import traceback

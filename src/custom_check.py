@@ -1,5 +1,5 @@
-from src.agent_log import AgentLog
-from src.check_result_store import CheckResultStore
+from agent_log import AgentLog
+from check_result_store import CheckResultStore
 
 import subprocess
 import time

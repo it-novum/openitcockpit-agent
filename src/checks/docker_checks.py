@@ -3,8 +3,8 @@ import traceback
 import time
 import subprocess
 
-from src.checks.Check import Check
-from src.operating_system import OperatingSystem
+from checks.Check import Check
+from operating_system import OperatingSystem
 
 
 class DockerChecks(Check):

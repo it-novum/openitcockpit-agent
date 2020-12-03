@@ -14,6 +14,7 @@ import win32service
 import win32serviceutil
 import win32timezone
 
+_ = win32timezone.DLLCache  # to keep the import
 
 class OITCService(win32serviceutil.ServiceFramework, AgentService):
     _svc_name_ = "openITCOCKPITAgent"

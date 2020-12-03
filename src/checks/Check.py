@@ -1,6 +1,6 @@
-from src.config import Config
-from src.agent_log import AgentLog
-from src.check_result_store import CheckResultStore
+from config import Config
+from agent_log import AgentLog
+from check_result_store import CheckResultStore
 
 class Check:
 

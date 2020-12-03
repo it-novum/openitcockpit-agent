@@ -10,10 +10,10 @@ import time
 if sys.platform == 'win32' or sys.platform == 'win64':
     import winreg
 
-from src.color_output import ColorOutput
-from src.filesystem import Filesystem
-from src.help import Help
-from src.operating_system import OperatingSystem
+from color_output import ColorOutput
+from filesystem import Filesystem
+from help import Help
+from operating_system import OperatingSystem
 
 
 class Config:

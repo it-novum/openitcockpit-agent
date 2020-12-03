@@ -22,12 +22,12 @@ import signal
 import threading
 import time
 
-from src.main_thread import MainThread
-from src.config import Config
-from src.agent_log import AgentLog
-from src.certificates import Certificates
-from src.thread_factory import ThreadFactory
-from src.exceptions.untrusted_agent_exception import UntrustedAgentException
+from main_thread import MainThread
+from config import Config
+from agent_log import AgentLog
+from certificates import Certificates
+from thread_factory import ThreadFactory
+from exceptions.untrusted_agent_exception import UntrustedAgentException
 
 
 class AgentService:

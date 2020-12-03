@@ -1,11 +1,11 @@
 import json
 import traceback
 from http.server import BaseHTTPRequestHandler
-from src.check_result_store import CheckResultStore
-from src.config import Config
-from src.certificates import Certificates
-from src.agent_log import AgentLog
-from src.main_thread import MainThread
+from check_result_store import CheckResultStore
+from config import Config
+from certificates import Certificates
+from agent_log import AgentLog
+from main_thread import MainThread
 
 
 class AgentRequestHandler(BaseHTTPRequestHandler):

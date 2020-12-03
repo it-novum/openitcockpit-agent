@@ -2,22 +2,22 @@ import concurrent.futures
 import threading
 import time
 
-from src.checks.alfresco_checks import AlfrescoChecks
-from src.checks.default_checks import DefaultChecks
-from src.checks.systemd_checks import SystemdChecks
-from src.checks.docker_checks import DockerChecks
-from src.checks.qemu_checks import QemuChecks
-from src.http_server.webserver import Webserver
-from src.http_server.webserver_flask import WebserverFlask
-from src.custom_check import CustomCheck
-from src.config import Config
-from src.agent_log import AgentLog
-from src.check_result_store import CheckResultStore
-from src.main_thread import MainThread
-from src.push_client import PushClient
-from src.certificates import Certificates
-from src.exceptions.untrusted_agent_exception import UntrustedAgentException
-from src.operating_system import OperatingSystem
+from checks.alfresco_checks import AlfrescoChecks
+from checks.default_checks import DefaultChecks
+from checks.systemd_checks import SystemdChecks
+from checks.docker_checks import DockerChecks
+from checks.qemu_checks import QemuChecks
+from http_server.webserver import Webserver
+from http_server.webserver_flask import WebserverFlask
+from custom_check import CustomCheck
+from config import Config
+from agent_log import AgentLog
+from check_result_store import CheckResultStore
+from main_thread import MainThread
+from push_client import PushClient
+from certificates import Certificates
+from exceptions.untrusted_agent_exception import UntrustedAgentException
+from operating_system import OperatingSystem
 
 
 class ThreadFactory:

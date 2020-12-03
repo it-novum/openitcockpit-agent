@@ -6,7 +6,7 @@ import psutil
 import time
 from contextlib import contextmanager
 
-from src.checks.Check import Check
+from checks.Check import Check
 
 if sys.platform == 'win32' or sys.platform == 'win64':
     import win32evtlog
@@ -14,7 +14,7 @@ if sys.platform == 'win32' or sys.platform == 'win64':
     import win32con
     import win32security  # To translate NT Sids to account names.
 
-from src.operating_system import OperatingSystem
+from operating_system import OperatingSystem
 
 
 class DefaultChecks(Check):

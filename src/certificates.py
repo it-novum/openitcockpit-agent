@@ -6,16 +6,14 @@ import traceback
 from threading import Lock
 
 import OpenSSL
-import ssl
 import hashlib
 import urllib3
 import requests
-from Crypto.Hash import SHA512
 
-from src.config import Config
-from src.agent_log import AgentLog
-from src.filesystem import Filesystem
-from src.exceptions.untrusted_agent_exception import UntrustedAgentException
+from config import Config
+from agent_log import AgentLog
+from filesystem import Filesystem
+from exceptions.untrusted_agent_exception import UntrustedAgentException
 
 from OpenSSL.SSL import FILETYPE_PEM
 from OpenSSL.crypto import (dump_certificate_request, dump_privatekey, load_certificate, PKey, TYPE_RSA, X509Req)
@@ -96,7 +94,7 @@ class Certificates:
             req.set_pubkey(key)
 
             # b'sha512' will throw an error so we pass a string even if the function docs says it wants a byte string
-            req.sign(key, 'sha512')
+            req.sign(key, b'sha512')
 
             ssl_paths = [
                 self.Config.config['default']['autossl-csr-file'],
@@ -178,7 +176,7 @@ class Certificates:
 
             if datetime.date(int(exp_year), int(exp_month),
                              int(exp_day)) - datetime.datetime.now().date() <= datetime.timedelta(
-                self.days_until_cert_warning):
+                    self.days_until_cert_warning):
                 self.agent_log.warning(
                     'Agent SSL certificate will expire soon. Try to create a new one automatically ...')
                 return True
@@ -355,7 +353,7 @@ class Certificates:
         cert_checksum = self.cert_checksum
         self.checksum_lock.release()
 
-        #self.agent_log.debug(cert_checksum)
+        # self.agent_log.debug(cert_checksum)
         return cert_checksum
 
     def store_cert_file(self, cert_data: str) -> bool:

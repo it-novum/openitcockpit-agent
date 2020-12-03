@@ -3,10 +3,10 @@ import logging.handlers
 import os
 
 from logging.handlers import RotatingFileHandler
-from src.color_output import ColorOutput
-from src.config import Config
+from color_output import ColorOutput
+from config import Config
 from datetime import datetime
-from src.filesystem import Filesystem
+from filesystem import Filesystem
 
 
 class AgentLog:

@@ -2,8 +2,8 @@ import sys
 import threading
 import signal
 
-from src.config import Config
-from src.agent_log import AgentLog
+from config import Config
+from agent_log import AgentLog
 
 
 class MainThread:

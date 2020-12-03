@@ -1,10 +1,10 @@
 import json
 
-from src.config import Config
-from src.agent_log import AgentLog
-from src.check_result_store import CheckResultStore
-from src.filesystem import Filesystem
-from src.certificates import Certificates
+from config import Config
+from agent_log import AgentLog
+from check_result_store import CheckResultStore
+from filesystem import Filesystem
+from certificates import Certificates
 
 import urllib3
 import requests
