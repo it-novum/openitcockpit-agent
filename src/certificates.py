@@ -1,22 +1,21 @@
 import datetime
 import errno
+import hashlib
 import json
 import os
 import traceback
 from threading import Lock
 
 import OpenSSL
-import hashlib
-import urllib3
 import requests
-
-from config import Config
-from agent_log import AgentLog
-from filesystem import Filesystem
-from exceptions.untrusted_agent_exception import UntrustedAgentException
-
+import urllib3
 from OpenSSL.SSL import FILETYPE_PEM
 from OpenSSL.crypto import (dump_certificate_request, dump_privatekey, load_certificate, PKey, TYPE_RSA, X509Req)
+
+from agent_log import AgentLog
+from config import Config
+from exceptions.untrusted_agent_exception import UntrustedAgentException
+from filesystem import Filesystem
 
 
 class Certificates:
@@ -176,7 +175,7 @@ class Certificates:
 
             if datetime.date(int(exp_year), int(exp_month),
                              int(exp_day)) - datetime.datetime.now().date() <= datetime.timedelta(
-                    self.days_until_cert_warning):
+                self.days_until_cert_warning):
                 self.agent_log.warning(
                     'Agent SSL certificate will expire soon. Try to create a new one automatically ...')
                 return True

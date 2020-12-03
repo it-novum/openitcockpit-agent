@@ -1,10 +1,11 @@
 import os
-import sys
-import traceback
 import platform
-import psutil
+import sys
 import time
+import traceback
 from contextlib import contextmanager
+
+import psutil
 
 from checks.Check import Check
 
@@ -390,7 +391,7 @@ class DefaultChecks(Check):
                                 # OSError: [WinError 1168] Element nicht gefunden: '(originated from NtQueryInformationProcess(ProcessBasicInformation))'
                                 pass
                             except Exception as err:
-                                #print(type(err))
+                                # print(type(err))
                                 self.agent_log.stacktrace(traceback.format_exc())
 
                     for key_to_rename in rename:

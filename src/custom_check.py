@@ -1,10 +1,10 @@
-from agent_log import AgentLog
-from check_result_store import CheckResultStore
-
+import shlex
 import subprocess
 import time
-import shlex
 import traceback
+
+from agent_log import AgentLog
+from check_result_store import CheckResultStore
 
 
 class CustomCheck:
@@ -75,7 +75,8 @@ class CustomCheck:
 
             check_result = self._build_checkresult(
                 output='Command "' + self.custom_check['name'] + '" timed out after ' + str(self.timeout) + ' seconds',
-                error_output='Command "' + self.custom_check['name'] + '" timed out after ' + str(self.timeout) + ' seconds',
+                error_output='Command "' + self.custom_check['name'] + '" timed out after ' + str(
+                    self.timeout) + ' seconds',
                 returncode=124
             )
 

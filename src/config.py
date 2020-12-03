@@ -1,11 +1,11 @@
 import base64
+import configparser
 import getopt
 import json
 import os
 import sys
-import configparser
-import traceback
 import time
+import traceback
 
 if sys.platform == 'win32' or sys.platform == 'win64':
     import winreg

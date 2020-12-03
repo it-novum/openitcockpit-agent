@@ -17,17 +17,12 @@
 #
 # current psutil>=5.5.0,<=5.6.2 limitation due to https://github.com/giampaolo/psutil/issues/1723
 
-import concurrent.futures
-import signal
-import threading
-import time
-
-from main_thread import MainThread
-from config import Config
 from agent_log import AgentLog
 from certificates import Certificates
-from thread_factory import ThreadFactory
+from config import Config
 from exceptions.untrusted_agent_exception import UntrustedAgentException
+from main_thread import MainThread
+from thread_factory import ThreadFactory
 
 
 class AgentService:

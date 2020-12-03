@@ -2,22 +2,21 @@ import concurrent.futures
 import threading
 import time
 
+from agent_log import AgentLog
+from certificates import Certificates
+from check_result_store import CheckResultStore
 from checks.alfresco_checks import AlfrescoChecks
 from checks.default_checks import DefaultChecks
-from checks.systemd_checks import SystemdChecks
 from checks.docker_checks import DockerChecks
 from checks.qemu_checks import QemuChecks
-from http_server.webserver import Webserver
-from http_server.webserver_flask import WebserverFlask
-from custom_check import CustomCheck
+from checks.systemd_checks import SystemdChecks
 from config import Config
-from agent_log import AgentLog
-from check_result_store import CheckResultStore
-from main_thread import MainThread
-from push_client import PushClient
-from certificates import Certificates
+from custom_check import CustomCheck
 from exceptions.untrusted_agent_exception import UntrustedAgentException
+from http_server.webserver_flask import WebserverFlask
+from main_thread import MainThread
 from operating_system import OperatingSystem
+from push_client import PushClient
 
 
 class ThreadFactory:
@@ -61,19 +60,19 @@ class ThreadFactory:
             pass
 
     def spawn_webserver_thread(self):
-        self.webserver = WebserverFlask(self.Config, self.agent_log, self.check_store, self.main_thread, self.certificates)
+        self.webserver = WebserverFlask(self.Config, self.agent_log, self.check_store, self.main_thread,
+                                        self.certificates)
         self.webserver.start_webserver()
 
         # Start the web server in a separate thread
 
-
         self.webserver_thread = threading.Thread(target=self.webserver.srv.serve_forever, daemon=True)
-        #self.webserver_thread = threading.Thread(target=self.webserver.loop, daemon=True)
+        # self.webserver_thread = threading.Thread(target=self.webserver.loop, daemon=True)
         self.webserver_thread.start()
 
     def shutdown_webserver_thread(self):
         self.webserver.srv.shutdown()
-        #self.webserver.shutdown()
+        # self.webserver.shutdown()
         self.webserver_thread.join()
 
     def _loop_checks_thread(self):

@@ -1,7 +1,6 @@
 import subprocess
-import traceback
 import time
-import subprocess
+import traceback
 
 from checks.Check import Check
 from operating_system import OperatingSystem

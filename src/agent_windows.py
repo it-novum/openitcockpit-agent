@@ -4,17 +4,19 @@
 # If you want to run the agent on Linux or inside of an IDE like VS Code or PyCharm use the agent_nix.py file
 # EVEN if you are using Windows
 
-from src.agent_generic import AgentService
-
-import servicemanager
 import socket
 import sys
+
+import servicemanager
 import win32event
 import win32service
 import win32serviceutil
 import win32timezone
 
+from src.agent_generic import AgentService
+
 _ = win32timezone.DLLCache  # to keep the import
+
 
 class OITCService(win32serviceutil.ServiceFramework, AgentService):
     _svc_name_ = "openITCOCKPITAgent"

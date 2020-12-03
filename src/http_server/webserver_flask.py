@@ -1,20 +1,18 @@
-from filesystem import Filesystem
-from config import Config
-from agent_log import AgentLog
-from check_result_store import CheckResultStore
-from http_server.daemon_threaded_http_server import DaemonThreadedHTTPServer
-from http_server.agent_request_handler import AgentRequestHandler
-from certificates import Certificates
-from main_thread import MainThread
-import ssl
 import json
+import ssl
 import traceback
 
-import socket
-
-from flask import Flask, Response
+from flask import Flask
 from flask import request
 from werkzeug.serving import make_server
+
+from agent_log import AgentLog
+from certificates import Certificates
+from check_result_store import CheckResultStore
+from config import Config
+from filesystem import Filesystem
+from main_thread import MainThread
+
 
 # todo implement basic auth ?
 class WebserverFlask:
@@ -191,4 +189,3 @@ class WebserverFlask:
             self.server_address['port'],
             self.Config.config.getint('default', 'interval', fallback=5)
         ))
-

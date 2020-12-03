@@ -1,12 +1,9 @@
 import logging
 import logging.handlers
 import os
-
 from logging.handlers import RotatingFileHandler
+
 from color_output import ColorOutput
-from config import Config
-from datetime import datetime
-from filesystem import Filesystem
 
 
 class AgentLog:
@@ -95,5 +92,5 @@ class AgentLog:
             process = "%s" % (name)
 
         msg = 'psutil access denied: Process %s is not allowing us to get %s' % (process, type)
-        #self.ColorOutput.warning(msg)
-        #self.logfile.warning(msg)
+        # self.ColorOutput.warning(msg)
+        # self.logfile.warning(msg)

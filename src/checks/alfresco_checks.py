@@ -1,10 +1,9 @@
-import time
-import traceback
 import subprocess
+import traceback
 
 from checks.Check import Check
-from operating_system import OperatingSystem
 from filesystem import Filesystem
+from operating_system import OperatingSystem
 
 
 class AlfrescoChecks(Check):

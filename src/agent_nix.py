@@ -6,7 +6,9 @@
 
 import signal
 import time
+
 from src.agent_generic import AgentService
+
 
 class LinuxService(AgentService):
 
@@ -32,6 +34,7 @@ class LinuxService(AgentService):
                 time.sleep(5)
 
         self.cleanup()
+
 
 if __name__ == '__main__':
     LinuxService().run()

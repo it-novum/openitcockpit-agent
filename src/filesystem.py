@@ -1,4 +1,3 @@
-import os
 from os import access, R_OK, W_OK
 from os.path import isfile, isdir
 
@@ -39,7 +38,6 @@ class Filesystem:
         """
         return (isdir(path) and access(path, W_OK))
 
-    
     def file_exists(file):
         """Function to check whether a file exists or not
 

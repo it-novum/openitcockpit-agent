@@ -1,5 +1,5 @@
-import time
 import subprocess
+import time
 import traceback
 
 from checks.Check import Check

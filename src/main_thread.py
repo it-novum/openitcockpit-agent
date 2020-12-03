@@ -1,9 +1,8 @@
-import sys
-import threading
 import signal
+import threading
 
-from config import Config
 from agent_log import AgentLog
+from config import Config
 
 
 class MainThread:

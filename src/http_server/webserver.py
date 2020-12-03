@@ -1,14 +1,14 @@
-from filesystem import Filesystem
-from config import Config
-from agent_log import AgentLog
-from check_result_store import CheckResultStore
-from http_server.daemon_threaded_http_server import DaemonThreadedHTTPServer
-from http_server.agent_request_handler import AgentRequestHandler
-from certificates import Certificates
-from main_thread import MainThread
+import socket
 import ssl
 
-import socket
+from agent_log import AgentLog
+from certificates import Certificates
+from check_result_store import CheckResultStore
+from config import Config
+from filesystem import Filesystem
+from http_server.agent_request_handler import AgentRequestHandler
+from http_server.daemon_threaded_http_server import DaemonThreadedHTTPServer
+from main_thread import MainThread
 
 
 class Webserver:
@@ -47,7 +47,7 @@ class Webserver:
             self.Config.config.getint('default', 'port', fallback=3333)
         ))
 
-        self.sock = socket.socket (socket.AF_INET, socket.SOCK_STREAM)
+        self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         self.sock.bind(self.server_address)
         self.sock.settimeout(5)
@@ -85,8 +85,8 @@ class Webserver:
             ))
 
     def loop(self):
-        #self.httpd.timeout = 10
-        #self.httpd.handle_timeout = lambda: (_ for _ in ()).throw(TimeoutError())
+        # self.httpd.timeout = 10
+        # self.httpd.handle_timeout = lambda: (_ for _ in ()).throw(TimeoutError())
 
         self.run_loop = True
 
@@ -95,11 +95,10 @@ class Webserver:
                 self.httpd.handle_request()
             except TimeoutError:
                 self.agent_log.error('Http SERVER TIMEOUT! Trigger reload of the agent')
-                #self.run_loop = False
-                #self.sock.shutdown(socket.SHUT_RDWR)
-                #self.sock.close()
-                #self.main_thread.trigger_reload()
-    
+                # self.run_loop = False
+                # self.sock.shutdown(socket.SHUT_RDWR)
+                # self.sock.close()
+                # self.main_thread.trigger_reload()
+
     def shutdown(self):
         self.run_loop = False
-
