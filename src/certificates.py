@@ -1,24 +1,21 @@
 import datetime
 import errno
+import hashlib
 import json
 import os
 import traceback
 from threading import Lock
 
 import OpenSSL
-import ssl
-import hashlib
-import urllib3
 import requests
-from Crypto.Hash import SHA512
-
-from src.config import Config
-from src.agent_log import AgentLog
-from src.filesystem import Filesystem
-from src.exceptions.untrusted_agent_exception import UntrustedAgentException
-
+import urllib3
 from OpenSSL.SSL import FILETYPE_PEM
 from OpenSSL.crypto import (dump_certificate_request, dump_privatekey, load_certificate, PKey, TYPE_RSA, X509Req)
+
+from agent_log import AgentLog
+from config import Config
+from exceptions import UntrustedAgentException
+from filesystem import Filesystem
 
 
 class Certificates:
@@ -96,7 +93,7 @@ class Certificates:
             req.set_pubkey(key)
 
             # b'sha512' will throw an error so we pass a string even if the function docs says it wants a byte string
-            req.sign(key, 'sha512')
+            req.sign(key, b'sha512')
 
             ssl_paths = [
                 self.Config.config['default']['autossl-csr-file'],
@@ -135,7 +132,7 @@ class Certificates:
          - no agent certificate exists
         """
 
-        if self.Config.autossl is False:
+        if not self.Config.autossl:
             return False
 
         # Check if agent certificate file exists
@@ -217,7 +214,7 @@ class Certificates:
         self.agent_log.info('Checking auto TLS certificate')
 
         trigger_reload = False
-        if self.requires_new_certificate() is True:
+        if self.requires_new_certificate():
             result = self._pull_crt_from_server(renew=False)
             if result == self.RENEWAL_SUCESSFUL:
                 trigger_reload = True
@@ -228,7 +225,7 @@ class Certificates:
                 raise UntrustedAgentException
 
         if Filesystem.file_readable(self.Config.config['default']['autossl-crt-file']):
-            if self.requires_certificate_renewal() is True:
+            if self.requires_certificate_renewal():
                 result = self._pull_crt_from_server(renew=True)
                 if result == self.RENEWAL_SUCESSFUL:
                     trigger_reload = True
@@ -261,7 +258,7 @@ class Certificates:
         """
 
         # ONLY PULL cert if Agent is running in PUSH mode!!
-        if self.Config.is_push_mode is False:
+        if not self.Config.is_push_mode:
             return self.RENEWAL_ERROR
 
         if self.certificate_check_lock.locked():
@@ -355,7 +352,7 @@ class Certificates:
         cert_checksum = self.cert_checksum
         self.checksum_lock.release()
 
-        #self.agent_log.debug(cert_checksum)
+        # self.agent_log.debug(cert_checksum)
         return cert_checksum
 
     def store_cert_file(self, cert_data: str) -> bool:

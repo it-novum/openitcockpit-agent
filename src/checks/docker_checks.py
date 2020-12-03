@@ -1,10 +1,9 @@
 import subprocess
-import traceback
 import time
-import subprocess
+import traceback
 
-from src.checks.Check import Check
-from src.operating_system import OperatingSystem
+from checks.Check import Check
+from operating_system import OperatingSystem
 
 
 class DockerChecks(Check):
@@ -42,7 +41,7 @@ class DockerChecks(Check):
         self.docker_stats_data['running'] = "true"
 
         docker_stats_command = 'docker stats --no-stream --format "stats;{{.ID}};{{.Name}};{{.CPUPerc}};{{.MemUsage}};{{.MemPerc}};{{.NetIO}};{{.BlockIO}};{{.PIDs}}"'
-        if self.operating_system.isWindows() is True:
+        if self.operating_system.isWindows():
             docker_stats_command = 'docker stats --no-stream --format "stats;{{.ID}};{{.Name}};{{.CPUPerc}};{{.MemUsage}};;{{.NetIO}};{{.BlockIO}};"'  # fill not existing 'MemPerc' and 'PIDs' with empty ; separated value
         docker_container_list_command = 'docker container list -a -s --format "cl;{{.ID}};{{.Status}};{{.Size}};{{.Image}};{{.RunningFor}};{{.Names}}"'
 

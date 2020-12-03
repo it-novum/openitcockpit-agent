@@ -1,20 +1,18 @@
-from src.filesystem import Filesystem
-from src.config import Config
-from src.agent_log import AgentLog
-from src.check_result_store import CheckResultStore
-from src.http_server.daemon_threaded_http_server import DaemonThreadedHTTPServer
-from src.http_server.agent_request_handler import AgentRequestHandler
-from src.certificates import Certificates
-from src.main_thread import MainThread
-import ssl
 import json
+import ssl
 import traceback
 
-import socket
-
-from flask import Flask, Response
+from flask import Flask
 from flask import request
 from werkzeug.serving import make_server
+
+from agent_log import AgentLog
+from certificates import Certificates
+from check_result_store import CheckResultStore
+from config import Config
+from filesystem import Filesystem
+from main_thread import MainThread
+
 
 # todo implement basic auth ?
 class WebserverFlask:
@@ -44,7 +42,7 @@ class WebserverFlask:
             self.enable_ssl = True
 
         self.protocol = 'http'
-        if (self.enable_ssl):
+        if self.enable_ssl:
             self.protocol = 'https'
 
         self.server_address = {
@@ -81,8 +79,8 @@ class WebserverFlask:
 
             data = request.get_data()
 
-            if self.Config.config.getboolean('default', 'config-update-mode', fallback=False) is True:
-                if self.Config.set_new_config_from_dict(data) is True:
+            if self.Config.config.getboolean('default', 'config-update-mode', fallback=False):
+                if self.Config.set_new_config_from_dict(data):
                     self.main_thread.trigger_reload()
                     response['success'] = True
 
@@ -95,7 +93,7 @@ class WebserverFlask:
             # GET Request
             config = {}
 
-            if self.Config.config.getboolean('default', 'config-update-mode', fallback=False) is True:
+            if self.Config.config.getboolean('default', 'config-update-mode', fallback=False):
                 config = self.Config.get_config_as_dict()
 
             return self.app.response_class(
@@ -128,7 +126,7 @@ class WebserverFlask:
         except:
             self.agent_log.stacktrace(traceback.format_exc())
 
-        if update_sucessfully is True:
+        if update_sucessfully:
             response['success'] = True
             # Reload all threads to enable the SSL certificate
             self.main_thread.trigger_reload()
@@ -180,7 +178,8 @@ class WebserverFlask:
             self.server_address['address'],
             self.server_address['port'],
             self.app,
-            ssl_context=self.ssl_context
+            ssl_context=self.ssl_context,
+            threaded=True
         )
         self.ctx = self.app.app_context()
         self.ctx.push()
@@ -191,4 +190,3 @@ class WebserverFlask:
             self.server_address['port'],
             self.Config.config.getint('default', 'interval', fallback=5)
         ))
-

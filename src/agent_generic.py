@@ -17,17 +17,12 @@
 #
 # current psutil>=5.5.0,<=5.6.2 limitation due to https://github.com/giampaolo/psutil/issues/1723
 
-import concurrent.futures
-import signal
-import threading
-import time
-
-from src.main_thread import MainThread
-from src.config import Config
-from src.agent_log import AgentLog
-from src.certificates import Certificates
-from src.thread_factory import ThreadFactory
-from src.exceptions.untrusted_agent_exception import UntrustedAgentException
+from agent_log import AgentLog
+from certificates import Certificates
+from config import Config
+from exceptions import UntrustedAgentException
+from main_thread import MainThread
+from thread_factory import ThreadFactory
 
 
 class AgentService:
@@ -46,7 +41,7 @@ class AgentService:
 
         self.thread_factory = ThreadFactory(self.config, self.agent_log, self.main_thread, self.certificates)
 
-        if self.config.autossl is True:
+        if self.config.autossl:
             try:
                 self.certificates.check_auto_certificate()
 
@@ -59,7 +54,7 @@ class AgentService:
                 )
 
     def main_loop(self):
-        if self.main_thread.spawn_threads is True:
+        if self.main_thread.spawn_threads:
             mode = 'pull'
             if self.config.is_push_mode:
                 mode = 'push'
@@ -86,7 +81,7 @@ class AgentService:
             # All threads got spawned
             self.main_thread.spawn_threads = False
 
-        elif self.main_thread.join_threads is True:
+        elif self.main_thread.join_threads:
             self.thread_factory.shutdown_all_threads()
 
             # Set main_thread.join_threads back to False

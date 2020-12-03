@@ -1,14 +1,14 @@
 import json
-
-from src.config import Config
-from src.agent_log import AgentLog
-from src.check_result_store import CheckResultStore
-from src.filesystem import Filesystem
-from src.certificates import Certificates
-
-import urllib3
-import requests
 import traceback
+
+import requests
+import urllib3
+
+from agent_log import AgentLog
+from certificates import Certificates
+from check_result_store import CheckResultStore
+from config import Config
+from filesystem import Filesystem
 
 
 class PushClient:
@@ -64,7 +64,8 @@ class PushClient:
                     response_data = json.loads(response.content.decode('utf-8'))
 
                     if 'receivedChecks' in response_data:
-                        self.agent_log.verbose('openITCOCKPIT processed %d check results' % response_data['receivedChecks'])
+                        self.agent_log.verbose(
+                            'openITCOCKPIT processed %d check results' % response_data['receivedChecks'])
                         if response_data['receivedChecks'] == 0:
                             self.agent_log.info('Agent maybe not trusted yet or no checks have been defined')
 

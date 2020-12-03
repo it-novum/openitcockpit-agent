@@ -28,7 +28,10 @@ pipeline {
                 sh 'mkdir -p ./release'
 
                 sh 'LD_LIBRARY_PATH=/usr/local/lib${LD_LIBRARY_PATH:+:${LD_LIBRARY_PATH}} pip3.9 install -r requirements.txt'
-                sh 'LD_LIBRARY_PATH=/usr/local/lib${LD_LIBRARY_PATH:+:${LD_LIBRARY_PATH}} pyinstaller agent_nix.py -n openitcockpit-agent-python3 --onefile'
+                dir ('src') {
+                    sh 'LD_LIBRARY_PATH=/usr/local/lib${LD_LIBRARY_PATH:+:${LD_LIBRARY_PATH}} pyinstaller agent_nix.py --distpath "../dist" -n openitcockpit-agent-python3 --onefile'
+                }
+
                 
                 sh 'mv ./dist/openitcockpit-agent-python3 ./public/binaries/openitcockpit-agent-python3.linux.bin'
                 sh 'chmod +x ./public/binaries/openitcockpit-agent-python3.linux.bin'
@@ -110,7 +113,7 @@ pipeline {
                    """
                 sh 'ssh -o StrictHostKeyChecking=no -i /var/lib/jenkins/.ssh/id_rsa kress@172.16.166.223 if exist openitcockpit-agent-2.0 rmdir /Q /S openitcockpit-agent-2.0'
                 sh 'scp -o StrictHostKeyChecking=no -i /var/lib/jenkins/.ssh/id_rsa -r ./ kress@172.16.166.223:openitcockpit-agent-2.0'
-                sh 'ssh -o StrictHostKeyChecking=no -i /var/lib/jenkins/.ssh/id_rsa kress@172.16.166.223 powershell "cd openitcockpit-agent-2.0; python.exe -m venv ./python3-windows-env; ./python3-windows-env/Scripts/activate.bat; ./python3-windows-env/Scripts/pip.exe install -r requirements.txt pywin32; ./python3-windows-env/Scripts/pyinstaller.exe agent_windows.py --onefile -n openitcockpit-agent-python3; ./python3-windows-env/Scripts/deactivate.bat"'
+                sh 'ssh -o StrictHostKeyChecking=no -i /var/lib/jenkins/.ssh/id_rsa kress@172.16.166.223 powershell "cd openitcockpit-agent-2.0; python.exe -m venv ./python3-windows-env; ./python3-windows-env/Scripts/activate.bat; ./python3-windows-env/Scripts/pip.exe install -r requirements.txt pywin32; cd src; ./python3-windows-env/Scripts/pyinstaller.exe agent_windows.py --distpath ../dist --onefile -n openitcockpit-agent-python3; cd ..; ./python3-windows-env/Scripts/deactivate.bat"'
                 sh 'ssh -o StrictHostKeyChecking=no -i /var/lib/jenkins/.ssh/id_rsa kress@172.16.166.223 powershell "cd openitcockpit-agent-2.0; mv ./dist/openitcockpit-agent-python3.exe executables/openitcockpit-agent-python3.exe; rm -r -fo ./dist; rm -r -fo ./build; rm -r -fo ./__pycache__; rm -r -fo ./openitcockpit-agent-python3.spec; rm -r -fo ./python3-windows-env"'
                 sh 'ssh -o StrictHostKeyChecking=no -i /var/lib/jenkins/.ssh/id_rsa kress@172.16.166.223 powershell "openitcockpit-agent-2.0/packages/scripts/build_msi.bat"'
                 sh 'mkdir -p ./release'
@@ -186,7 +189,7 @@ pipeline {
                 sh 'ssh -o StrictHostKeyChecking=no -i /var/lib/jenkins/.ssh/id_rsa admin@itsm-mojave.oitc.itn "rm -rf openitcockpit-agent-packages-2.0"'
                 sh 'ssh -o StrictHostKeyChecking=no -i /var/lib/jenkins/.ssh/id_rsa admin@itsm-mojave.oitc.itn "mkdir -p openitcockpit-agent-packages-2.0/openitcockpit-agent"'
                 sh 'scp -o StrictHostKeyChecking=no -i /var/lib/jenkins/.ssh/id_rsa -r ./ admin@itsm-mojave.oitc.itn:openitcockpit-agent-packages-2.0/openitcockpit-agent'
-                sh 'ssh -o StrictHostKeyChecking=no -i /var/lib/jenkins/.ssh/id_rsa admin@itsm-mojave.oitc.itn "cd openitcockpit-agent-packages-2.0/openitcockpit-agent; /usr/local/bin/python3 -m venv ./python3-macos-env; source ./python3-macos-env/bin/activate; rm ./python3-macos-env/bin/python3; cp /usr/local/bin/python3 ./python3-macos-env/bin; ./python3-macos-env/bin/python3 -m pip install -r requirements.txt pyinstaller; ./python3-macos-env/bin/python3 ./python3-macos-env/bin/pyinstaller agent_nix.py -n openitcockpit-agent-python3 --onefile; deactivate"'
+                sh 'ssh -o StrictHostKeyChecking=no -i /var/lib/jenkins/.ssh/id_rsa admin@itsm-mojave.oitc.itn "cd openitcockpit-agent-packages-2.0/openitcockpit-agent; /usr/local/bin/python3 -m venv ./python3-macos-env; source ./python3-macos-env/bin/activate; rm ./python3-macos-env/bin/python3; cp /usr/local/bin/python3 ./python3-macos-env/bin; ./python3-macos-env/bin/python3 -m pip install -r requirements.txt pyinstaller; cd src; ./python3-macos-env/bin/python3 ./python3-macos-env/bin/pyinstaller agent_nix.py --distpath ../dist -n openitcockpit-agent-python3 --onefile; cd ..; deactivate"'
                 sh 'ssh -o StrictHostKeyChecking=no -i /var/lib/jenkins/.ssh/id_rsa admin@itsm-mojave.oitc.itn "cd openitcockpit-agent-packages-2.0/openitcockpit-agent; mv ./dist/openitcockpit-agent-python3 ./executables/openitcockpit-agent-python3.macos.bin; chmod +x ./executables/openitcockpit-agent-python3.macos.bin; rm -r ./python3-macos-env ./dist ./build ./__pycache__ openitcockpit-agent-python3.spec; cd ..; ./openitcockpit-agent/packages/scripts/build_macos.sh; rm -r package_osx package_osx_uninstaller"'
                 sh 'mkdir -p ./release'
                 sh 'scp -o StrictHostKeyChecking=no -i /var/lib/jenkins/.ssh/id_rsa admin@itsm-mojave.oitc.itn:openitcockpit-agent-packages-2.0/openitcockpit-agent-${VERSION}-darwin-amd64.pkg ./release'
