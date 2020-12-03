@@ -14,7 +14,7 @@ from OpenSSL.crypto import (dump_certificate_request, dump_privatekey, load_cert
 
 from agent_log import AgentLog
 from config import Config
-from exceptions.untrusted_agent_exception import UntrustedAgentException
+from exceptions import UntrustedAgentException
 from filesystem import Filesystem
 
 

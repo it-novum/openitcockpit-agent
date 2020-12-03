@@ -12,7 +12,7 @@ from checks.qemu_checks import QemuChecks
 from checks.systemd_checks import SystemdChecks
 from config import Config
 from custom_check import CustomCheck
-from exceptions.untrusted_agent_exception import UntrustedAgentException
+from exceptions import UntrustedAgentException
 from http_server.webserver_flask import WebserverFlask
 from main_thread import MainThread
 from operating_system import OperatingSystem

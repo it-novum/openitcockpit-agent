@@ -20,7 +20,7 @@
 from agent_log import AgentLog
 from certificates import Certificates
 from config import Config
-from exceptions.untrusted_agent_exception import UntrustedAgentException
+from exceptions import UntrustedAgentException
 from main_thread import MainThread
 from thread_factory import ThreadFactory
 
