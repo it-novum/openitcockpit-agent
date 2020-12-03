@@ -41,7 +41,7 @@ class AgentService:
 
         self.thread_factory = ThreadFactory(self.config, self.agent_log, self.main_thread, self.certificates)
 
-        if self.config.autossl is True:
+        if self.config.autossl:
             try:
                 self.certificates.check_auto_certificate()
 
@@ -54,7 +54,7 @@ class AgentService:
                 )
 
     def main_loop(self):
-        if self.main_thread.spawn_threads is True:
+        if self.main_thread.spawn_threads:
             mode = 'pull'
             if self.config.is_push_mode:
                 mode = 'push'
@@ -81,7 +81,7 @@ class AgentService:
             # All threads got spawned
             self.main_thread.spawn_threads = False
 
-        elif self.main_thread.join_threads is True:
+        elif self.main_thread.join_threads:
             self.thread_factory.shutdown_all_threads()
 
             # Set main_thread.join_threads back to False

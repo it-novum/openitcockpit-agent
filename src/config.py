@@ -171,7 +171,7 @@ class Config:
         self.temperatureIsFahrenheit = self.config.getboolean('default', 'temperature-fahrenheit')
 
         # Determine if the Agent should run in PUSH mode
-        if self.config.getboolean('oitc', 'enabled', fallback=False) is True:
+        if self.config.getboolean('oitc', 'enabled', fallback=False):
             self.push_config = {
                 'url': self.config.get('oitc', 'url').strip(),
                 'apikey': self.config.get('oitc', 'apikey').strip(),
@@ -226,7 +226,7 @@ class Config:
         if self.config.get('default', 'autossl-folder', fallback='') != "":
             etc_agent_path = self.config.get('default', 'autossl-folder')
 
-        if etc_agent_path.endswith(os.path.sep) is False:
+        if not etc_agent_path.endswith(os.path.sep):
             etc_agent_path = etc_agent_path + os.path.sep
 
         self.config.set('default', 'autossl-csr-file', etc_agent_path + 'agent.csr')
@@ -236,7 +236,7 @@ class Config:
 
     def get_custom_checks(self) -> dict:
         custom_checks_config_file = self.config.get('default', 'customchecks')
-        if Filesystem.file_readable(custom_checks_config_file) is False:
+        if not Filesystem.file_readable(custom_checks_config_file):
             self.ColorOutput.error('Could not read customchecks configuration file %s' % (custom_checks_config_file))
 
         with open(custom_checks_config_file, 'r') as configfile:

@@ -35,7 +35,7 @@ class ThreadFactory:
         self.loop_check_result_push_thread = True
         self.loop_autossl_thread = True
 
-        if (self.Config.autossl is False):
+        if not self.Config.autossl:
             # Autossl is disabled
             self.loop_autossl_thread = False
 
@@ -114,7 +114,7 @@ class ThreadFactory:
 
         # Run checks on agent startup
         check_interval_counter = check_interval
-        while self.loop_checks_thread is True:
+        while self.loop_checks_thread:
             if (check_interval_counter >= check_interval):
                 # Execute checks
                 # print('run checks')
@@ -154,7 +154,7 @@ class ThreadFactory:
         if worker <= 0:
             worker = 8
 
-        while self.loop_custom_checks_thread is True:
+        while self.loop_custom_checks_thread:
 
             # Execute all custom checks in a separate thread managed by ThreadPoolExecutor
             with concurrent.futures.ThreadPoolExecutor(max_workers=worker) as executor:
@@ -163,7 +163,7 @@ class ThreadFactory:
                     custom_check = self.custom_checks[key]
                     custom_check['name'] = key
 
-                    if custom_check['next_check'] <= time.time() and custom_check['running'] is False:
+                    if custom_check['next_check'] <= time.time() and not custom_check['running']:
                         self.agent_log.debug('Starting new Custom Checks Thread %d' % i)
 
                         # Mark custom check as running, create a new CustomCheck object
@@ -205,7 +205,7 @@ class ThreadFactory:
 
         push_client = PushClient(self.Config, self.agent_log, self.check_store, self.certificates)
 
-        while self.loop_check_result_push_thread is True:
+        while self.loop_check_result_push_thread:
             if (push_interval_counter >= push_interval):
 
                 # Push checks results to openITCOCKPIT Server
@@ -233,7 +233,7 @@ class ThreadFactory:
 
         check_autossl_counter = 0
 
-        while self.loop_autossl_thread is True:
+        while self.loop_autossl_thread:
             if (check_autossl_counter >= interval):
 
                 try:
@@ -243,7 +243,7 @@ class ThreadFactory:
                     interval = 21600
                     check_autossl_counter = 0
 
-                    if trigger_reload is True:
+                    if trigger_reload:
                         self.agent_log.info(
                             'Reloading agent to enable new autossl certificates'
                         )

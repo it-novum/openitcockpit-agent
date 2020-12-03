@@ -132,7 +132,7 @@ class Certificates:
          - no agent certificate exists
         """
 
-        if self.Config.autossl is False:
+        if not self.Config.autossl:
             return False
 
         # Check if agent certificate file exists
@@ -214,7 +214,7 @@ class Certificates:
         self.agent_log.info('Checking auto TLS certificate')
 
         trigger_reload = False
-        if self.requires_new_certificate() is True:
+        if self.requires_new_certificate():
             result = self._pull_crt_from_server(renew=False)
             if result == self.RENEWAL_SUCESSFUL:
                 trigger_reload = True
@@ -225,7 +225,7 @@ class Certificates:
                 raise UntrustedAgentException
 
         if Filesystem.file_readable(self.Config.config['default']['autossl-crt-file']):
-            if self.requires_certificate_renewal() is True:
+            if self.requires_certificate_renewal():
                 result = self._pull_crt_from_server(renew=True)
                 if result == self.RENEWAL_SUCESSFUL:
                     trigger_reload = True
@@ -258,7 +258,7 @@ class Certificates:
         """
 
         # ONLY PULL cert if Agent is running in PUSH mode!!
-        if self.Config.is_push_mode is False:
+        if not self.Config.is_push_mode:
             return self.RENEWAL_ERROR
 
         if self.certificate_check_lock.locked():

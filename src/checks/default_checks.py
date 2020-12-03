@@ -256,7 +256,7 @@ class DefaultChecks(Check):
         sensors = {}
         if self.Config.config.getboolean('default', 'sensorstats'):
             try:
-                if hasattr(psutil, "sensors_temperatures") and self.operating_system.isWindows() is False:
+                if hasattr(psutil, "sensors_temperatures") and not self.operating_system.isWindows():
                     sensors['temperatures'] = {}
                     for device, data in psutil.sensors_temperatures(
                             fahrenheit=self.Config.temperatureIsFahrenheit).items():
@@ -270,7 +270,7 @@ class DefaultChecks(Check):
                 self.agent_log.stacktrace(traceback.format_exc())
 
             try:
-                if hasattr(psutil, "sensors_fans") and self.operating_system.isWindows() is False:
+                if hasattr(psutil, "sensors_fans") and not self.operating_system.isWindows():
                     sensors['fans'] = {}
                     for device, data in psutil.sensors_fans().items():
                         sensors['fans'][device] = []
@@ -418,7 +418,7 @@ class DefaultChecks(Check):
 
         windows_services = []
         windows_eventlog = {}
-        if self.operating_system.isWindows() is True:
+        if self.operating_system.isWindows():
             if self.Config.config.getboolean('default', 'winservices', fallback=True):
                 try:
                     for win_process in psutil.win_service_iter():
@@ -561,7 +561,7 @@ class DefaultChecks(Check):
         if self.Config.config.getboolean('default', 'processstats'):
             out['processes'] = processes
 
-        if self.operating_system.isWindows() is True:
+        if self.operating_system.isWindows():
             if self.Config.config.getboolean('default', 'winservices'):
                 out['windows_services'] = windows_services
             if self.Config.config.getboolean('default', 'wineventlog'):

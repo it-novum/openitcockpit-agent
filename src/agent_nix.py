@@ -22,7 +22,7 @@ class LinuxService(AgentService):
             signal.signal(signal.SIGHUP, self.main_thread.signal_handler)  # systemctl reload openitcockpit-agent
 
         # Endless loop until we get a signal to stop caught by main_thread.signal_handler
-        while self.main_thread.loop is True:
+        while self.main_thread.loop:
             self.main_loop()
 
             # Do not use signal.pause() because it will block the internal reload which does not send any kernel signals

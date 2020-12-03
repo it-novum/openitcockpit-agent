@@ -36,7 +36,7 @@ class AgentRequestHandler(BaseHTTPRequestHandler):
             check_results = self.check_store.get_store_for_json_response()
             self.wfile.write(json.dumps(check_results).encode())
         elif self.path == "/config" and self.config.config.getboolean('default', 'config-update-mode',
-                                                                      fallback=False) is True:
+                                                                      fallback=False):
             config = self.config.get_config_as_dict()
             self.wfile.write(json.dumps(config).encode())
         elif self.path == "/getCsr":
@@ -58,8 +58,8 @@ class AgentRequestHandler(BaseHTTPRequestHandler):
         }
 
         if self.path == "/config" and self.config.config.getboolean('default', 'config-update-mode',
-                                                                    fallback=False) is True:
-            if self.config.set_new_config_from_dict(data) is True:
+                                                                    fallback=False):
+            if self.config.set_new_config_from_dict(data):
                 response['success'] = True
                 # Reload all threads to enable the new config
                 self.main_thread.trigger_reload()
@@ -78,7 +78,7 @@ class AgentRequestHandler(BaseHTTPRequestHandler):
             except:
                 self.agent_log.stacktrace(traceback.format_exc())
 
-            if update_sucessfully is True:
+            if update_sucessfully:
                 response['success'] = True
                 # Reload all threads to enable the SSL certificate
                 self.main_thread.trigger_reload()

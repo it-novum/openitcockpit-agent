@@ -40,8 +40,8 @@ class SystemdChecks(Check):
         self.systemd_services_data['running'] = "true"
 
         systemd_services = []
-        if self.operating_system.isLinux() is True and self.Config.config.getboolean('default',
-                                                                                     'systemdservices') is True:
+        if self.operating_system.isLinux() and self.Config.config.getboolean('default',
+                                                                                     'systemdservices'):
             systemd_stats_command = "systemctl list-units --type=service --all --no-legend --no-pager --no-ask-password"
             try:
                 tmp_systemd_stats_result = ''

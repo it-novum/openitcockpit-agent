@@ -79,8 +79,8 @@ class WebserverFlask:
 
             data = request.get_data()
 
-            if self.Config.config.getboolean('default', 'config-update-mode', fallback=False) is True:
-                if self.Config.set_new_config_from_dict(data) is True:
+            if self.Config.config.getboolean('default', 'config-update-mode', fallback=False):
+                if self.Config.set_new_config_from_dict(data):
                     self.main_thread.trigger_reload()
                     response['success'] = True
 
@@ -93,7 +93,7 @@ class WebserverFlask:
             # GET Request
             config = {}
 
-            if self.Config.config.getboolean('default', 'config-update-mode', fallback=False) is True:
+            if self.Config.config.getboolean('default', 'config-update-mode', fallback=False):
                 config = self.Config.get_config_as_dict()
 
             return self.app.response_class(
@@ -126,7 +126,7 @@ class WebserverFlask:
         except:
             self.agent_log.stacktrace(traceback.format_exc())
 
-        if update_sucessfully is True:
+        if update_sucessfully:
             response['success'] = True
             # Reload all threads to enable the SSL certificate
             self.main_thread.trigger_reload()
