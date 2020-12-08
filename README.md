@@ -426,6 +426,22 @@ Definition in `customchecks.cnf`
   enabled = true
 ```
 
+### Usage of percent sign `%`
+If your command contains a percent sign `%` you have to escape it with `%%`.
+Otherwise you will get an error like this: `configparser.InterpolationSyntaxError: '%' must be followed by '%' or '(', found: '% -p /'`
+
+Example:
+```
+/usr/lib/nagios/plugins/check_ping -H 127.0.0.1 -w 100.0,20%% -c 500.0,60%% -p 5
+```
+
+### Add custom check to monitoring
+Open the agent wizard (pick "openITCOCKPIT Agent discovery" from the dropdown menu on the host list)
+![openITCOCKPIT Agent discovery Wizard](images/agent_wizard.png)
+
+Pick all custom checks you want to monitor
+![Pick all custom checks you want to monitor](images/pick_customchecks.png)
+
 ---
 
 ## Build instructions
