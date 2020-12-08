@@ -6,7 +6,9 @@
 
 import signal
 import time
-from src.agent_generic import AgentService
+
+from agent_generic import AgentService
+
 
 class LinuxService(AgentService):
 
@@ -20,7 +22,7 @@ class LinuxService(AgentService):
             signal.signal(signal.SIGHUP, self.main_thread.signal_handler)  # systemctl reload openitcockpit-agent
 
         # Endless loop until we get a signal to stop caught by main_thread.signal_handler
-        while self.main_thread.loop is True:
+        while self.main_thread.loop:
             self.main_loop()
 
             # Do not use signal.pause() because it will block the internal reload which does not send any kernel signals
@@ -32,6 +34,7 @@ class LinuxService(AgentService):
                 time.sleep(5)
 
         self.cleanup()
+
 
 if __name__ == '__main__':
     LinuxService().run()

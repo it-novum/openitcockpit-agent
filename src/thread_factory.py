@@ -1,22 +1,22 @@
-import concurrent.futures
+from concurrent.futures import ThreadPoolExecutor
 import threading
 import time
 
-from src.checks.alfresco_checks import AlfrescoChecks
-from src.checks.default_checks import DefaultChecks
-from src.checks.systemd_checks import SystemdChecks
-from src.checks.docker_checks import DockerChecks
-from src.checks.qemu_checks import QemuChecks
-from src.http_server.webserver import Webserver
-from src.custom_check import CustomCheck
-from src.config import Config
-from src.agent_log import AgentLog
-from src.check_result_store import CheckResultStore
-from src.main_thread import MainThread
-from src.push_client import PushClient
-from src.certificates import Certificates
-from src.exceptions.untrusted_agent_exception import UntrustedAgentException
-from src.operating_system import OperatingSystem
+from agent_log import AgentLog
+from certificates import Certificates
+from check_result_store import CheckResultStore
+from checks.alfresco_checks import AlfrescoChecks
+from checks.default_checks import DefaultChecks
+from checks.docker_checks import DockerChecks
+from checks.qemu_checks import QemuChecks
+from checks.systemd_checks import SystemdChecks
+from config import Config
+from custom_check import CustomCheck
+from exceptions import UntrustedAgentException
+from http_server.webserver_flask import WebserverFlask
+from main_thread import MainThread
+from operating_system import OperatingSystem
+from push_client import PushClient
 
 
 class ThreadFactory:
@@ -35,7 +35,7 @@ class ThreadFactory:
         self.loop_check_result_push_thread = True
         self.loop_autossl_thread = True
 
-        if (self.Config.autossl is False):
+        if not self.Config.autossl:
             # Autossl is disabled
             self.loop_autossl_thread = False
 
@@ -60,15 +60,19 @@ class ThreadFactory:
             pass
 
     def spawn_webserver_thread(self):
-        self.webserver = Webserver(self.Config, self.agent_log, self.check_store, self.main_thread, self.certificates)
+        self.webserver = WebserverFlask(self.Config, self.agent_log, self.check_store, self.main_thread,
+                                        self.certificates)
         self.webserver.start_webserver()
 
         # Start the web server in a separate thread
-        self.webserver_thread = threading.Thread(target=self.webserver.httpd.serve_forever, daemon=True)
+
+        self.webserver_thread = threading.Thread(target=self.webserver.srv.serve_forever, daemon=True)
+        # self.webserver_thread = threading.Thread(target=self.webserver.loop, daemon=True)
         self.webserver_thread.start()
 
     def shutdown_webserver_thread(self):
-        self.webserver.httpd.shutdown()
+        self.webserver.srv.shutdown()
+        # self.webserver.shutdown()
         self.webserver_thread.join()
 
     def _loop_checks_thread(self):
@@ -83,41 +87,41 @@ class ThreadFactory:
             DefaultChecks(self.Config, self.agent_log, self.check_store, check_params),
         ]
 
-        if (self.Config.config.getboolean('default', 'dockerstats')):
+        if self.Config.config.getboolean('default', 'dockerstats'):
             checks.append(
                 DockerChecks(self.Config, self.agent_log, self.check_store, check_params)
             )
 
-        if (self.Config.config.getboolean('default', 'qemustats')):
+        if self.Config.config.getboolean('default', 'qemustats'):
             checks.append(
                 QemuChecks(self.Config, self.agent_log, self.check_store, check_params)
             )
 
-        if (self.Config.config.getboolean('default', 'systemdservices') and self.operating_system.isLinux()):
+        if self.Config.config.getboolean('default', 'systemdservices') and self.operating_system.isLinux():
             checks.append(
                 SystemdChecks(self.Config, self.agent_log, self.check_store, check_params),
             )
 
-        if (self.Config.config.getboolean('default', 'alfrescostats')):
+        if self.Config.config.getboolean('default', 'alfrescostats'):
             checks.append(
                 AlfrescoChecks(self.Config, self.agent_log, self.check_store, check_params),
             )
 
         check_interval = self.Config.config.getint('default', 'interval', fallback=5)
-        if (check_interval <= 0):
+        if check_interval <= 0:
             self.agent_log.info('check_interval <= 0. Using 5 seconds as check_interval for now.')
             check_interval = 5
 
         # Run checks on agent startup
         check_interval_counter = check_interval
-        while self.loop_checks_thread is True:
-            if (check_interval_counter >= check_interval):
+        while self.loop_checks_thread:
+            if check_interval_counter >= check_interval:
                 # Execute checks
                 # print('run checks')
                 check_interval_counter = 1
 
                 # Execute all checks in a separate thread managed by ThreadPoolExecutor
-                with concurrent.futures.ThreadPoolExecutor(max_workers=5) as executor:
+                with ThreadPoolExecutor(max_workers=5) as executor:
                     i = 0
                     for check in checks:
                         self.agent_log.debug('Starting new Default Checks Thread %d' % i)
@@ -150,16 +154,16 @@ class ThreadFactory:
         if worker <= 0:
             worker = 8
 
-        while self.loop_custom_checks_thread is True:
+        while self.loop_custom_checks_thread:
 
             # Execute all custom checks in a separate thread managed by ThreadPoolExecutor
-            with concurrent.futures.ThreadPoolExecutor(max_workers=worker) as executor:
+            with ThreadPoolExecutor(max_workers=worker) as executor:
                 i = 0
                 for key in self.custom_checks:
                     custom_check = self.custom_checks[key]
                     custom_check['name'] = key
 
-                    if custom_check['next_check'] <= time.time() and custom_check['running'] is False:
+                    if custom_check['next_check'] <= time.time() and not custom_check['running']:
                         self.agent_log.debug('Starting new Custom Checks Thread %d' % i)
 
                         # Mark custom check as running, create a new CustomCheck object
@@ -201,8 +205,8 @@ class ThreadFactory:
 
         push_client = PushClient(self.Config, self.agent_log, self.check_store, self.certificates)
 
-        while self.loop_check_result_push_thread is True:
-            if (push_interval_counter >= push_interval):
+        while self.loop_check_result_push_thread:
+            if push_interval_counter >= push_interval:
 
                 # Push checks results to openITCOCKPIT Server
                 push_interval_counter = 1
@@ -229,8 +233,8 @@ class ThreadFactory:
 
         check_autossl_counter = 0
 
-        while self.loop_autossl_thread is True:
-            if (check_autossl_counter >= interval):
+        while self.loop_autossl_thread:
+            if check_autossl_counter >= interval:
 
                 try:
                     trigger_reload = self.certificates.check_auto_certificate()
@@ -239,7 +243,7 @@ class ThreadFactory:
                     interval = 21600
                     check_autossl_counter = 0
 
-                    if trigger_reload is True:
+                    if trigger_reload:
                         self.agent_log.info(
                             'Reloading agent to enable new autossl certificates'
                         )

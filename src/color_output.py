@@ -1,14 +1,14 @@
-import threading
 import sys
-
+import threading
 from datetime import datetime
-from src.operating_system import OperatingSystem
+
+from operating_system import OperatingSystem
 
 if sys.platform == 'win32' or sys.platform == 'win64':
     import ctypes
 
-class ColorOutput:
 
+class ColorOutput:
     PURPLE = '\033[95m'
     BLUE = '\033[94m'
     CYAN = '\033[96m'

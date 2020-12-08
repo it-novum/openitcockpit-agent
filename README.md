@@ -426,6 +426,22 @@ Definition in `customchecks.cnf`
   enabled = true
 ```
 
+### Usage of percent sign `%`
+If your command contains a percent sign `%` you have to escape it with `%%`.
+Otherwise you will get an error like this: `configparser.InterpolationSyntaxError: '%' must be followed by '%' or '(', found: '% -p /'`
+
+Example:
+```
+/usr/lib/nagios/plugins/check_ping -H 127.0.0.1 -w 100.0,20%% -c 500.0,60%% -p 5
+```
+
+### Add custom check to monitoring
+Open the agent wizard (pick "openITCOCKPIT Agent discovery" from the dropdown menu on the host list)
+![openITCOCKPIT Agent discovery Wizard](images/agent_wizard.png)
+
+Pick all custom checks you want to monitor
+![Pick all custom checks you want to monitor](images/pick_customchecks.png)
+
 ---
 
 ## Build instructions
@@ -523,7 +539,9 @@ brew install python
 python3 -m venv ./python3-macos-env
 ./python3-macos-env/bin/activate
 pip3 install -r requirements.txt
-pyinstaller agent_nix.py -n openitcockpit-agent-python3 --onefile
+cd src
+pyinstaller agent_nix.py --distpath ../dist -n openitcockpit-agent-python3 --onefile
+cd ..
 ./python3-macos-env/bin/deactivate
 
 mv ./dist/openitcockpit-agent-python3 ./executables/openitcockpit-agent-python3.macos.bin
