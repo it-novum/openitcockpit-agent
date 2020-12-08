@@ -426,6 +426,13 @@ Definition in `customchecks.cnf`
   enabled = true
 ```
 
+### Add custom check to monitoring
+Open the agent wizard (pick "openITCOCKPIT Agent discovery" from the dropdown menu on the host list)
+![openITCOCKPIT Agent discovery Wizard](images/agent_wizard.png)
+
+Pick all custom checks you want to monitor
+![Pick all custom checks you want to monitor](images/pick_customchecks.png)
+
 ---
 
 ## Build instructions
