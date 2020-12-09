@@ -28,6 +28,7 @@ class Config:
         self.autossl = True
         self.temperatureIsFahrenheit = False
         self.is_push_mode = False
+        self.proxy = None
 
         self.etc_agent_path = None
 
@@ -184,6 +185,9 @@ class Config:
 
             if self.push_config['url'] and self.push_config['apikey']:
                 self.is_push_mode = True
+
+        if self.config.get('oitc', 'proxy', fallback=False):
+            self.proxy = self.config.get('oitc', 'proxy')
 
         if self.config.get('default', 'autossl-folder', fallback='') != '':
             self.build_autossl_defaults()

@@ -49,12 +49,18 @@ class PushClient:
             # For production
             url = self.Config.push_config['url'] + '/agentconnector/updateCheckdata.json'
 
+            proxies = {
+                'http': self.Config.proxy,
+                'https': self.Config.proxy,
+            }
+
             try:
                 response = requests.post(
                     url,
                     data=data,
                     headers=headers,
-                    verify=False
+                    verify=False,
+                    proxies=proxies
                 )
 
                 # response_body = response.content.decode('utf-8')

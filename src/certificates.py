@@ -291,11 +291,17 @@ class Certificates:
                 except:
                     self.agent_log.stacktrace(traceback.format_exc())
 
+                proxies = {
+                    'http': self.Config.proxy,
+                    'https': self.Config.proxy,
+                }
+
                 response = requests.post(
                     self.Config.config['oitc']['url'].strip() + '/agentconnector/certificate.json',
                     data=data,
                     headers=headers,
-                    verify=False
+                    verify=False,
+                    proxies=proxies
                 )
 
                 if response.content.decode('utf-8').strip() != '':

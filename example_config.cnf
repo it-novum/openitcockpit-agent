@@ -142,6 +142,11 @@ url =
 # API-Key of your openITCOCKPIT Server
 apikey =
 
+# Address of HTTP/HTTPS Proxy if required.
+# Leave blank to not use a proxy server
+# Example: http://10.10.1.10:3128
+proxy =
+
 # Determines in seconds how often the agent will push
 # check results to your openITCOCKPIT Server
 interval = 60
