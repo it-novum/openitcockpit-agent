@@ -25,19 +25,18 @@ class CheckResultStore:
     def get_store_for_json_response(self) -> dict:
         data = self.get_store()
 
-        if "default_checks" not in data:
+        if "agent" not in data:
             return {}
 
-        # Add all default checks to json (base json structure)
-        response = data['default_checks']
-        for key in data.keys():
-            if (key != 'default_checks'):
-                # Add all additional checks like qemu, systemd, docker etc...
-                response[key] = data[key]
+        if "cpu_checks_combined" in data:
+            for key in data['cpu_checks_combined'].keys():
+                data[key] = data['cpu_checks_combined'][key]
 
-        response['customchecks'] = self.get_custom_check_store()
+            del data['cpu_checks_combined']
 
-        return response
+        data['customchecks'] = self.get_custom_check_store()
+
+        return data
 
     def store_custom_check(self, key_name: str, data: dict):
         self.custom_lock.acquire()

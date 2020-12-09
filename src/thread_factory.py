@@ -5,8 +5,20 @@ import time
 from agent_log import AgentLog
 from certificates import Certificates
 from check_result_store import CheckResultStore
+from checks.agent_checks import AgentChecks
+from checks.memory_checks import MemoryChecks
+from checks.swap_checks import SwapChecks
+from checks.user_checks import UserChecks
+from checks.cpu_checks import CpuChecks
+from checks.disk_checks import DiskChecks
+from checks.diskio_checks import DiskIoChecks
+from checks.netio_checks import NetIoChecks
+from checks.netstats_checks import NetStatsChecks
+from checks.sensors_checks import SensorsChecks
+from checks.process_checks import ProcessChecks
+from checks.win_services_checks import WinServicesChecks
+from checks.win_eventlog_checks import WinEventlogChecks
 from checks.alfresco_checks import AlfrescoChecks
-from checks.default_checks import DefaultChecks
 from checks.docker_checks import DockerChecks
 from checks.qemu_checks import QemuChecks
 from checks.systemd_checks import SystemdChecks
@@ -84,25 +96,71 @@ class ThreadFactory:
         # Add new checks to the checks array
         # This is the only place where new checks needs to be added
         checks = [
-            DefaultChecks(self.Config, self.agent_log, self.check_store, check_params),
+            AgentChecks(self.Config, self.agent_log, self.check_store, check_params),
+            MemoryChecks(self.Config, self.agent_log, self.check_store, check_params),
+            SwapChecks(self.Config, self.agent_log, self.check_store, check_params),
+            UserChecks(self.Config, self.agent_log, self.check_store, check_params),
+            CpuChecks(self.Config, self.agent_log, self.check_store, check_params)
         ]
 
-        if self.Config.config.getboolean('default', 'dockerstats'):
+        if self.Config.config.getboolean('default', 'diskstats', fallback=True):
+            checks.append(
+                DiskChecks(self.Config, self.agent_log, self.check_store, check_params)
+            )
+
+        if self.Config.config.getboolean('default', 'diskio', fallback=True):
+            checks.append(
+                DiskIoChecks(self.Config, self.agent_log, self.check_store, check_params)
+            )
+
+        if self.Config.config.getboolean('default', 'netio', fallback=True):
+            checks.append(
+                NetIoChecks(self.Config, self.agent_log, self.check_store, check_params)
+            )
+
+        if self.Config.config.getboolean('default', 'netstats', fallback=True):
+            checks.append(
+                NetStatsChecks(self.Config, self.agent_log, self.check_store, check_params)
+            )
+
+        if self.Config.config.getboolean('default', 'sensorstats', fallback=True):
+            checks.append(
+                SensorsChecks(self.Config, self.agent_log, self.check_store, check_params)
+            )
+
+        if self.Config.config.getboolean('default', 'processstats', fallback=True):
+            checks.append(
+                ProcessChecks(self.Config, self.agent_log, self.check_store, check_params)
+            )
+
+        if self.operating_system.isWindows():
+            if self.Config.config.getboolean('default', 'winservices', fallback=True):
+                checks.append(
+                    WinServicesChecks(self.Config, self.agent_log, self.check_store, check_params)
+                )
+
+            if self.Config.config.getboolean('default', 'wineventlog', fallback=True):
+                checks.append(
+                    WinEventlogChecks(self.Config, self.agent_log, self.check_store, check_params)
+                )
+
+        if self.Config.config.getboolean('default', 'dockerstats', fallback=False):
             checks.append(
                 DockerChecks(self.Config, self.agent_log, self.check_store, check_params)
             )
 
-        if self.Config.config.getboolean('default', 'qemustats'):
+        if self.Config.config.getboolean('default', 'qemustats', fallback=False):
             checks.append(
                 QemuChecks(self.Config, self.agent_log, self.check_store, check_params)
             )
 
-        if self.Config.config.getboolean('default', 'systemdservices') and self.operating_system.isLinux():
-            checks.append(
-                SystemdChecks(self.Config, self.agent_log, self.check_store, check_params),
-            )
+        if self.operating_system.isLinux():
+            if self.Config.config.getboolean('default', 'systemdservices', fallback=True):
+                checks.append(
+                    SystemdChecks(self.Config, self.agent_log, self.check_store, check_params),
+                )
 
-        if self.Config.config.getboolean('default', 'alfrescostats'):
+        if self.Config.config.getboolean('default', 'alfrescostats', fallback=False):
             checks.append(
                 AlfrescoChecks(self.Config, self.agent_log, self.check_store, check_params),
             )

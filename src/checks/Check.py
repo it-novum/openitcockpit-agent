@@ -17,3 +17,22 @@ class Check:
     def real_check_run(self):
         result = self.run_check()
         self.check_store.store(self.key_name, result)
+
+    def wrapdiff(self, last, curr):
+        """ Function to calculate the difference between last and curr
+
+            If last > curr, try to guess the boundary at which the value must have wrapped
+            by trying the maximum values of 64, 32 and 16 bit signed and unsigned ints.
+        """
+
+        if last <= curr:
+            return float(curr - last)
+
+        boundary = None
+        for chkbound in (64, 63, 32, 31, 16, 15):
+            if last > 2 ** chkbound:
+                break
+            boundary = chkbound
+        if boundary is None:
+            raise ArithmeticError("Couldn't determine boundary")
+        return float(2 ** boundary - last + curr)
