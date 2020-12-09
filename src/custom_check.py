@@ -63,8 +63,8 @@ class CustomCheck:
             )
 
             check_result = self._build_checkresult(
-                output=result.stdout.decode(),
-                error_output=result.stderr.decode(),
+                output=result.stdout.decode(encoding='UTF-8',errors='replace'),
+                error_output=result.stderr.decode(encoding='UTF-8',errors='replace'),
                 returncode=result.returncode,
             )
 
