@@ -2,6 +2,7 @@ from concurrent.futures import ThreadPoolExecutor
 import threading
 import time
 import os
+import traceback
 
 from agent_log import AgentLog
 from certificates import Certificates
@@ -195,30 +196,34 @@ class ThreadFactory:
                 all_threads_finished = False
                 number_of_running_threads = 0
                 while not all_threads_finished:
-                    # spawn all threads
-                    if (number_of_running_threads < max_workers):
+                    try:
+                        # spawn all threads
+                        if (number_of_running_threads < max_workers):
+                            for thread in threads:
+                                if not thread['was_started']:
+                                    thread['thread'].start()
+                                    thread['was_started'] = True
+                                    number_of_running_threads += 1
+
+                        # Join all threads
                         for thread in threads:
-                            if not thread['was_started']:
-                                thread['thread'].start()
-                                thread['was_started'] = True
-                                number_of_running_threads += 1
+                            if thread['was_started']:
+                                thread['thread'].join(timeout=10.0)
+                                if thread['thread'].is_alive():
+                                    self.agent_log.error(
+                                        'Thread with json_key %s joins for more than 10 seconds! Can not join it to main thread!' %
+                                        thread['json_key'])
+                                else:
+                                    number_of_running_threads = number_of_running_threads - 1
 
-                    # Join all threads
-                    for thread in threads:
-                        if thread['was_started']:
-                            thread['thread'].join(timeout=10.0)
-                            if thread['thread'].is_alive():
-                                self.agent_log.error(
-                                    'Thread with json_key %s joins for more than 10 seconds! Can not join it to main thread!' %
-                                    thread['json_key'])
-                            else:
-                                number_of_running_threads = number_of_running_threads - 1
-
-                    # Are there any threads that needs to be executed?
-                    for thread in threads:
-                        all_threads_finished = True
-                        if thread['was_started'] is False:
-                            all_threads_finished = False
+                        # Are there any threads that needs to be executed?
+                        for thread in threads:
+                            all_threads_finished = True
+                            if thread['was_started'] is False:
+                                all_threads_finished = False
+                    except Exception as e:
+                        self.agent_log.error(str(e))
+                        self.agent_log.stacktrace(traceback.format_exc())
 
 
             else:
