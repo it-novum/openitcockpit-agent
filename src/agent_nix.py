@@ -6,6 +6,8 @@
 
 import signal
 import time
+import faulthandler
+import os
 
 from agent_generic import AgentService
 
@@ -13,6 +15,15 @@ from agent_generic import AgentService
 class LinuxService(AgentService):
 
     def run(self):
+        log_file = '/tmp/faulthandler.log'
+        fd = open(log_file, 'a')
+        faulthandler.enable(file=fd, all_threads=True)
+        faulthandler.dump_traceback_later(
+            timeout=10,
+            repeat=True,
+            file=fd
+        )
+
         self.init_service()
         signal.signal(signal.SIGINT, self.main_thread.signal_handler)  # ^C
         signal.signal(signal.SIGTERM, self.main_thread.signal_handler)  # systemctl stop openitcockpit-agent

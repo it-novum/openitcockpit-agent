@@ -12,6 +12,8 @@ import win32event
 import win32service
 import win32serviceutil
 import win32timezone
+import faulthandler
+import os
 
 from agent_generic import AgentService
 
@@ -33,6 +35,15 @@ class OITCService(win32serviceutil.ServiceFramework, AgentService):
         win32event.SetEvent(self.hWaitStop)
 
     def SvcDoRun(self):
+        log_file = 'C:' + os.path.sep + 'Program Files' + os.path.sep + 'it-novum' + os.path.sep + 'openitcockpit-agent' + os.path.sep + "faulthandler.log"
+        fd = open(log_file, 'a')
+        faulthandler.enable(file=fd, all_threads=True)
+        faulthandler.dump_traceback_later(
+            timeout=10,
+            repeat=True,
+            file=fd
+        )
+
         rc = None
         self.init_service()
         while rc != win32event.WAIT_OBJECT_0:
