@@ -1,6 +1,7 @@
 from concurrent.futures import ThreadPoolExecutor
 import threading
 import time
+import os
 
 from agent_log import AgentLog
 from certificates import Certificates
@@ -170,21 +171,56 @@ class ThreadFactory:
             self.agent_log.info('check_interval <= 0. Using 5 seconds as check_interval for now.')
             check_interval = 5
 
+        # This is stolen from Pythons ThreadPoolExecutor
+        # Use max 32 threads on CPUs with many cores but at least 4 threads on hardware with less cores
+        max_workers = min(32, (os.cpu_count() or 1) + 4)
+
         # Run checks on agent startup
         check_interval_counter = check_interval
         while self.loop_checks_thread:
             if check_interval_counter >= check_interval:
                 # Execute checks
-                # print('run checks')
                 check_interval_counter = 1
 
-                # Execute all checks in a separate thread managed by ThreadPoolExecutor
-                with ThreadPoolExecutor(max_workers=5) as executor:
-                    i = 0
-                    for check in checks:
-                        self.agent_log.debug('Starting new Default Checks Thread %d' % i)
-                        i += 1
-                        executor.submit(check.real_check_run)
+                threads = []
+                for check in checks:
+                    thread = threading.Thread(target=check.real_check_run, daemon=True)
+                    threads.append({
+                        'thread': thread,
+                        'ident': thread.ident,
+                        'was_started': False,
+                        'json_key': check.key_name
+                    })
+
+                all_threads_finished = False
+                number_of_running_threads = 0
+                while not all_threads_finished:
+                    # spawn all threads
+                    if (number_of_running_threads < max_workers):
+                        for thread in threads:
+                            if not thread['was_started']:
+                                thread['thread'].start()
+                                thread['was_started'] = True
+                                number_of_running_threads += 1
+
+                    # Join all threads
+                    for thread in threads:
+                        if thread['was_started']:
+                            thread['thread'].join(timeout=10.0)
+                            if thread['thread'].is_alive():
+                                self.agent_log.error(
+                                    'Thread with json_key %s joins for more than 10 seconds! Can not join it to main thread!' %
+                                    thread['json_key'])
+                            else:
+                                number_of_running_threads = number_of_running_threads - 1
+
+                    # Are there any threads that needs to be executed?
+                    for thread in threads:
+                        all_threads_finished = True
+                        if thread['was_started'] is False:
+                            all_threads_finished = False
+
+
             else:
                 # print('Sleep wait for next run ', check_interval_counter, '/', check_interval)
                 check_interval_counter += 1
