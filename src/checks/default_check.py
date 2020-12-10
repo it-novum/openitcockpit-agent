@@ -1,15 +1,17 @@
 from agent_log import AgentLog
 from check_result_store import CheckResultStore
 from config import Config
+from utils.operating_system import OperatingSystem
 
 
-class Check:
+class DefaultCheck:
 
     def __init__(self, config, agent_log, check_store, check_params):
         self.Config: Config = config
         self.agent_log: AgentLog = agent_log
         self.check_params = check_params
         self.check_store: CheckResultStore = check_store
+        self.operating_system = OperatingSystem()
 
     def run_check(self):
         pass

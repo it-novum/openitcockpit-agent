@@ -3,7 +3,7 @@ import traceback
 
 import psutil
 
-from checks.Check import Check
+from checks.default_check import DefaultCheck
 
 if sys.platform == 'win32' or sys.platform == 'win64':
     pass
@@ -11,12 +11,10 @@ if sys.platform == 'win32' or sys.platform == 'win64':
 from utils.operating_system import OperatingSystem
 
 
-class NetStatsChecks(Check):
+class NetStatsChecks(DefaultCheck):
 
     def __init__(self, config, agent_log, check_store, check_params):
         super().__init__(config, agent_log, check_store, check_params)
-        self.operating_system = OperatingSystem()
-
         self.key_name = "net_stats"
 
     def run_check(self) -> dict:

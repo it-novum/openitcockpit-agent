@@ -2,16 +2,14 @@ import subprocess
 import time
 import traceback
 
-from checks.Check import Check
+from checks.default_check import DefaultCheck
 from utils.operating_system import OperatingSystem
 
 
-class SystemdChecks(Check):
+class SystemdChecks(DefaultCheck):
 
     def __init__(self, config, agent_log, check_store, check_params):
         super().__init__(config, agent_log, check_store, check_params)
-        self.operating_system = OperatingSystem()
-
         self.key_name = "systemd_services"
 
         self.systemd_services_data = {}

@@ -5,7 +5,7 @@ from contextlib import contextmanager
 
 import psutil
 
-from checks.Check import Check
+from checks.default_check import DefaultCheck
 
 if sys.platform == 'win32' or sys.platform == 'win64':
     pass
@@ -13,12 +13,10 @@ if sys.platform == 'win32' or sys.platform == 'win64':
 from utils.operating_system import OperatingSystem
 
 
-class ProcessChecks(Check):
+class ProcessChecks(DefaultCheck):
 
     def __init__(self, config, agent_log, check_store, check_params):
         super().__init__(config, agent_log, check_store, check_params)
-        self.operating_system = OperatingSystem()
-
         self.key_name = "processes"
 
     def run_check(self):
@@ -77,7 +75,10 @@ class ProcessChecks(Check):
                             self.agent_log.stacktrace(traceback.format_exc())
 
                     attributes = ['nice', 'name', 'username', 'exe', 'cmdline', 'cpu_percent', 'memory_info',
-                                  'memory_percent', 'num_fds', 'open_files', 'io_counters']
+                                  'memory_percent', 'num_fds', 'io_counters']
+                    if not self.operating_system.windows:
+                        attributes.append('open_files')
+
                     for attr in attributes:
                         try:
                             if attr == 'cpu_percent':

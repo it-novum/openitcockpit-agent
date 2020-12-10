@@ -1,16 +1,14 @@
 import traceback
 import psutil
 
-from checks.Check import Check
+from checks.default_check import DefaultCheck
 from utils.operating_system import OperatingSystem
 
 
-class WinServicesChecks(Check):
+class WinServicesChecks(DefaultCheck):
 
     def __init__(self, config, agent_log, check_store, check_params):
         super().__init__(config, agent_log, check_store, check_params)
-        self.operating_system = OperatingSystem()
-
         self.key_name = "windows_services"
 
     def run_check(self):

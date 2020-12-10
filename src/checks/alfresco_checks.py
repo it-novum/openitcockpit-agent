@@ -1,17 +1,15 @@
 import subprocess
 import traceback
 
-from checks.Check import Check
+from checks.default_check import DefaultCheck
 from utils.filesystem import file_readable
 from utils.operating_system import OperatingSystem
 
 
-class AlfrescoChecks(Check):
+class AlfrescoChecks(DefaultCheck):
 
     def __init__(self, config, agent_log, check_store, check_params):
         super().__init__(config, agent_log, check_store, check_params)
-        self.operating_system = OperatingSystem()
-
         self.key_name = "alfresco_checks"
 
         self.alfresco_stats_data = {}
