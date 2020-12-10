@@ -8,8 +8,6 @@ from checks.default_check import DefaultCheck
 if sys.platform == 'win32' or sys.platform == 'win64':
     pass
 
-from utils.operating_system import OperatingSystem
-
 
 class NetStatsChecks(DefaultCheck):
 

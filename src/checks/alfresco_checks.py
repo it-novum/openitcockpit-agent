@@ -3,7 +3,6 @@ import traceback
 
 from checks.default_check import DefaultCheck
 from utils.filesystem import file_readable
-from utils.operating_system import OperatingSystem
 
 
 class AlfrescoChecks(DefaultCheck):

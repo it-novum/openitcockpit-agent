@@ -3,7 +3,6 @@ import time
 import traceback
 
 from checks.default_check import DefaultCheck
-from utils.operating_system import OperatingSystem
 
 
 class QemuChecks(DefaultCheck):
