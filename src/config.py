@@ -13,7 +13,7 @@ if sys.platform == 'win32' or sys.platform == 'win64':
 from color_output import ColorOutput
 from utils.filesystem import file_readable
 from help import Help
-from operating_system import OperatingSystem
+from utils.operating_system import OperatingSystem
 
 
 class Config:

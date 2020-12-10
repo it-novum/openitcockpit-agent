@@ -3,7 +3,7 @@ import time
 import traceback
 
 from checks.Check import Check
-from operating_system import OperatingSystem
+from utils.operating_system import OperatingSystem
 
 
 class QemuChecks(Check):

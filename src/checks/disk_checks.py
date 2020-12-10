@@ -3,7 +3,7 @@ import psutil
 
 from checks.Check import Check
 
-from operating_system import OperatingSystem
+from utils.operating_system import OperatingSystem
 
 
 class DiskChecks(Check):

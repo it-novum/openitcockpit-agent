@@ -9,7 +9,7 @@ if sys.platform == 'win32' or sys.platform == 'win64':
     import win32con
     import win32security  # To translate NT Sids to account names.
 
-from operating_system import OperatingSystem
+from utils.operating_system import OperatingSystem
 
 
 class WinEventlogChecks(Check):

@@ -2,7 +2,7 @@ import sys
 import threading
 from datetime import datetime
 
-from operating_system import OperatingSystem
+from utils.operating_system import OperatingSystem
 
 if sys.platform == 'win32' or sys.platform == 'win64':
     import ctypes

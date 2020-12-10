@@ -1,11 +1,10 @@
-import sys
 import time
 import traceback
 
 import psutil
 
 from checks.Check import Check
-from operating_system import OperatingSystem
+from utils.operating_system import OperatingSystem
 
 
 class DiskIoChecks(Check):

@@ -1,21 +1,14 @@
-import os
-import platform
 import sys
-import time
 import traceback
-from contextlib import contextmanager
 
 import psutil
 
 from checks.Check import Check
 
 if sys.platform == 'win32' or sys.platform == 'win64':
-    import win32evtlog
-    import win32evtlogutil
-    import win32con
-    import win32security  # To translate NT Sids to account names.
+    pass
 
-from operating_system import OperatingSystem
+from utils.operating_system import OperatingSystem
 
 
 class NetStatsChecks(Check):

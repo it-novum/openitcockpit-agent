@@ -3,7 +3,7 @@ import traceback
 
 from checks.Check import Check
 from utils.filesystem import file_readable
-from operating_system import OperatingSystem
+from utils.operating_system import OperatingSystem
 
 
 class AlfrescoChecks(Check):

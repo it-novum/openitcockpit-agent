@@ -2,7 +2,6 @@ from concurrent.futures import ThreadPoolExecutor
 import threading
 import time
 import os
-import traceback
 
 from agent_log import AgentLog
 from certificates import Certificates
@@ -29,7 +28,7 @@ from custom_check import CustomCheck
 from exceptions import UntrustedAgentException
 from http_server.webserver_flask import WebserverFlask
 from main_thread import MainThread
-from operating_system import OperatingSystem
+from utils.operating_system import OperatingSystem
 from push_client import PushClient
 
 
