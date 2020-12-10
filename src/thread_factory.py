@@ -171,10 +171,6 @@ class ThreadFactory:
             self.agent_log.info('check_interval <= 0. Using 5 seconds as check_interval for now.')
             check_interval = 5
 
-        # This is stolen from Pythons ThreadPoolExecutor
-        # Use max 32 threads on CPUs with many cores but at least 4 threads on hardware with less cores
-        max_workers = min(32, (os.cpu_count() or 1) + 4)
-
         # Run checks on agent startup
         check_interval_counter = check_interval
         while self.loop_checks_thread:
@@ -182,14 +178,9 @@ class ThreadFactory:
                 # Execute checks
                 check_interval_counter = 1
 
-                executor = ThreadPoolExecutor()
-                i = 0
+                self.agent_log.debug('Running integrated checks')
                 for check in checks:
-                    self.agent_log.debug('Starting new Thread %d for "%s"' % (i, check.key_name))
-                    i += 1
-                    executor.submit(check.real_check_run)
-
-                executor.shutdown()
+                    check.real_check_run()
 
             else:
                 # print('Sleep wait for next run ', check_interval_counter, '/', check_interval)
