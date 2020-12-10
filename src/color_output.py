@@ -24,7 +24,7 @@ class ColorOutput:
         self.lock = threading.Lock()
 
         operating_system = OperatingSystem()
-        if operating_system.isWindows():
+        if operating_system.windows:
             # Enable ANSI color support on Windows 10
             # This requires Windows 10 (1909)
             try:
@@ -50,6 +50,5 @@ class ColorOutput:
 
     def print_with_time(self, msg):
         now = datetime.now()
-        self.lock.acquire()
-        print(self.LIGHT_GRAY + now.strftime("%H:%M:%S") + self.END + " " + msg)
-        self.lock.release()
+        with self.lock:
+            print(self.LIGHT_GRAY + now.strftime("%H:%M:%S") + self.END + " " + msg)

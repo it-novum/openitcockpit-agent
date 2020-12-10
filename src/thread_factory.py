@@ -135,7 +135,7 @@ class ThreadFactory:
                 ProcessChecks(self.Config, self.agent_log, self.check_store, check_params)
             )
 
-        if self.operating_system.isWindows():
+        if self.operating_system.windows:
             if self.Config.config.getboolean('default', 'winservices', fallback=True):
                 checks.append(
                     WinServicesChecks(self.Config, self.agent_log, self.check_store, check_params)
@@ -156,7 +156,7 @@ class ThreadFactory:
                 QemuChecks(self.Config, self.agent_log, self.check_store, check_params)
             )
 
-        if self.operating_system.isLinux():
+        if self.operating_system.linux:
             if self.Config.config.getboolean('default', 'systemdservices', fallback=True):
                 checks.append(
                     SystemdChecks(self.Config, self.agent_log, self.check_store, check_params),

@@ -21,7 +21,7 @@ class DiskChecks(Check):
         # DISKS #
         try:
             for disk in psutil.disk_partitions():
-                if self.operating_system.isWindows():
+                if self.operating_system.windows:
                     if 'cdrom' in disk.opts or disk.fstype == '':
                         # skip cd-rom drives with no disk in it; they may raise
                         # ENOENT, pop-up a Windows GUI error for a non-ready

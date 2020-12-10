@@ -66,7 +66,7 @@ class Config:
         self.config = configparser.ConfigParser(allow_no_value=True)
 
         operating_system = OperatingSystem()
-        if operating_system.isWindows():
+        if operating_system.windows:
             self.configpath = self.get_etc_path() + 'config.cnf'
 
         for opt, arg in opts:
@@ -562,10 +562,10 @@ class Config:
         # Default path for Linux systems
         etc_agent_path = '/etc/openitcockpit-agent/'
 
-        if operating_system.isMacos():
+        if operating_system.macos:
             etc_agent_path = '/Applications/openitcockpit-agent/'
 
-        if operating_system.isWindows():
+        if operating_system.windows:
             etc_agent_path = 'C:' + os.path.sep + 'Program Files' + os.path.sep + 'it-novum' + os.path.sep + 'openitcockpit-agent' + os.path.sep
             try:
                 registry_path = r'SOFTWARE\it-novum\InstalledProducts\openitcockpit-agent'

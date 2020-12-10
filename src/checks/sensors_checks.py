@@ -21,7 +21,7 @@ class SensorsChecks(Check):
 
         sensors = {}
         try:
-            if hasattr(psutil, "sensors_temperatures") and not self.operating_system.isWindows():
+            if hasattr(psutil, "sensors_temperatures") and not self.operating_system.windows:
                 sensors['temperatures'] = {}
                 for device, data in psutil.sensors_temperatures(
                         fahrenheit=self.Config.temperatureIsFahrenheit).items():
@@ -35,7 +35,7 @@ class SensorsChecks(Check):
             self.agent_log.stacktrace(traceback.format_exc())
 
         try:
-            if hasattr(psutil, "sensors_fans") and not self.operating_system.isWindows():
+            if hasattr(psutil, "sensors_fans") and not self.operating_system.windows:
                 sensors['fans'] = {}
                 for device, data in psutil.sensors_fans().items():
                     sensors['fans'][device] = []

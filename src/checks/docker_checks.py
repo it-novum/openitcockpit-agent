@@ -41,7 +41,7 @@ class DockerChecks(Check):
         self.docker_stats_data['running'] = "true"
 
         docker_stats_command = 'docker stats --no-stream --format "stats;{{.ID}};{{.Name}};{{.CPUPerc}};{{.MemUsage}};{{.MemPerc}};{{.NetIO}};{{.BlockIO}};{{.PIDs}}"'
-        if self.operating_system.isWindows():
+        if self.operating_system.windows:
             docker_stats_command = 'docker stats --no-stream --format "stats;{{.ID}};{{.Name}};{{.CPUPerc}};{{.MemUsage}};;{{.NetIO}};{{.BlockIO}};"'  # fill not existing 'MemPerc' and 'PIDs' with empty ; separated value
         docker_container_list_command = 'docker container list -a -s --format "cl;{{.ID}};{{.Status}};{{.Size}};{{.Image}};{{.RunningFor}};{{.Names}}"'
 
