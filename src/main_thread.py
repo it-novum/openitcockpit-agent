@@ -31,12 +31,10 @@ class MainThread:
 
     def trigger_reload(self):
         """Call this function to trigger an reload of all threads"""
-        self.lock.acquire()
-        self.join_threads = True
-        self.lock.release()
+        with self.lock:
+            self.join_threads = True
 
     def disable_reload_trigger(self):
         """Call this function to trigger an reload of all threads"""
-        self.lock.acquire()
-        self.join_threads = False
-        self.lock.release()
+        with self.lock:
+            self.join_threads = False
