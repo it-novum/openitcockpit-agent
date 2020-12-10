@@ -183,48 +183,14 @@ class ThreadFactory:
                 # Execute checks
                 check_interval_counter = 1
 
-                threads = []
+                executor = ThreadPoolExecutor()
+                i = 0
                 for check in checks:
-                    thread = threading.Thread(target=check.real_check_run, daemon=True)
-                    threads.append({
-                        'thread': thread,
-                        'ident': thread.ident,
-                        'was_started': False,
-                        'json_key': check.key_name
-                    })
+                    self.agent_log.debug('Starting new Thread %d for "%s"' % (i, check.key_name))
+                    i += 1
+                    executor.submit(check.real_check_run)
 
-                all_threads_finished = False
-                number_of_running_threads = 0
-                while not all_threads_finished:
-                    try:
-                        # spawn all threads
-                        if (number_of_running_threads < max_workers):
-                            for thread in threads:
-                                if not thread['was_started']:
-                                    thread['thread'].start()
-                                    thread['was_started'] = True
-                                    number_of_running_threads += 1
-
-                        # Join all threads
-                        for thread in threads:
-                            if thread['was_started']:
-                                thread['thread'].join(timeout=10.0)
-                                if thread['thread'].is_alive():
-                                    self.agent_log.error(
-                                        'Thread with json_key %s joins for more than 10 seconds! Can not join it to main thread!' %
-                                        thread['json_key'])
-                                else:
-                                    number_of_running_threads = number_of_running_threads - 1
-
-                        # Are there any threads that needs to be executed?
-                        for thread in threads:
-                            all_threads_finished = True
-                            if thread['was_started'] is False:
-                                all_threads_finished = False
-                    except Exception as e:
-                        self.agent_log.error(str(e))
-                        self.agent_log.stacktrace(traceback.format_exc())
-
+                executor.shutdown()
 
             else:
                 # print('Sleep wait for next run ', check_interval_counter, '/', check_interval)
