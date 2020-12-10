@@ -15,7 +15,7 @@ from OpenSSL.crypto import (dump_certificate_request, dump_privatekey, load_cert
 from agent_log import AgentLog
 from config import Config
 from exceptions import UntrustedAgentException
-from filesystem import Filesystem
+from utils.filesystem import file_readable
 
 
 class Certificates:
@@ -136,14 +136,14 @@ class Certificates:
             return False
 
         # Check if agent certificate file exists
-        if not Filesystem.file_readable(self.Config.config['default']['autossl-crt-file']):
+        if not file_readable(self.Config.config['default']['autossl-crt-file']):
             self.agent_log.warning(
                 'Could not read agent certificate file %s' % self.Config.config['default']['autossl-crt-file']
             )
             return True
 
         # Check if CA certificate file exists
-        if not Filesystem.file_readable(self.Config.config['default']['autossl-ca-file']):
+        if not file_readable(self.Config.config['default']['autossl-ca-file']):
             self.agent_log.warning(
                 'Could not read CA certificate file %s' % self.Config.config['default']['autossl-ca-file']
             )
@@ -181,7 +181,7 @@ class Certificates:
                 return True
 
         # Check if CA certificate will expire soon
-        if Filesystem.file_readable(self.Config.config['default']['autossl-ca-file']):
+        if file_readable(self.Config.config['default']['autossl-ca-file']):
             self.agent_log.info('CA file %s found and readable' % self.Config.config['default']['autossl-ca-file'])
             with open(self.Config.config['default']['autossl-ca-file'], 'rb') as f:
                 ca = f.read()
@@ -224,7 +224,7 @@ class Certificates:
                 # so it can set the certificate check interval to 60 seconds instead of 6 hours
                 raise UntrustedAgentException
 
-        if Filesystem.file_readable(self.Config.config['default']['autossl-crt-file']):
+        if file_readable(self.Config.config['default']['autossl-crt-file']):
             if self.requires_certificate_renewal():
                 result = self._pull_crt_from_server(renew=True)
                 if result == self.RENEWAL_SUCESSFUL:

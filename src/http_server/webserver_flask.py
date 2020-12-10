@@ -10,7 +10,7 @@ from agent_log import AgentLog
 from certificates import Certificates
 from check_result_store import CheckResultStore
 from config import Config
-from filesystem import Filesystem
+from utils.filesystem import file_readable
 from main_thread import MainThread
 
 
@@ -36,8 +36,8 @@ class WebserverFlask:
         self.app.add_url_rule('/reload', '/reload', self.handle_request_reload, methods=['GET'])
 
         self.enable_ssl = False
-        if Filesystem.file_readable(
-                self.Config.config.get('default', 'certfile', fallback=False)) and Filesystem.file_readable(
+        if file_readable(
+                self.Config.config.get('default', 'certfile', fallback=False)) and file_readable(
             self.Config.config.get('default', 'keyfile', fallback=False)):
             self.enable_ssl = True
 
@@ -149,9 +149,9 @@ class WebserverFlask:
                 keyfile=self.Config.config.get('default', 'keyfile')
             )
         elif self.Config.autossl and \
-                Filesystem.file_readable(self.Config.config.get('default', 'autossl-key-file')) and \
-                Filesystem.file_readable(self.Config.config.get('default', 'autossl-crt-file')) and \
-                Filesystem.file_readable(self.Config.config.get('default', 'autossl-ca-file')):
+                file_readable(self.Config.config.get('default', 'autossl-key-file')) and \
+                file_readable(self.Config.config.get('default', 'autossl-crt-file')) and \
+                file_readable(self.Config.config.get('default', 'autossl-ca-file')):
 
             self.protocol = 'https'
             # Enable HTTPS with certificate authentication

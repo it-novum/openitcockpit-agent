@@ -8,7 +8,7 @@ from agent_log import AgentLog
 from certificates import Certificates
 from check_result_store import CheckResultStore
 from config import Config
-from filesystem import Filesystem
+from utils.filesystem import file_readable
 
 
 class PushClient:
@@ -33,7 +33,7 @@ class PushClient:
                 'hostuuid': self.Config.push_config['hostuuid']
             }
 
-            if self.Config.autossl and Filesystem.file_readable(self.Config.config.get('default', 'autossl-crt-file')):
+            if self.Config.autossl and file_readable(self.Config.config.get('default', 'autossl-crt-file')):
                 data['checksum'] = self.certificates.get_cert_checksum()
 
             try:

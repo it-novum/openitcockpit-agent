@@ -2,7 +2,7 @@ import subprocess
 import traceback
 
 from checks.Check import Check
-from filesystem import Filesystem
+from utils.filesystem import file_readable
 from operating_system import OperatingSystem
 
 
@@ -40,7 +40,7 @@ class AlfrescoChecks(Check):
         alfrescostats = []
 
         if self.jmx_import_successfull and self.Config.config.getboolean('default', 'alfrescostats', fallback=False):
-            if Filesystem.file_readable(self.Config.config['default']['alfresco-javapath']):
+            if file_readable(self.Config.config['default']['alfresco-javapath']):
                 try:
                     uri = ("%s:%s%s" % (
                         self.Config.config['default']['alfresco-jmxaddress'],

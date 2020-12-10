@@ -5,7 +5,7 @@ from agent_log import AgentLog
 from certificates import Certificates
 from check_result_store import CheckResultStore
 from config import Config
-from filesystem import Filesystem
+from utils.filesystem import file_readable
 from http_server.agent_request_handler import AgentRequestHandler
 from http_server.daemon_threaded_http_server import DaemonThreadedHTTPServer
 from main_thread import MainThread
@@ -28,13 +28,13 @@ class Webserver:
         AgentRequestHandler.main_thread = main_thread
 
         self.enable_ssl = False
-        if Filesystem.file_readable(
-                self.Config.config.get('default', 'certfile', fallback=False)) and Filesystem.file_readable(
+        if file_readable(
+                self.Config.config.get('default', 'certfile', fallback=False)) and file_readable(
             self.Config.config.get('default', 'keyfile', fallback=False)):
             self.enable_ssl = True
 
         self.protocol = 'http'
-        if (self.enable_ssl):
+        if self.enable_ssl:
             self.protocol = 'https'
         self.server_address = (
             self.Config.config.get('default', 'address', fallback='0.0.0.0'),
@@ -64,9 +64,9 @@ class Webserver:
                                                 server_side=True
                                                 )
         elif self.Config.autossl and \
-                Filesystem.file_readable(self.Config.config.get('default', 'autossl-key-file')) and \
-                Filesystem.file_readable(self.Config.config.get('default', 'autossl-crt-file')) and \
-                Filesystem.file_readable(self.Config.config.get('default', 'autossl-ca-file')):
+                file_readable(self.Config.config.get('default', 'autossl-key-file')) and \
+                file_readable(self.Config.config.get('default', 'autossl-crt-file')) and \
+                file_readable(self.Config.config.get('default', 'autossl-ca-file')):
             self.agent_log.info('SSL with custom certificate enabled')
 
             self.httpd.socket = ssl.wrap_socket(self.httpd.socket,

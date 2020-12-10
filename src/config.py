@@ -11,7 +11,7 @@ if sys.platform == 'win32' or sys.platform == 'win64':
     import winreg
 
 from color_output import ColorOutput
-from filesystem import Filesystem
+from utils.filesystem import file_readable
 from help import Help
 from operating_system import OperatingSystem
 
@@ -78,7 +78,7 @@ class Config:
                 self.stacktrace = True
 
         if self.configpath != "":
-            if Filesystem.file_readable(path=self.configpath):
+            if file_readable(path=self.configpath):
                 with open(self.configpath, 'r') as configfile:
                     self.ColorOutput.info('Load agent configuration file "%s"' % (self.configpath))
                     self.config.read_file(configfile)
@@ -199,7 +199,7 @@ class Config:
         if self.config.get('default', 'certfile', fallback='') != '' and self.config.get('default', 'keyfile',
                                                                                          fallback='') != '':
             try:
-                if Filesystem.file_readable(self.config.get('default', 'certfile')) and Filesystem.file_readable(
+                if file_readable(self.config.get('default', 'certfile')) and file_readable(
                         self.config.get('default', 'keyfile')):
                     self.enableSSL = True
                 else:
@@ -240,7 +240,7 @@ class Config:
 
     def get_custom_checks(self) -> dict:
         custom_checks_config_file = self.config.get('default', 'customchecks')
-        if not Filesystem.file_readable(custom_checks_config_file):
+        if not file_readable(custom_checks_config_file):
             self.ColorOutput.error('Could not read customchecks configuration file %s' % (custom_checks_config_file))
 
         with open(custom_checks_config_file, 'r') as configfile:
@@ -322,7 +322,7 @@ class Config:
             jdata = json.loads(data.decode('utf-8'))
 
             for key in jdata:
-                if key == 'config' and Filesystem.file_readable(self.configpath):
+                if key == 'config' and file_readable(self.configpath):
                     new_config = configparser.ConfigParser(allow_no_value=True)
                     new_config['default'] = {}
                     new_config['oitc'] = {}
@@ -488,10 +488,10 @@ class Config:
                     else:
                         self.ColorOutput.error('New configuration is invalid - aborting')
 
-                elif key == 'config' and not Filesystem.file_readable(self.configpath):
+                elif key == 'config' and not file_readable(self.configpath):
                     self.ColorOutput.error('Agent configuration file %s is not readable ' % (self.configpath))
 
-                if key == 'customchecks' and Filesystem.file_readable(self.config['default']['customchecks']):
+                if key == 'customchecks' and file_readable(self.config['default']['customchecks']):
                     new_customchecks = configparser.ConfigParser(allow_no_value=True)
                     new_customchecks.read_string(Help.sample_customcheck_config)
 
@@ -524,8 +524,7 @@ class Config:
                     else:
                         self.ColorOutput.error('New customchecks configuration is invalid - aborting')
 
-
-                elif key == 'customchecks' and not Filesystem.file_readable(self.config['default']['customchecks']):
+                elif key == 'customchecks' and not file_readable(self.config['default']['customchecks']):
                     self.ColorOutput.error('Customchecks configuration file %s is not readable' % self.configpath)
 
             return True
