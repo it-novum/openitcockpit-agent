@@ -2,6 +2,7 @@ from agent_log import AgentLog
 from check_result_store import CheckResultStore
 from config import Config
 from utils.operating_system import OperatingSystem
+from copy import deepcopy
 
 
 class DefaultCheck:
@@ -12,13 +13,14 @@ class DefaultCheck:
         self.check_params = check_params
         self.check_store: CheckResultStore = check_store
         self.operating_system = OperatingSystem()
+        self.key_name = None
 
     def run_check(self):
-        pass
+        return {}
 
     def real_check_run(self):
         result = self.run_check()
-        self.check_store.store(self.key_name, result)
+        self.check_store.store(self.key_name, deepcopy(result))
 
     def wrapdiff(self, last, curr):
         """ Function to calculate the difference between last and curr

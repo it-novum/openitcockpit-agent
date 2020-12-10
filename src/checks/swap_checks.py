@@ -15,4 +15,4 @@ class SwapChecks(DefaultCheck):
         swap = psutil.swap_memory()
         swap = swap._asdict()
 
-        return swap.copy()
+        return swap

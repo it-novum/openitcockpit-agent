@@ -104,4 +104,4 @@ class SystemdChecks(DefaultCheck):
         del self.systemd_services_data['running']
         self.agent_log.verbose('Systemd services check finished')
 
-        return self.systemd_services_data.copy()
+        return self.systemd_services_data

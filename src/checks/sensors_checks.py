@@ -55,4 +55,4 @@ class SensorsChecks(DefaultCheck):
             self.agent_log.error("Could not get battery sensor data!")
             self.agent_log.stacktrace(traceback.format_exc())
 
-        return sensors.copy()
+        return sensors

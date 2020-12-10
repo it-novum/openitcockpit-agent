@@ -81,4 +81,4 @@ class AlfrescoChecks(DefaultCheck):
         self.agent_log.verbose('Alfresco stats check finished')
 
         self.alfresco_stats_data['result'] = alfrescostats
-        return self.alfresco_stats_data.copy()
+        return self.alfresco_stats_data

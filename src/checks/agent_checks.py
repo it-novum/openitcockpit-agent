@@ -43,4 +43,4 @@ class AgentChecks(DefaultCheck):
                 'temperature_unit': 'F' if self.Config.temperatureIsFahrenheit else 'C'
             }
 
-        return agent.copy()
+        return agent

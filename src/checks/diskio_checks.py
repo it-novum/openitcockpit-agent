@@ -76,4 +76,4 @@ class DiskIoChecks(DefaultCheck):
                 self.agent_log.error("Could not get disk io stats!")
                 self.agent_log.stacktrace(traceback.format_exc())
 
-        return diskIO.copy()
+        return diskIO

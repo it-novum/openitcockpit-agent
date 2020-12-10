@@ -133,4 +133,4 @@ class DockerChecks(DefaultCheck):
         self.agent_log.verbose('Docker status check finished')
         del self.docker_stats_data['running']
 
-        return self.docker_stats_data.copy()
+        return self.docker_stats_data

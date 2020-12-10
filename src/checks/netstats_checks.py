@@ -1,12 +1,8 @@
-import sys
 import traceback
 
 import psutil
 
 from checks.default_check import DefaultCheck
-
-if sys.platform == 'win32' or sys.platform == 'win64':
-    pass
 
 
 class NetStatsChecks(DefaultCheck):
@@ -26,4 +22,4 @@ class NetStatsChecks(DefaultCheck):
                 self.agent_log.error("Could not get network device stats!")
                 self.agent_log.stacktrace(traceback.format_exc())
 
-        return net_stats.copy()
+        return net_stats

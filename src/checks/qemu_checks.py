@@ -102,4 +102,4 @@ class QemuChecks(DefaultCheck):
         self.agent_log.verbose('Qemu status check finished')
         del self.qemu_stats_data['running']
 
-        return self.qemu_stats_data.copy()
+        return self.qemu_stats_data

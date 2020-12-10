@@ -87,4 +87,4 @@ class WinEventlogChecks(DefaultCheck):
             self.agent_log.error("An error occurred during windows eventlog check!")
             self.agent_log.stacktrace(traceback.format_exc())
 
-        return windows_eventlog.copy()
+        return windows_eventlog

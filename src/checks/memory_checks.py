@@ -15,4 +15,4 @@ class MemoryChecks(DefaultCheck):
         memory = psutil.virtual_memory()
         memory = memory._asdict()
 
-        return memory.copy()
+        return memory
