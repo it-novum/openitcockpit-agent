@@ -34,15 +34,14 @@ from push_client import PushClient
 
 class ThreadFactory:
 
-    def __init__(self, config, agent_log, main_thread, certificates):
+    def __init__(self, config, agent_log, main_thread, certificates, check_store):
         self.Config: Config = config
         self.agent_log: AgentLog = agent_log
         self.main_thread: MainThread = main_thread
         self.certificates: Certificates = certificates
+        self.check_store: CheckResultStore = check_store
 
-        self.check_store = CheckResultStore()
         self.operating_system = OperatingSystem()
-
         self.loop_checks_thread = True
         self.loop_custom_checks_thread = True
         self.loop_check_result_push_thread = True
@@ -56,7 +55,7 @@ class ThreadFactory:
 
     def shutdown_all_threads(self):
         self.shutdown_webserver_thread()
-        self.shutdown_checks_thread()
+        #self.shutdown_checks_thread()
         self.shutdown_custom_checks_thread()
 
         try:

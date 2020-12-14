@@ -46,9 +46,26 @@ class OITCService(win32serviceutil.ServiceFramework, AgentService):
 
         rc = None
         self.init_service()
+
+        check_interval = self.config.config.getint('default', 'interval', fallback=5)
+        if check_interval <= 0:
+            self.agent_log.info('check_interval <= 0. Using 5 seconds as check_interval for now.')
+            check_interval = 5
+
+        # Run checks on agent startup
+        check_interval_counter = check_interval
+
         while rc != win32event.WAIT_OBJECT_0:
             self.main_loop()
-            rc = win32event.WaitForSingleObject(self.hWaitStop, 5000)
+
+            if check_interval_counter >= check_interval:
+                # Execute checks
+                check_interval_counter = 1
+                self.run_psutil_checks_in_main_thread()
+            else:
+                check_interval_counter += 1
+
+            rc = win32event.WaitForSingleObject(self.hWaitStop, 1000)
         self.cleanup()
 
 
